@@ -1,0 +1,24 @@
+name: Release
+
+# A tag like v0.4.0 puts apk/tartan-0.4.0.apk on a GitHub release, where Obtainium finds it.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find the APK
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          test -f "apk/tartan-$V.apk" || { echo "apk/tartan-$V.apk is missing"; exit 1; }
+          echo "APK=apk/tartan-$V.apk" >> "$GITHUB_ENV"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.APK }}
+          body_path: notes.md
