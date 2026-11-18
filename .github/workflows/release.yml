@@ -1,9 +1,12 @@
 name: Release
 
-# A tag like v0.4.0 puts apk/tartan-0.4.0.apk on a GitHub release, where Obtainium finds it.
+# A push to main that changes apk/ makes a release of the APK there (apk/tartan-<version>.apk),
+# tagged v<version>. Obtainium reads the releases.
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+    paths: ["apk/**"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,10 +18,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Find the APK
         run: |
-          V="${GITHUB_REF_NAME#v}"
-          test -f "apk/tartan-$V.apk" || { echo "apk/tartan-$V.apk is missing"; exit 1; }
-          echo "APK=apk/tartan-$V.apk" >> "$GITHUB_ENV"
+          APK=$(ls apk/tartan-*.apk | head -1)
+          test -n "$APK" || { echo "No apk/tartan-<version>.apk"; exit 1; }
+          V=$(basename "$APK" .apk); V="${V#tartan-}"
+          echo "APK=$APK" >> "$GITHUB_ENV"
+          echo "V=$V" >> "$GITHUB_ENV"
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ env.V }}
+          name: Tartan ${{ env.V }}
+          target_commitish: ${{ github.sha }}
           files: ${{ env.APK }}
           body_path: notes.md
+          make_latest: true
