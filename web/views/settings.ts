@@ -626,6 +626,7 @@ function tartan2Card(): HTMLElement | undefined {
       switchRow("Native chat", "Talking to your coach, drawn by iOS: its answer as it comes, routes, photos.", p.chat, (on) => setShellParts({ chat: on })),
       switchRow("Native Settings", "Settings drawn by iOS; what isn't native yet opens this page's group.", p.settings, (on) => setShellParts({ settings: on })),
       switchRow("Native Body", "Your muscles on the map, sleep and the watch's vitals, drawn by iOS.", p.body, (on) => setShellParts({ body: on })),
+      switchRow("Native Record and Lift", "Recording a run (on the lock screen while it runs), and a strength session set by set, drawn by iOS.", p.record, (on) => setShellParts({ record: on })),
     );
   return el(
     "section",

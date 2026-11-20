@@ -137,6 +137,13 @@ struct ShellScreens: View {
             } else if model.shown == "you" {
                 BodyScreen(shell: model, m: model.body)
                     .transition(.opacity)
+            } else if model.shown == "record" {
+                RecordScreen(shell: model, m: model.record)
+                    .transition(.opacity)
+            } else if model.shown == "lift", let l = model.lift {
+                LiftScreen(shell: model, m: l)
+                    .id(l.date)
+                    .transition(.opacity)
             }
         }
         .animation(.smooth(duration: 0.25), value: model.shown)

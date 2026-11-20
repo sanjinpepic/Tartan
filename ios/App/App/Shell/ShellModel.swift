@@ -72,6 +72,9 @@ final class ShellModel {
     let chat: ChatModel
     let settings: SettingsModel
     let body: BodyModel
+    let record: RecordModel
+    /** The strength session open (by the address: lift/<date>). */
+    var lift: LiftModel?
 
     /** The web app's view ("today", "coach", "chat"...) and its address after the #. */
     var view = "today"
@@ -86,6 +89,7 @@ final class ShellModel {
     var chatOn = NativeParts.isOn("chat")
     var settingsOn = NativeParts.isOn("settings")
     var bodyOn = NativeParts.isOn("body")
+    var recordOn = NativeParts.isOn("record")
     /** The Settings group showing (from the address: settings/coach). */
     var settingsGroup = "sources"
     /** The keyboard is up (over a native screen: the bar steps aside). */
@@ -117,9 +121,11 @@ final class ShellModel {
         self.chat = ChatModel(engine: engine)
         self.settings = SettingsModel(engine: engine)
         self.body = BodyModel(engine: engine)
+        self.record = RecordModel(engine: engine)
         today.shell = self
         coach.shell = self
         settings.shell = self
+        record.shell = self
         NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { _ in
             MainActor.assumeIsolated { ShellModel.shared.resumed() }
         }
@@ -150,7 +156,19 @@ final class ShellModel {
         coach.stale = true
         showScreen()
         if Launch.demo { Task { await demoForScreens() } }
-        if let tab = Launch.tab { go(tab, retain: true) }
+        if let tab = Launch.tab {
+            if tab == "lift" {
+                // Screenshots: the plan's strength session nearest today.
+                Task {
+                    let days = J(json: await engine.get("/api/plan"))["weeks"].array.flatMap { $0["days"].array }
+                    let strength = days.filter { d in d["sessions"].array.contains { $0["kind"].text == "strength" } }.map { $0["date"].text }
+                    let today = isoDay(Date())
+                    if let d = strength.first(where: { $0 >= today }) ?? strength.last { go("lift/\(d)", retain: true) }
+                }
+            } else {
+                go(tab, retain: true)
+            }
+        }
     }
 
     @ObservationIgnored private var settingUp = false
@@ -209,8 +227,15 @@ final class ShellModel {
         chatOn = NativeParts.isOn("chat")
         settingsOn = NativeParts.isOn("settings")
         bodyOn = NativeParts.isOn("body")
+        recordOn = NativeParts.isOn("record")
         if tell { plugin?.emit("parts", NativeParts.all()) }
         showScreen()
+    }
+
+    /** The run being recorded, as the page pushes it: Record shows it, the lock screen too. */
+    func recorded(_ r: RecNow) {
+        record.rec = r
+        LiveRun.update(r)
     }
 
     /** A part switched on or off in native Settings: kept, and the page hears. */
@@ -227,6 +252,16 @@ final class ShellModel {
         if v == "trends" && progressOn { return "trends" }
         if v == "chat" && chatOn { return "chat" }
         if v == "you" && bodyOn { return "you" }
+        if v == "record" && recordOn { return "record" }
+        if v == "lift" && recordOn {
+            let date = hash.split(separator: "/").dropFirst().first.map(String.init) ?? isoDay(Date())
+            if lift?.date != date {
+                let l = LiftModel(engine: engine, date: date)
+                l.shell = self
+                lift = l
+            }
+            return "lift"
+        }
         if v == "settings" && settingsOn {
             // settings/<group>/all: the page's whole group, for what isn't native yet.
             let parts = hash.split(separator: "/").map(String.init)
@@ -253,6 +288,7 @@ final class ShellModel {
         if next == "chat" { chat.ensure() }
         if next == "settings" { settings.ensure() }
         if next == "you" { body.ensure() }
+        if next == "record" { record.ensure() }
         // Coach reads whenever it's asked for, so it knows whether there's a plan to draw.
         if view == "coach" && NativeParts.wanted("coach") { coach.freshen() }
     }

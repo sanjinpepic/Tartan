@@ -43,6 +43,10 @@
 		15599D205C96F0F3AB6C10F2 /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 419DD0CC3D9FB9DED5EA037E /* SVGPath.swift */; };
 		703913EA9063731C887D8C89 /* BodyData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23F9C9E53BB219E1D17A04C1 /* BodyData.swift */; };
 		677647453FEE5042CD85B35B /* BodyScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293FA8B71D8124E194E085A4 /* BodyScreen.swift */; };
+		94F4108C34C74D4E9481B707 /* RecordScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E527951A0B9AD28D2E0867 /* RecordScreen.swift */; };
+		C9D9E1423FAC51B4EEA17B71 /* LiftScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6660C3697BF6595E4714B267 /* LiftScreen.swift */; };
+		64CD5FC1317431ADB784675C /* LiveRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9451A6AC335BE0C95B561B /* LiveRun.swift */; };
+		D876D5724CA8E7E5A014353D /* LiveRunAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -84,6 +88,10 @@
 		419DD0CC3D9FB9DED5EA037E /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPath.swift; sourceTree = "<group>"; };
 		23F9C9E53BB219E1D17A04C1 /* BodyData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyData.swift; sourceTree = "<group>"; };
 		293FA8B71D8124E194E085A4 /* BodyScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyScreen.swift; sourceTree = "<group>"; };
+		47E527951A0B9AD28D2E0867 /* RecordScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordScreen.swift; sourceTree = "<group>"; };
+		6660C3697BF6595E4714B267 /* LiftScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftScreen.swift; sourceTree = "<group>"; };
+		4D9451A6AC335BE0C95B561B /* LiveRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRun.swift; sourceTree = "<group>"; };
+		11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRunAttributes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -162,6 +170,10 @@
 				419DD0CC3D9FB9DED5EA037E /* SVGPath.swift */,
 				23F9C9E53BB219E1D17A04C1 /* BodyData.swift */,
 				293FA8B71D8124E194E085A4 /* BodyScreen.swift */,
+				47E527951A0B9AD28D2E0867 /* RecordScreen.swift */,
+				6660C3697BF6595E4714B267 /* LiftScreen.swift */,
+				4D9451A6AC335BE0C95B561B /* LiveRun.swift */,
+				11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */,
 			);
 			path = Shell;
 			sourceTree = "<group>";
@@ -250,6 +262,10 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				D876D5724CA8E7E5A014353D /* LiveRunAttributes.swift in Sources */,
+				64CD5FC1317431ADB784675C /* LiveRun.swift in Sources */,
+				C9D9E1423FAC51B4EEA17B71 /* LiftScreen.swift in Sources */,
+				94F4108C34C74D4E9481B707 /* RecordScreen.swift in Sources */,
 				677647453FEE5042CD85B35B /* BodyScreen.swift in Sources */,
 				703913EA9063731C887D8C89 /* BodyData.swift in Sources */,
 				15599D205C96F0F3AB6C10F2 /* SVGPath.swift in Sources */,

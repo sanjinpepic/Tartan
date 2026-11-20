@@ -8,7 +8,7 @@ import Capacitor
 enum NativeParts {
     static let names = ["nav", "today", "coach", "chat", "activities", "progress", "settings", "workout", "body", "routes", "record"]
     /** The parts iOS has natively so far. */
-    static let built: Set<String> = ["nav", "today", "workout", "coach", "activities", "progress", "chat", "settings", "body"]
+    static let built: Set<String> = ["nav", "today", "workout", "coach", "activities", "progress", "chat", "settings", "body", "record"]
 
     /** Switched on (Settings → More → Native screens), whether or not it shows now. */
     static func wanted(_ name: String) -> Bool {
@@ -147,8 +147,12 @@ public class TartanShellPlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve()
     }
 
-    /// The run being recorded, for a native Record (not on iPhone yet).
+    /// The run being recorded, as the page's recorder holds it, on every change: native Record
+    /// shows it, and the lock screen and the Dynamic Island while it runs.
     @objc func recorder(_ call: CAPPluginCall) {
+        if let st = call.getString("state"), let r = parseRec(st) {
+            onMain { ShellModel.shared.recorded(r) }
+        }
         call.resolve()
     }
 

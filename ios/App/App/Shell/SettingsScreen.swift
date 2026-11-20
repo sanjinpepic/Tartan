@@ -340,7 +340,7 @@ private struct MoreGroup: View {
     @State private var showLog = false
     @State private var parts = NativeParts.all()
 
-    private let names: [(String, String)] = [("nav", "Tab bar"), ("today", "Today"), ("workout", "Workout sheet"), ("coach", "Coach"), ("chat", "Chat"), ("activities", "Activities"), ("progress", "Progress"), ("settings", "Settings"), ("body", "Body")]
+    private let names: [(String, String)] = [("nav", "Tab bar"), ("today", "Today"), ("workout", "Workout sheet"), ("coach", "Coach"), ("chat", "Chat"), ("activities", "Activities"), ("progress", "Progress"), ("settings", "Settings"), ("body", "Body"), ("record", "Record and Lift")]
 
     var body: some View {
         Section {

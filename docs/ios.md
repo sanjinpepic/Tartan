@@ -55,8 +55,8 @@ iPhone would be Apple's Foundation Models, later).
 ## Native iPhone screens
 
 Since Nov 2026 the tab bar, Today, Coach (with a plan), Activities, Progress and the session and
-workout sheets, the chat, Settings and Body are native SwiftUI with Liquid Glass; the rest (Record
-and Lift, Routes, making the first plan, and the parts of Settings below) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
+workout sheets, the chat, Settings, Body, Record and Lift are native SwiftUI with Liquid Glass; the
+rest (Routes, making the first plan, the intro, and the parts of Settings below) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
 same as Android's.
 
 - **The plugin** (`TartanShellPlugin.swift`): the `TartanShell` Capacitor plugin, with every
@@ -115,6 +115,13 @@ same as Android's.
   `Shell/musclemap.json` (MuscleMap, MIT; `scripts/musclemap-asset.ts` writes it for both apps),
   shaded on the heat scale, a tap opens a muscle; sleep and vitals. An exercise shows the 3D body
   moving through it, drawn by the page's WebGL as pictures (`rpc:body`, `BodyFrames`), drag to turn.
+- **Record** (`RecordScreen.swift`) and **Lift** (`LiftScreen.swift`): the page's recorder
+  (`web/recorder.ts`, background location) records the run, with the screen off too; it pushes
+  every change through `recorder`, which Record draws (start, pause, finish, a guided run's steps,
+  heart rate, Save and Strava). While a run is live it's on the lock screen and in the Dynamic
+  Island (`LiveRun.swift`, ActivityKit; `RunAttributes` in `LiveRunAttributes.swift`). Lift logs a
+  strength session set by set (`/api/lifts`), the rest counting down with a notification when it's
+  over (`rpc:restNote`), and Finish shows the records and next time.
 - **Activities** (`ActivitiesScreen.swift`) and **Progress** (`ProgressScreen.swift`,
   `ProgressData.swift`): the list by week with search and the sport filter (Routes is the page's),
   and the ranges and the Week, with Swift Charts.

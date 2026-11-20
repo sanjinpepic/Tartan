@@ -55,6 +55,8 @@
 	<string>To save share cards of your runs.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>To turn what you say into a question for your coach.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
