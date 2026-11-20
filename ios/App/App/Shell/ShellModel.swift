@@ -69,6 +69,7 @@ final class ShellModel {
     let coach: CoachModel
     let activities: ActivitiesModel
     let progress: ProgressModel
+    let chat: ChatModel
 
     /** The web app's view ("today", "coach", "chat"...) and its address after the #. */
     var view = "today"
@@ -80,6 +81,9 @@ final class ShellModel {
     var coachOn = NativeParts.isOn("coach")
     var activitiesOn = NativeParts.isOn("activities")
     var progressOn = NativeParts.isOn("progress")
+    var chatOn = NativeParts.isOn("chat")
+    /** The keyboard is up (over a native screen: the bar steps aside). */
+    var keyboardUp = false
     /** The native screen showing; nil while the page shows its own. */
     var shown: String?
     /** The bar folded small while a screen scrolls down. */
@@ -104,10 +108,17 @@ final class ShellModel {
         self.coach = CoachModel(engine: engine)
         self.activities = ActivitiesModel(engine: engine)
         self.progress = ProgressModel(engine: engine)
+        self.chat = ChatModel(engine: engine)
         today.shell = self
         coach.shell = self
         NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { _ in
             MainActor.assumeIsolated { ShellModel.shared.resumed() }
+        }
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { ShellModel.shared.keyboardUp = true }
+        }
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { ShellModel.shared.keyboardUp = false }
         }
     }
 
@@ -169,7 +180,7 @@ final class ShellModel {
     var tab: String? { Tab.of(view) }
 
     /** Screens that take the whole screen: no bar over them (as on Android). */
-    var barHidden: Bool { !navOn || pageOpen || ["lift", "record", "face"].contains(view) }
+    var barHidden: Bool { !navOn || pageOpen || (keyboardUp && shown != nil) || ["lift", "record", "face"].contains(view) }
 
     func route(view next: String, hash: String, pageOpen: Bool) {
         if next != view { navFolded = false }
@@ -186,6 +197,7 @@ final class ShellModel {
         coachOn = NativeParts.isOn("coach")
         activitiesOn = NativeParts.isOn("activities")
         progressOn = NativeParts.isOn("progress")
+        chatOn = NativeParts.isOn("chat")
         if tell { plugin?.emit("parts", NativeParts.all()) }
         showScreen()
     }
@@ -196,6 +208,7 @@ final class ShellModel {
         if v == "coach" && coachOn { return "coach" }
         if v == "activities" && activitiesOn { return "activities" }
         if v == "trends" && progressOn { return "trends" }
+        if v == "chat" && chatOn { return "chat" }
         return nil
     }
 
@@ -211,6 +224,7 @@ final class ShellModel {
         host?.layout(animated: true)
         if next == "today" { today.freshen() }
         if next == "activities" { activities.freshen() }
+        if next == "chat" { chat.ensure() }
         // Coach reads whenever it's asked for, so it knows whether there's a plan to draw.
         if view == "coach" && NativeParts.wanted("coach") { coach.freshen() }
     }

@@ -8,7 +8,7 @@ import Capacitor
 enum NativeParts {
     static let names = ["nav", "today", "coach", "chat", "activities", "progress", "settings", "workout", "body", "routes", "record"]
     /** The parts iOS has natively so far. */
-    static let built: Set<String> = ["nav", "today", "workout", "coach", "activities", "progress"]
+    static let built: Set<String> = ["nav", "today", "workout", "coach", "activities", "progress", "chat"]
 
     /** Switched on (Settings → More → Native screens), whether or not it shows now. */
     static func wanted(_ name: String) -> Bool {
@@ -124,8 +124,13 @@ public class TartanShellPlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve()
     }
 
-    /// The chat isn't native on iPhone yet: the page opens its own (it asks only when `chat` is on).
+    /// Open the chat: a conversation (null: a new one; absent: the latest) and words to start with.
     @objc func chat(_ call: CAPPluginCall) {
+        let raw = call.options["conversation"]
+        let given = raw != nil
+        let conversation = raw as? String
+        let prefill = call.getString("prefill")
+        onMain { ShellModel.shared.chat.open(conversation: conversation, given: given, prefill: prefill) }
         call.resolve()
     }
 

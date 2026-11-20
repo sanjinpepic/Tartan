@@ -35,6 +35,8 @@
 		AAA6C6D71A6A4874DD38B790 /* ActivitiesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C582CB4C6522F96EAD400D /* ActivitiesScreen.swift */; };
 		4A04023C939DC5FD45E35B23 /* ProgressData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC40FC2B07C3524C1196DA69 /* ProgressData.swift */; };
 		B87F79C373EB1D0B1D2C8DBD /* ProgressScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88BBCBA2B2B7906431CD95D /* ProgressScreen.swift */; };
+		19CBED7FD1F5964154BE680E /* ChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3B881C88556686F9A1EB0F /* ChatModel.swift */; };
+		268F8BC2EEED51DFEBA99393 /* ChatScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA386988D30A88B18C6E4992 /* ChatScreen.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,6 +70,8 @@
 		39C582CB4C6522F96EAD400D /* ActivitiesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitiesScreen.swift; sourceTree = "<group>"; };
 		BC40FC2B07C3524C1196DA69 /* ProgressData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressData.swift; sourceTree = "<group>"; };
 		F88BBCBA2B2B7906431CD95D /* ProgressScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressScreen.swift; sourceTree = "<group>"; };
+		9B3B881C88556686F9A1EB0F /* ChatModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModel.swift; sourceTree = "<group>"; };
+		AA386988D30A88B18C6E4992 /* ChatScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScreen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +142,8 @@
 				39C582CB4C6522F96EAD400D /* ActivitiesScreen.swift */,
 				BC40FC2B07C3524C1196DA69 /* ProgressData.swift */,
 				F88BBCBA2B2B7906431CD95D /* ProgressScreen.swift */,
+				9B3B881C88556686F9A1EB0F /* ChatModel.swift */,
+				AA386988D30A88B18C6E4992 /* ChatScreen.swift */,
 			);
 			path = Shell;
 			sourceTree = "<group>";
@@ -225,6 +231,8 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				268F8BC2EEED51DFEBA99393 /* ChatScreen.swift in Sources */,
+				19CBED7FD1F5964154BE680E /* ChatModel.swift in Sources */,
 				B87F79C373EB1D0B1D2C8DBD /* ProgressScreen.swift in Sources */,
 				4A04023C939DC5FD45E35B23 /* ProgressData.swift in Sources */,
 				AAA6C6D71A6A4874DD38B790 /* ActivitiesScreen.swift in Sources */,

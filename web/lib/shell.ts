@@ -743,8 +743,9 @@ export async function startShell(): Promise<void> {
     if (e.action === "board") document.getElementById("conn")?.click();
     else if (e.action === "laneSync") void (e.lane === "watch" ? syncWatchNow() : syncStravaNow()).finally(() => void Shell.changed().catch(() => {}));
     else if (e.action === "chat") {
-      if (webUi.openChat) webUi.openChat({ conversation: e.conversation, prefill: e.prefill, focus: true });
-      else if (shellChat({ conversation: e.conversation, prefill: e.prefill })) location.hash = "#chat";
+      // The native chat when it's on (the iPhone has the page's too); else the page's.
+      if (shellChat({ conversation: e.conversation, prefill: e.prefill })) location.hash = "#chat";
+      else webUi.openChat?.({ conversation: e.conversation, prefill: e.prefill, focus: true });
     }
     else if (e.action === "sync") void syncAllNow().finally(() => void Shell.changed().catch(() => {}));
     else if (e.activity) void (webUi.openActivity ? webUi.openActivity(e.activity) : shellWorkout(e.activity));

@@ -26,7 +26,7 @@ data only. They're committed to
 `https://raw.githubusercontent.com/sanjinpepic/Tartan/main/screenshots/ios/light-1-today.png`.
 The app takes launch arguments for it (`ios/App/App/Shell/Launch.swift`): `-TartanDemo YES` (the
 sample data as the intro's "Try it with sample data" starts it, then a half marathon nine weeks out
-and a plan by Tartan's rules, once), `-TartanTab coach`, `-TartanMore YES`, `-TartanOpen session|workout`, `-TartanDark YES`; they last for
+and a plan by Tartan's rules, once), `-TartanTab coach`, `-TartanMore YES`, `-TartanOpen session|workout`, `-TartanChatSample YES` (a made-up conversation, nothing sent), `-TartanDark YES`; they last for
 that launch only. The script waits for each screen's data: the app writes a `ready-<screen>` file in
 its Documents when it has it (only with `-TartanDemo`). `scripts/ios-prepare.sh` holds the steps both builds share.
 
@@ -55,8 +55,8 @@ iPhone would be Apple's Foundation Models, later).
 ## Native iPhone screens
 
 Since Nov 2026 the tab bar, Today, Coach (with a plan), Activities, Progress and the session and
-workout sheets are native SwiftUI with Liquid Glass; the rest (the chat, Settings, Body, Record and
-Lift, Routes, making the first plan) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
+workout sheets and the chat are native SwiftUI with Liquid Glass; the rest (Settings, Body, Record
+and Lift, Routes, making the first plan) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
 same as Android's.
 
 - **The plugin** (`TartanShellPlugin.swift`): the `TartanShell` Capacitor plugin, with every
@@ -96,7 +96,13 @@ same as Android's.
   (`CoachModel.hasPlan`, kept so `parts` can answer); without one the page makes the first plan,
   and when one appears the shell sends `parts` so the page steps aside. This week or the whole
   plan, Change plan (ill, better, away, busy: `POST /api/plan/life`), the watch line
-  (`rpc:watchWeek`), the suggestion, undo and the week's review; the ask bar opens the page's chat.
+  (`rpc:watchWeek`), the suggestion, undo and the week's review; the ask bar opens the chat.
+- **The chat** (`ChatScreen.swift`, `ChatModel.swift`): `POST /api/coach/chat` streamed through
+  `chunk` (each NDJSON line: the conversation, a tool step, words, who answered, the plan changed or
+  changes suggested, a route, an error). Steps as chips, route cards, Ask again on a failed turn,
+  Copy and Report on a long press (Report can open a GitHub issue), a photo from the library; the
+  keyboard's own dictation for voice. The box rides the keyboard (the bar steps aside while it's up).
+  The page opens it through `chat` (the `go` action `chat` now prefers the native one).
 - **Activities** (`ActivitiesScreen.swift`) and **Progress** (`ProgressScreen.swift`,
   `ProgressData.swift`): the list by week with search and the sport filter (Routes is the page's),
   and the ranges and the Week, with Swift Charts.

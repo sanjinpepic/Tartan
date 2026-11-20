@@ -12,6 +12,8 @@ enum Launch {
     static var more: Bool { UserDefaults.standard.bool(forKey: "TartanMore") }
     /** Open a sheet from Today once it has its data: "session" (today's or the next) or "workout" (the last). */
     static var open: String? { UserDefaults.standard.string(forKey: "TartanOpen").flatMap { $0.isEmpty ? nil : $0 } }
+    /** The chat with a made-up conversation (no coach asked, nothing sent). */
+    static var chatSample: Bool { UserDefaults.standard.bool(forKey: "TartanChatSample") }
     /** Dark, whatever the phone is set to. */
     static var dark: Bool { UserDefaults.standard.bool(forKey: "TartanDark") }
 

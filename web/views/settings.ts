@@ -623,6 +623,7 @@ function tartan2Card(): HTMLElement | undefined {
       switchRow("Native Coach", "Your plan drawn by iOS: this week, the whole plan, the coach's suggestions, Change plan. Making the first plan stays here.", p.coach, (on) => setShellParts({ coach: on })),
       switchRow("Native Activities", "Your workouts drawn by iOS, by week, searchable. Routes stay as they are.", p.activities, (on) => setShellParts({ activities: on })),
       switchRow("Native Progress", "The long view drawn by iOS: charts you can slide across, your bests, the week.", p.progress, (on) => setShellParts({ progress: on })),
+      switchRow("Native chat", "Talking to your coach, drawn by iOS: its answer as it comes, routes, photos.", p.chat, (on) => setShellParts({ chat: on })),
     );
   return el(
     "section",

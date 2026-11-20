@@ -128,6 +128,9 @@ struct ShellScreens: View {
             } else if model.shown == "trends" {
                 ProgressScreen(shell: model, m: model.progress)
                     .transition(.opacity)
+            } else if model.shown == "chat" {
+                ChatScreen(shell: model, chat: model.chat)
+                    .transition(.opacity)
             }
         }
         .animation(.smooth(duration: 0.25), value: model.shown)

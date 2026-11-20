@@ -77,6 +77,7 @@ for look in light dark; do
   shot "$look-2b-session" session -TartanTab today -TartanOpen session
   shot "$look-2c-workout" workout -TartanTab today -TartanOpen workout
   shot "$look-3-coach" coach -TartanTab coach
+  shot "$look-3b-chat" chat -TartanTab chat -TartanChatSample YES
   shot "$look-4-activities" activities -TartanTab activities
   shot "$look-5-progress" trends -TartanTab trends
 done
