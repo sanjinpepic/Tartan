@@ -175,10 +175,16 @@ struct PcSection: View {
                     step(2, "Tap Pair a phone.", "It shows a code for 10 minutes. No code there? Tartan on the PC needs to be started for your home network (bun src/cli.ts serve --lan).")
                     step(3, "Type its address and code here.", "Both are under the QR code on the PC.")
                 }
-                TextField("PC address", text: $urls, prompt: Text("192.168.1.20:5173"))
-                    .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
-                TextField("Code", text: Binding(get: { code }, set: { code = $0.uppercased() }), prompt: Text("K7QM3-XPA9R"))
-                    .textInputAutocapitalization(.characters).autocorrectionDisabled().font(.body.monospaced())
+                LabeledContent("PC address") {
+                    TextField("PC address", text: $urls, prompt: Text("192.168.1.20:5173"))
+                        .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .multilineTextAlignment(.trailing)
+                }
+                LabeledContent("Code") {
+                    TextField("Code", text: Binding(get: { code }, set: { code = $0.uppercased() }), prompt: Text("K7QM3-XPA9R"))
+                        .textInputAutocapitalization(.characters).autocorrectionDisabled().font(.body.monospaced())
+                        .multilineTextAlignment(.trailing)
+                }
                 Button("Connect") { s.pcPair(urls: urls, code: code) }
                     .disabled(urls.trimmingCharacters(in: .whitespaces).isEmpty || code.trimmingCharacters(in: .whitespaces).isEmpty || s.busy == "pc")
             }

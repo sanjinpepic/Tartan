@@ -205,7 +205,18 @@ struct CoachSetupCard: View {
             } else if let saved = m.saved, !changed {
                 Label("Saved. \(saved)", systemImage: "checkmark").font(.footnote).foregroundStyle(.secondary)
             }
-            DisclosureGroup("More options", isExpanded: $more) {
+            // Not a DisclosureGroup: in Settings' list that would split the card into rows.
+            Button { withAnimation(.smooth) { more.toggle() } } label: {
+                HStack {
+                    Text("More options").font(.subheadline.weight(.semibold))
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).rotationEffect(.degrees(more ? 90 : 0)).foregroundStyle(.secondary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(Press())
+            .foregroundStyle(Color.primary)
+            if more {
                 VStack(alignment: .leading, spacing: 12) {
                     if p.id == "google" || p.id == "anthropic" {
                         Picker("\(WHO[p.id] ?? p.label) model", selection: Binding(get: { typing ? OTHER : current }, set: { v in
@@ -243,9 +254,7 @@ struct CoachSetupCard: View {
                          : "\(s.plannerModel ?? WHO[s.plannerUses] ?? s.plannerUses) writes your plan, changes it when you ask, and reviews each week. Everyday questions stay with the coach.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-                .padding(.top, 8)
             }
-            .font(.subheadline.weight(.semibold))
             Toggle(isOn: Binding(get: { s.photos }, set: { v in Task { await m.flag("photos", v) } })) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Photos in the chat")
@@ -285,7 +294,7 @@ struct CoachSetupCard: View {
                 Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.title3).foregroundStyle(on ? Brand.tint : Color.secondary)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.subheadline.weight(.semibold))
-                    Text(sub).font(.footnote).foregroundStyle(.secondary)
+                    Text(sub).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
             }
@@ -326,6 +335,7 @@ private struct CoachNow: View {
                 Text(answers ? "\(chat!) answers you" : "No AI set up yet").font(.headline)
                 Text(answers ? ([offline.isEmpty ? nil : "Offline: \(offline).", plans].compactMap { $0 }.joined(separator: " ")) : "Tartan's rules write your plan. Choose an AI below to talk with the coach.")
                     .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .foregroundStyle(Brand.onContainer)
             Spacer(minLength: 0)
@@ -349,7 +359,7 @@ private struct KeySteps: View {
                 HStack(alignment: .top, spacing: 10) {
                     Text("\(i + 1)").font(.caption.weight(.bold)).foregroundStyle(Brand.container)
                         .frame(width: 24, height: 24).background(Brand.onContainer, in: Circle())
-                    Text(t).font(.subheadline)
+                    Text(t).font(.subheadline).fixedSize(horizontal: false, vertical: true)
                 }
             }
             Button(google ? "Open Google AI Studio" : "Open the Anthropic Console") {
