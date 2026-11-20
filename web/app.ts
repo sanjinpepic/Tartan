@@ -326,6 +326,10 @@ document.addEventListener("visibilitychange", () => {
 applyMaterial();
 void applyColours();
 void startShell();
+// The demo (iPhone, the PC): its sample written the first time, then every screen reads it.
+void import("./lib/demo.ts").then(async (d) => {
+  if (await d.seedDemo()) hooks.refresh?.();
+});
 slideSelect();
 setInterval(() => void autoSync(false, "tick"), 30 * 60_000);
 void listenForStravaReturn();
