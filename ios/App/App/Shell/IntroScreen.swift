@@ -164,7 +164,7 @@ struct IntroScreen: View {
                   doneLine: s.strava.flatMap { $0.name.isEmpty ? nil : "Connected as \($0.name)" } ?? "Connected") { flow = "strava" }
         SourceRow(icon: .symbol("watch.analog"), title: "Your watch", line: "Straight off your wrist, over Bluetooth", done: s.watch?.connected == true,
                   doneLine: s.watch.flatMap { $0.name.isEmpty ? nil : "Connected to \($0.name)" } ?? "Connected") { flow = "watch" }
-        SourceRow(icon: .symbol("chart.bar"), title: "intervals.icu", line: "Garmin, Coros, Polar, Wahoo, Zwift: a key, no app", done: s.icu?.connected == true,
+        SourceRow(icon: .symbol("chart.bar.xaxis"), title: "intervals.icu", line: "Garmin, Coros, Polar, Wahoo, Zwift: a key, no app", done: s.icu?.connected == true,
                   doneLine: s.icu?.name.map { "Connected as \($0)" } ?? "Connected") { flow = "icu" }
     }
 }
@@ -574,7 +574,7 @@ private struct Places: View {
         ForEach(Array([("sun.max", "Today", "How you are, what's on today, and your body"),
                        ("ellipsis.bubble", "Coach", "Your plan, and a coach to ask"),
                        ("list.bullet", "Activities", "Every workout once, and routes to draw for the watch"),
-                       ("chart.bar", "Progress", "How your training adds up, week by week")].enumerated()), id: \.offset) { _, r in
+                       ("chart.bar.xaxis", "Progress", "How your training adds up, week by week")].enumerated()), id: \.offset) { _, r in
             HStack(spacing: 14) {
                 Image(systemName: r.0).font(.system(size: 22, weight: .medium)).foregroundStyle(Brand.onContainer)
                     .frame(width: 48, height: 48).background(Brand.container, in: Circle())

@@ -202,6 +202,8 @@ struct WatchGroup: View {
             Text(w.fuel.map { "Drink and gel reminders on sessions over \($0.fromMin) minutes. Changes reach the watch the next time you send the week. Start a workout from the sport mode's workout options on the watch." }
                  ?? "Start one from the sport mode's workout options on the watch.")
         }
+        // The first section, so it runs at once (the list builds the rows below lazily).
+        .onAppear { w.ensure() }
         if let wf = w.week {
             Section {
                 HStack(spacing: 14) {
@@ -236,7 +238,6 @@ struct WatchGroup: View {
         Section {
             Button { shell.go("routes") } label: { Label("Open Routes", systemImage: "point.topleft.down.to.point.bottomright.curvepath") }
         } header: { Text("Routes") } footer: { Text("Made under Activities → Routes, sent to the watch with a prompt at every turn.") }
-            .onAppear { w.ensure() }
     }
 }
 

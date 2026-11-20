@@ -20,6 +20,8 @@ final class MoreModel {
     @ObservationIgnored weak var shell: ShellModel?
     private let engine: EngineBridge
     var backup: BackupNow?
+    /** Why the backups' state didn't come (shown with Try again instead of a spinner). */
+    var backupError: String?
     var recorder: (armed: Bool, recording: Bool, last: String?)?
     var log: String?
     var version = ""
@@ -36,10 +38,19 @@ final class MoreModel {
         }
     }
 
+    /** The backups' state again (after it failed). */
+    func retry() {
+        backupError = nil
+        Task { await runBackup(["op": "state"]) }
+    }
+
     @discardableResult
     private func runBackup(_ args: [String: Any]) async -> Bool {
-        switch await engine.rpc("backup", args) {
+        let r = await engine.rpc("backup", args)
+        defer { Launch.ready("backup") }
+        switch r {
         case .success(let j):
+            backupError = nil
             let o = J(json: j)
             let f = o["failed"]
             backup = BackupNow(pass: o["pass"].bool, weekly: o["weekly"].bool, last: o["last"].num.flatMap { $0 > 0 ? Date(timeIntervalSince1970: $0 / 1000) : nil },
@@ -49,7 +60,7 @@ final class MoreModel {
             if let s = o["said"].str { say(s) }
             return true
         case .failure(let e):
-            say(e.message)
+            if backup == nil { backupError = e.message } else { say(e.message) }
             return false
         }
     }
@@ -128,6 +139,7 @@ struct MoreGroup: View {
 
     var body: some View {
         PcSection(s: shell.sources)
+            .onAppear { shell.watchSettings.ensure() }
         BackupSection(more: more)
         Section {
             LabeledContent("Version", value: m.version.isEmpty ? "–" : "\(m.version) (\(m.build))")
@@ -147,7 +159,7 @@ struct MoreGroup: View {
                 Toggle(n.1, isOn: Binding(get: { NativeParts.wanted(n.0) }, set: { on in shell.setPart(n.0, on); parts = NativeParts.all() }))
             }
         } header: { Text("Native screens") } footer: { Text("Drawn by iOS itself, with Liquid Glass. Turn one off to use the page's instead.") }
-            .onAppear { more.ensure(); shell.watchSettings.ensure() }
+            .onAppear { shell.watchSettings.ensure() }
     }
 }
 
@@ -245,6 +257,9 @@ private struct BackupSection: View {
                     }
                     .disabled(file == nil || pass.isEmpty || more.busy != nil)
                 }
+            } else if let e = more.backupError {
+                Label("Couldn't read the backups: \(e)", systemImage: "exclamationmark.triangle").font(.subheadline).foregroundStyle(Brand.watch)
+                Button("Try again") { more.retry() }
             } else {
                 ProgressView()
             }
@@ -254,6 +269,9 @@ private struct BackupSection: View {
                      ?? "No backup yet. If this phone is lost or the app is removed, a backup is how your data comes back.")
             }
         }
+        // Its own read, as it comes into view: the list builds rows lazily, so an onAppear on a
+        // section further down may not run until it's scrolled to.
+        .task { if more.backup == nil && more.backupError == nil { more.ensure() } }
         .fileImporter(isPresented: $picking, allowedContentTypes: [UTType(filenameExtension: "tartan") ?? .data, .data]) { r in
             guard case .success(let url) = r else { return }
             let scoped = url.startAccessingSecurityScopedResource()

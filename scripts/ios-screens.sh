@@ -85,7 +85,7 @@ for look in light dark; do
   shot "$look-6-settings" settings -TartanTab settings/training
   shot "$look-6b-settings-sources" settings -TartanTab settings/sources
   shot "$look-6c-settings-coach" coachsetup -TartanTab settings/coach
-  shot "$look-6d-settings-more" settings -TartanTab settings/more
+  shot "$look-6d-settings-more" backup -TartanTab settings/more
   shot "$look-7-body" you -TartanTab you
   shot "$look-8-record" record -TartanTab record
   shot "$look-9-lift" lift -TartanTab lift
