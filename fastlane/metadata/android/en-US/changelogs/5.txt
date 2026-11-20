@@ -1,0 +1,2 @@
+- Version numbers are now plain (0.4.60), so app stores and Obtainium see each update.
+- The navigation bar folds small while you scroll down a list.

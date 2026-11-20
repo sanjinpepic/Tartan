@@ -1,0 +1,1 @@
+{"days":[{"date":"2026-10-28","worn_min":600,"resting_hr":52,"hr_min":48,"hr_max":150,"steps":5400,"active_kcal":300,"spo2":[{"at":"2026-10-28T03:00:00","pct":96.4}],"night":{"start":"2026-10-27T23:10:00","end":"2026-10-28T06:40:00","minutes":438,"hr_avg":55,"hr_min":49},"sleep":null,"hrv_ms":null}],"resting_baseline":47,"today_hr":[],"latest":null,"last_t":0}

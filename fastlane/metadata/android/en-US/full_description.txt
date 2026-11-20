@@ -1,0 +1,37 @@
+<p><b>Tartan is a training coach that works from your own data.</b> Your workouts come in by themselves, stay on your phone, and a plan is built around your week and adjusted as you train.</p>
+
+<p><b>Bring in your workouts, any way you like</b></p>
+<ul>
+<li><b>Health Connect</b>: whatever your watch's app already shares there (Samsung Health, Suunto, Fitbit, Coros, Polar and more), with heart rate, distance and route. No account.</li>
+<li><b>intervals.icu</b>: Garmin, Suunto, Coros, Polar, Wahoo and Zwift, with a personal key.</li>
+<li><b>Strava</b>: your whole history, every stream.</li>
+<li><b>Straight off a Suunto watch over Bluetooth</b> (tested on a Suunto Run 2), no Suunto app or account needed.</li>
+<li><b>Files</b>: share or open a .fit, .gpx or .tcx file from any app.</li>
+</ul>
+<p>A workout that arrives from more than one place shows up once.</p>
+
+<p><b>How you are, and what to do today</b></p>
+<ul>
+<li>Readiness from your training load, sleep and HRV, with a quick morning check.</li>
+<li>Today's session, your week against your goal, and how your last workout went.</li>
+<li>Progress: fitness over time, weekly distance, easy-run efficiency, how well long runs hold, personal bests and a race prediction.</li>
+<li>Strength sessions logged set by set, and a body map of what you trained.</li>
+<li>Record runs with the phone's GPS and any Bluetooth heart-rate sensor, live in the status bar and on the lock screen (Android 16 and later: distance, time, pace, heart rate, progress to the planned distance, pause and resume).</li>
+</ul>
+
+<p><b>A plan that adapts</b></p>
+<ul>
+<li>Tartan's own rules write a plan from your targets and recent weeks, with no AI and no account.</li>
+<li>Add a coach to talk to: a free Gemini key, your own Claude key, or a model on the phone (Model Hub). It reads your data before it answers, changes the plan when you ask, and reviews each week. Every change waits for your OK.</li>
+<li>Ask the coach for a route ("5 km near home", "a scenic loop in nature from here") and it makes one on OpenStreetMap and sends it to your watch.</li>
+<li>Reminders before sessions, a morning summary, your plan in your calendar, and a home-screen widget.</li>
+</ul>
+
+<p><b>Yours</b></p>
+<ul>
+<li>Everything stays on your phone, in encrypted backups you control, or on your own computer if you pair one. No Tartan account, no ads, no tracking.</li>
+<li>AI questions go only to the provider whose key you add, or stay on the phone.</li>
+<li>Not sure yet? Try it with sample data first.</li>
+</ul>
+
+<p><i>The coach gives training guidance, not medical advice. Tartan is unofficial and not affiliated with Suunto, Amer Sports, Strava, intervals.icu or Google; the Suunto Bluetooth protocol was recovered by reverse engineering and a firmware update can change it.</i></p>

@@ -1,0 +1,165 @@
+<title>Tartan Track</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column; the watch first, then its choices, then the parts that go on the watch. */
+:root {
+  --paper: #fbf7f6; --ink: #201a19; --ink-2: #534341; --ink-3: #7a6966; --rule: #e9dfdc; --chip: #f2e9e6;
+  --tartan: #a8321f; --case-hi: #3a3534; --case-lo: #0d0b0b;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #141111; --ink: #f3ebe8; --ink-2: #cdbfbb; --ink-3: #9a8a86; --rule: #2c2523; --chip: #221c1b; --tartan: #ff8a73; color-scheme: dark } }
+:root[data-theme="dark"] { --paper: #141111; --ink: #f3ebe8; --ink-2: #cdbfbb; --ink-3: #9a8a86; --rule: #2c2523; --chip: #221c1b; --tartan: #ff8a73; color-scheme: dark }
+body { background: var(--paper); color: var(--ink); font: 400 1rem/1.55 var(--body); }
+main { max-width: 760px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 32px; }
+header { display: grid; gap: 6px; }
+h1 { font: 700 clamp(2.4rem, 8vw, 3.6rem)/0.95 var(--display); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.lede { color: var(--ink-2); max-width: 56ch; margin: 0; }
+.status { display: inline-flex; gap: 8px; align-items: center; font: 600 0.8125rem/1 var(--body); letter-spacing: 0.04em; text-transform: uppercase; color: var(--tartan); }
+.status i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+.stage { display: grid; justify-items: center; gap: 22px; }
+.watch { position: relative; width: min(calc(100% - 24px), 420px); max-width: 100%; aspect-ratio: 1; }
+.case { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 30% 22%, var(--case-hi), var(--case-lo) 70%); box-shadow: 0 24px 60px rgba(30, 10, 6, 0.35), inset 0 0 0 2px rgba(255,255,255,0.06); }
+.button { position: absolute; right: -2.2%; width: 4%; height: 11%; border-radius: 4px; background: linear-gradient(90deg, #1a1717, #3c3635); }
+.button.top { top: 26%; } .button.bottom { top: 63%; }
+.screen { position: absolute; inset: 6.5%; border-radius: 50%; overflow: hidden; background: #000; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05); }
+.screen svg { display: block; width: 100%; height: 100%; }
+.controls { display: grid; gap: 14px; justify-items: center; }
+.label { font: 600 0.75rem/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.swatches { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.swatch { width: 34px; height: 34px; border-radius: 50%; border: 0; padding: 0; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25); cursor: pointer; outline-offset: 3px; }
+.swatch[aria-checked="true"] { outline: 2px solid var(--ink); }
+.swatch:focus-visible { outline: 2px solid var(--tartan); }
+.seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--chip); }
+.seg button { border: 0; background: transparent; color: var(--ink-2); font: 600 0.875rem/1 var(--body); padding: 9px 16px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-checked="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.colour-name { font: 600 1rem/1 var(--display); letter-spacing: 0.04em; color: var(--ink-2); min-height: 1em; }
+
+section { display: grid; gap: 14px; }
+h2 { font: 700 1.6rem/1 var(--display); margin: 0; }
+.parts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.part { display: grid; gap: 8px; align-content: start; padding: 12px; border-radius: 18px; background: var(--chip); min-width: 0; }
+.part .img { display: grid; place-items: center; height: 150px; border-radius: 12px; background: repeating-conic-gradient(#1b1818 0 25%, #121010 0 50%) 0 0 / 16px 16px; overflow: hidden; }
+.part .img svg { max-height: 138px; width: auto; max-width: 100%; }
+.part.wide { grid-column: 1 / -1; }
+.part .row { display: flex; justify-content: center; gap: 14px; }
+.part b { font: 600 0.9375rem/1.2 var(--body); }
+.part span { font: 500 0.8125rem/1.3 var(--body); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.notes { margin: 0; padding-left: 1.1em; color: var(--ink-2); display: grid; gap: 6px; max-width: 64ch; }
+.notes b { color: var(--ink); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .case { box-shadow: none; } }
+</style>
+
+<main>
+  <header>
+    <span class="status"><i></i>Preview only · not on your watch</span>
+    <h1>Tartan Track</h1>
+    <p class="lede">A face for the Suunto Run 2: AMOLED black with everything in tartan red. The minutes run round a track drawn as lane lines, with a finish line at twelve and the T above the centre. Only thin lines light up, so it's easy on the battery.</p>
+  </header>
+
+  <div class="stage">
+    <div class="watch" aria-label="Watch face preview">
+      <div class="case"></div>
+      <div class="button top"></div><div class="button bottom"></div>
+      <div class="screen" id="screen"></div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="radiogroup" aria-label="Time shown">
+        <button type="button" role="radio" id="t-live" aria-checked="true">Live</button>
+        <button type="button" role="radio" id="t-1009" aria-checked="false">10:09</button>
+      </div>
+      <span class="label">Seconds hand</span>
+      <div class="swatches" role="radiogroup" aria-label="Seconds hand colour" id="swatches"></div>
+      <span class="colour-name" id="colour-name"></span>
+    </div>
+  </div>
+
+  <section>
+    <h2>What goes on the watch</h2>
+    <p class="lede">Every image the face package carries, at the sizes the Run 2's face format uses. The hands point up and turn around the centre of their image.</p>
+    <div class="parts" id="parts"></div>
+  </section>
+
+  <section>
+    <h2>Before it goes on</h2>
+    <ol class="notes">
+      <li><b>Date and battery</b> are drawn by the watch itself, in its own font. Here they're stand-ins, placed where the face asks for them.</li>
+      <li><b>The seconds colour</b> is a choice on the watch, like the Suunto faces: all seven hands ship in the package.</li>
+      <li><b>Next</b>, Tartan writes the face's layout file (positions, which image is which hand) and installs it with one tap from Settings, with a check before anything is sent.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+var SCREEN=466;var C=SCREEN/2;var PALETTE={red:"#e0452b",finish:"#ff6a4d",deep:"#7d2615",muted:"#b83a24"};var SECONDS=[["Finish","#ff6a4d"],["Tartan","#e0452b"],["Cream","#fdf3ee"],["Infield","#8fe3b4"],["Lane blue","#a3c6ff"],["Amber","#ffbe3d"],["White","#ffffff"]];var T_BOX={x:92,y:150,w:698,h:595};var T_PATHS=["M167,150H720A70,70 0 0 1 790,220V298A70,70 0 0 1 720,368H615A197.7,197.7 0 0 0 425,225H92A75,75 0 0 1 167,150Z","M92,247H425A167,167 0 0 1 592,414V665A77,80 0 0 1 515,745V428A145,145 0 0 0 370,283H92Z","M92,303H370A119,119 0 0 1 489,422V745H373V425A53,55 0 0 0 320,370H165A73,67 0 0 1 92,303Z"];var f=(n)=>Number(n.toFixed(2));var polar=(r,deg)=>[f(C+r*Math.sin(deg*Math.PI/180)),f(C-r*Math.cos(deg*Math.PI/180))];function logo(cx,top,width,fill){const k=width/T_BOX.w;return`<g transform="translate(${f(cx-width/2)} ${f(top)}) scale(${f(k)}) translate(${-T_BOX.x} ${-T_BOX.y})" fill="${fill}">${T_PATHS.map((d)=>`<path d="${d}"/>`).join("")}</g>`}function dial(width=SCREEN){const dx=(width-SCREEN)/2;const R_OUT=224;const R_IN=200;const parts=[];for(let i=0;i<=3;i++)parts.push(`<circle cx="${C}" cy="${C}" r="${R_IN+i*8}" fill="none" stroke="${PALETTE.deep}" stroke-width="${i===0||i===3?2:1.4}"/>`);const fw=6;parts.push(`<rect x="${C-fw/2}" y="${C-R_OUT}" width="${fw}" height="${R_OUT-R_IN}" fill="${PALETTE.finish}"/>`);for(let i=0;i<4;i++)parts.push(`<rect x="${C+fw/2}" y="${f(C-R_OUT+i*(R_OUT-R_IN)/4)}" width="3" height="${f((R_OUT-R_IN)/8)}" fill="${PALETTE.finish}"/>`);for(let m=0;m<60;m++){const deg=m*6;const five=m%5===0;const[x1,y1]=polar(five?166:182,deg);const[x2,y2]=polar(190,deg);const colour=m===0?PALETTE.finish:five?PALETTE.red:PALETTE.deep;parts.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${colour}" stroke-width="${five?m===0?7:5:2}" stroke-linecap="round"/>`)}parts.push(logo(C,112,54,PALETTE.red));return`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${SCREEN}" viewBox="${-dx} 0 ${width} ${SCREEN}"><rect x="${-dx}" width="${width}" height="${SCREEN}" fill="#000"/>${parts.join("")}</svg>`}function handSvg(w,body){return`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${SCREEN}" viewBox="${-w/2} ${-C} ${w} ${SCREEN}">${body}</svg>`}var hourHand=()=>handSvg(64,`<path d="M-7,18 L-7,-104 Q-7,-118 0,-122 Q7,-118 7,-104 L7,18 Q7,24 0,24 Q-7,24 -7,18Z" fill="${PALETTE.red}"/>`);var minuteHand=()=>handSvg(64,`<path d="M-5,20 L-5,-170 Q-5,-180 0,-183 Q5,-180 5,-170 L5,20 Q5,26 0,26 Q-5,26 -5,20Z" fill="${PALETTE.red}"/>`);var secondHand=(colour=PALETTE.finish)=>handSvg(16,`<rect x="-1.6" y="-196" width="3.2" height="236" rx="1.6" fill="${colour}"/><circle cx="0" cy="34" r="6" fill="none" stroke="${colour}" stroke-width="3"/>`);var pin=(colour=PALETTE.red)=>`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="70" viewBox="-32 -35 64 70"><circle r="11" fill="${colour}"/><circle r="4" fill="#000"/></svg>`;var inner=(svg)=>svg.replace(/^<svg[^>]*>/,"").replace(/<\/svg>$/,"");function face(o){const size=o.size??SCREEN;const h=(o.hours%12+o.minutes/60)*30;const m=(o.minutes+o.seconds/60)*6;const s=o.seconds*6;const sc=o.secondsColour??PALETTE.finish;const date=o.date??"";const hand=(svg,deg)=>`<g transform="translate(${C} ${C}) rotate(${f(deg)})">${inner(svg)}</g>`;return`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${SCREEN} ${SCREEN}">
+<defs><clipPath id="tt-screen"><circle cx="${C}" cy="${C}" r="${C}"/></clipPath></defs>
+<g clip-path="url(#tt-screen)">
+${inner(dial())}
+${date?`<text x="${C+112}" y="${C+8}" text-anchor="middle" font-family="'Barlow Condensed', 'Arial Narrow', sans-serif" font-weight="600" font-size="24" letter-spacing="1.5" fill="${PALETTE.muted}">${date}</text>`:""}
+${o.battery!==undefined?`<g transform="translate(${C} ${C+118})"><rect x="-19" y="-9" width="34" height="18" rx="4" fill="none" stroke="${PALETTE.deep}" stroke-width="2"/><rect x="16" y="-4" width="3" height="8" rx="1" fill="${PALETTE.deep}"/><rect x="-16" y="-6" width="${f(28*Math.max(0,Math.min(1,o.battery/100)))}" height="12" rx="2" fill="${PALETTE.muted}"/></g>`:""}
+${hand(hourHand(),h)}
+${hand(minuteHand(),m)}
+${o.showSeconds===false?"":hand(secondHand(sc),s)}
+<g transform="translate(${C} ${C})">${inner(pin())}</g>
+</g></svg>`}function layers(secondsColour=PALETTE.finish){const out={"tt_bg.png":{svg:dial(480),width:480,height:SCREEN},"tt_hour.png":{svg:hourHand(),width:64,height:SCREEN},"tt_minute.png":{svg:minuteHand(),width:64,height:SCREEN},"tt_pin.png":{svg:pin(),width:64,height:70},"tt_preview.png":{svg:face({hours:10,minutes:9,seconds:36,secondsColour,date:"FRI 16",battery:84,size:352}),width:352,height:352}};for(const[name,colour]of SECONDS)out[`tt_second_${name.toLowerCase().replace(/\s+/g,"")}.png`]={svg:secondHand(colour),width:16,height:SCREEN};return out}
+(() => {
+  const screen = document.getElementById("screen");
+  const swatches = document.getElementById("swatches");
+  const nameEl = document.getElementById("colour-name");
+  let colour = SECONDS[0][1];
+  let live = true;
+  try { const c = localStorage.getItem("tt.colour"); if (c && SECONDS.some(([, v]) => v === c)) colour = c; } catch {}
+  const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const draw = () => {
+    const now = new Date();
+    const t = live ? { hours: now.getHours(), minutes: now.getMinutes(), seconds: now.getSeconds() + (matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : now.getMilliseconds() / 1000) } : { hours: 10, minutes: 9, seconds: 36 };
+    screen.innerHTML = face({ ...t, secondsColour: colour, date: `${days[now.getDay()]} ${now.getDate()}`, battery: 84 });
+  };
+  for (const [name, value] of SECONDS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "swatch"; b.setAttribute("role", "radio"); b.setAttribute("aria-label", name);
+    b.style.setProperty("--c", value);
+    b.setAttribute("aria-checked", String(value === colour));
+    b.onclick = () => {
+      colour = value;
+      try { localStorage.setItem("tt.colour", value); } catch {}
+      swatches.querySelectorAll(".swatch").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+      nameEl.textContent = name;
+      draw();
+    };
+    swatches.append(b);
+  }
+  nameEl.textContent = SECONDS.find(([, v]) => v === colour)[0];
+  const setLive = (on) => {
+    live = on;
+    document.getElementById("t-live").setAttribute("aria-checked", String(on));
+    document.getElementById("t-1009").setAttribute("aria-checked", String(!on));
+    draw();
+  };
+  document.getElementById("t-live").onclick = () => setLive(true);
+  document.getElementById("t-1009").onclick = () => setLive(false);
+  const tick = () => { if (live) draw(); requestAnimationFrame(tick); };
+  draw();
+  requestAnimationFrame(tick);
+
+  // The package's images.
+  const parts = document.getElementById("parts");
+  const labels = { "tt_bg.png": "Background", "tt_hour.png": "Hour hand", "tt_minute.png": "Minute hand", "tt_pin.png": "Centre cap", "tt_preview.png": "Preview" };
+  const all = Object.entries(layers(SECONDS[0][1]));
+  for (const [file, l] of all.filter(([f]) => labels[f])) {
+    const card = document.createElement("div");
+    card.className = "part";
+    card.innerHTML = `<div class="img">${l.svg}</div><b>${labels[file]}</b><span>${file} · ${l.width} × ${l.height}</span>`;
+    parts.append(card);
+  }
+  // The seven seconds hands, side by side.
+  const secs = all.filter(([f]) => f.startsWith("tt_second_"));
+  const card = document.createElement("div");
+  card.className = "part wide";
+  card.innerHTML = `<div class="img"><div class="row">${secs.map(([, l]) => l.svg).join("")}</div></div><b>Seconds hands, one per colour</b><span>tt_second_&lt;colour&gt;.png · 16 × 466 · ${SECONDS.map(([n]) => n).join(", ")}</span>`;
+  parts.append(card);
+})();
+</script>

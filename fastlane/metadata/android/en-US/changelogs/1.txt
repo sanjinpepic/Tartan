@@ -1,0 +1,7 @@
+First public release.
+- Workouts from Health Connect, intervals.icu, Strava, a Suunto watch over Bluetooth, or .fit/.gpx/.tcx files.
+- Readiness, today's session, progress, strength logging and run recording.
+- Plans by Tartan's own rules, or a coach on your own Gemini or Claude key, or on the phone.
+- Live Updates: your run, a watch backup and the coach's answer in the status bar and on the lock screen.
+- Morning notification, Sunday review, home-screen widget, share cards.
+- Try it with sample data before connecting anything.

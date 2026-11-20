@@ -1,0 +1,173 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+
+def pkg = new groovy.json.JsonSlurper().parse(rootProject.file("../package.json"))
+
+android {
+    namespace = "dev.freesuunto.app"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "dev.freesuunto.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        // The version is package.json's, one number for the web app and the APK (bumped with every
+        // build sent out). The code counts minutes since 2026, so any newer build installs over
+        // any older one, whichever branch it came from.
+        versionCode = (int) ((System.currentTimeMillis() / 60000L) - 29453760L)
+        versionName = pkg.version
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        // Phones only (Model Hub, the on-phone coach, is arm64 already): keeps MapLibre's native map small.
+        ndk { abiFilters 'arm64-v8a' }
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    // The owner's build is signed with one fixed debug key from the owner's private add-on
+    // (scripts/owner-overlay.sh), so each build installs over the last one. Without it (anyone
+    // else's checkout) Android's own debug key signs it.
+    signingConfigs {
+        debug {
+            if (file('debug.keystore').exists()) {
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }
+        // The release key: never in the repo. From android/keystore.properties on a computer
+        // (storeFile, storePassword, keyAlias, keyPassword), or the TARTAN_* variables in CI.
+        release {
+            def p = new Properties()
+            def f = rootProject.file("keystore.properties")
+            if (f.exists()) f.withInputStream { p.load(it) }
+            def store = p.getProperty("storeFile") ?: System.getenv("TARTAN_KEYSTORE")
+            if (store) {
+                storeFile file(store)
+                storePassword p.getProperty("storePassword") ?: System.getenv("TARTAN_KEYSTORE_PASSWORD")
+                keyAlias p.getProperty("keyAlias") ?: System.getenv("TARTAN_KEY_ALIAS") ?: "tartan"
+                keyPassword p.getProperty("keyPassword") ?: System.getenv("TARTAN_KEY_PASSWORD")
+            }
+        }
+    }
+    // Two builds from the same code (no flavour has source of its own since Gemini Nano went in
+    // 2.56). owner: the one you've been installing (its id, the debug key's updates). foss: the
+    // public one for Orion Store and F-Droid (its own id, the release key, a version code that
+    // only goes up with package.json's "versionCode").
+    flavorDimensions = ["build"]
+    productFlavors {
+        owner {
+            dimension "build"
+        }
+        foss {
+            dimension "build"
+            applicationId "app.tartan"
+            versionCode = (int) pkg.versionCode
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            // R8 shrinks the public build (foss): unused code and resources go. The owner's release
+            // variant isn't shrunk (see androidComponents below); its debug build never is.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (signingConfigs.release.storeFile) signingConfig signingConfigs.release
+        }
+    }
+    buildFeatures {
+        compose = true
+        // Model Hub's API (dev.modelhub.api: IModelHub.aidl, IModelHubCallback.aidl, copied as they are).
+        aidl = true
+    }
+    testOptions {
+        // Robolectric renders the native screens to PNGs on the JVM (TartanShotsTest).
+        unitTests.includeAndroidResources = true
+        unitTests.all {
+            systemProperty "shots", System.getProperty("shots") ?: "build/shots"
+            // Where Robolectric fetches Android from (Maven Central unless ROBOLECTRIC_REPO says a mirror).
+            systemProperty "robolectric.dependency.repo.url", System.getenv("ROBOLECTRIC_REPO") ?: "https://repo1.maven.org/maven2"
+        }
+    }
+}
+
+// Shrinking for the public build only: the owner's release variant stays as it was.
+androidComponents {
+    beforeVariants(selector().withName("ownerRelease")) { v ->
+        v.minifyEnabled = false
+        v.shrinkResources = false
+    }
+}
+
+// Native libraries compressed in the APK and unpacked on install: a smaller download.
+android.packaging.jniLibs.useLegacyPackaging = true
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    // Health Connect: workouts and the watch's health data in, sleep and HRV out (TartanHealthPlugin).
+    implementation "androidx.health.connect:connect-client:1.1.0"
+    implementation "androidx.activity:activity-ktx:$androidxActivityVersion"
+    // The coach on Model Hub (TartanModelHubPlugin, and Model Hub's client library in dev.modelhub.*).
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
+    // Tartan 2: the native screens and the floating bar, Material 3 Expressive in Compose.
+    // Compose 1.11 and Material3 1.5.0-alpha18: the newest that build with Android Gradle plugin 8
+    // (Compose 1.12 and alpha19 on need AGP 9.1, which Capacitor's build isn't ready for).
+    def compose = "1.11.4"
+    implementation "androidx.compose.material3:material3:1.5.0-alpha18"
+    implementation "androidx.compose.ui:ui:$compose"
+    implementation "androidx.compose.ui:ui-graphics:$compose"
+    implementation "androidx.compose.foundation:foundation:$compose"
+    implementation "androidx.compose.animation:animation:$compose"
+    implementation "androidx.activity:activity-compose:$androidxActivityVersion"
+    // The street map under a workout's route (and the route editor): OpenFreeMap's tiles, as the web draws them.
+    implementation "org.maplibre.gl:android-sdk:13.6.1"
+    // The PC's pairing QR code, read on the phone: CameraX for the camera, ZXing (Apache-2.0) to decode.
+    implementation "androidx.camera:camera-camera2:1.4.2"
+    implementation "androidx.camera:camera-lifecycle:1.4.2"
+    implementation "androidx.camera:camera-view:1.4.2"
+    implementation "com.google.zxing:core:3.5.3"
+    // CameraX hands back a ListenableFuture (ML Kit brought it along before; the public build needs it named).
+    implementation "com.google.guava:guava:31.1-android"
+    debugImplementation "androidx.compose.ui:ui-tooling:$compose"
+    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose"
+    testImplementation "junit:junit:$junitVersion"
+    testImplementation "org.robolectric:robolectric:4.16.1"
+    testImplementation "androidx.compose.ui:ui-test-junit4:$compose"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

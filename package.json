@@ -1,0 +1,68 @@
+{
+  "name": "tartan",
+  "version": "0.4.68",
+  "versionCode": 13,
+  "private": true,
+  "description": "Tartan: a running coach for your watch. Plans around your life, on your watch, with built-in rules, an AI on your phone or your own key.",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "bin": {
+    "tartan": "./src/cli.ts"
+  },
+  "scripts": {
+    "serve": "bun run src/server.ts",
+    "dev": "bun --hot run src/server.ts",
+    "cli": "bun run src/cli.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "build:web": "rm -rf dist && bun build web/index.html --outdir dist --minify --splitting --define PUBLIC_BUILD=false --define BUILD_ID=\\\"$(date -u +%Y%m%d-%H%M)\\\" && mkdir -p dist/maplibre && cp node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs node_modules/maplibre-gl/dist/maplibre-gl-shared.mjs node_modules/maplibre-gl/dist/maplibre-gl.css dist/maplibre/",
+    "build:engine": "rm -rf dist && bun build web/engine.html --outdir dist --minify --splitting --define PUBLIC_BUILD=false --define BUILD_ID=\\\"$(date -u +%Y%m%d-%H%M)\\\" && mv dist/engine.html dist/index.html",
+    "build:engine:public": "rm -rf dist && bun build web/engine.html --outdir dist --minify --splitting --define PUBLIC_BUILD=true --define BUILD_ID=\\\"$(date -u +%Y%m%d-%H%M)\\\" && mv dist/engine.html dist/index.html",
+    "android:sync": "bun run build:engine && cap sync android",
+    "android:sync:public": "bun run build:engine:public && cap sync android",
+    "android:open": "cap open android",
+    "android:build": "bun run android:sync && cd android && ./gradlew assembleOwnerDebug",
+    "android:build:public": "bun run build:engine:public && cap sync android && cd android && ./gradlew assembleFossRelease",
+    "build:web:public": "rm -rf dist && bun build web/index.html --outdir dist --minify --splitting --define PUBLIC_BUILD=true --define BUILD_ID=\\\"$(date -u +%Y%m%d-%H%M)\\\" && mkdir -p dist/maplibre && cp node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs node_modules/maplibre-gl/dist/maplibre-gl-shared.mjs node_modules/maplibre-gl/dist/maplibre-gl.css dist/maplibre/",
+    "check:public": "bun scripts/check-public.ts",
+    "contract:doc": "bun scripts/contract-doc.ts",
+    "ios:sync": "bun run build:web && cap sync ios",
+    "ios:build": "./scripts/ios-build.sh"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
+    "@capacitor-community/background-geolocation": "1.2.26",
+    "@capacitor-community/bluetooth-le": "^8.3.0",
+    "@capacitor-community/text-to-speech": "8.0.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/haptics": "^8.0.0",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "^8.0.3",
+    "@ebarooni/capacitor-calendar": "8.7.1",
+    "@google/genai": "^2.30.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "dbus-next": "^0.10.2",
+    "jsqr": "1.4.0",
+    "maplibre-gl": "6.11.2",
+    "qrcode-generator": "1.4.4",
+    "three": "0.186.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "@types/bun": "^1.2.0",
+    "@types/three": "^0.186.0",
+    "@types/web-bluetooth": "^0.0.21",
+    "playwright-core": "1.64.0",
+    "typescript": "^5.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sanjinpepic/Tartan.git"
+  }
+}

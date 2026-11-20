@@ -1,0 +1,27 @@
+name: iPhone app
+
+# The iPhone app, unsigned, for SideStore/AltStore (docs/ios.md): on each push that changes the
+# app (free on a public repository), or by hand. The .ipa is the run's artifact.
+on:
+  push:
+    branches: [main]
+    paths: ["ios/**", "web/**", "src/**", "package.json", "bun.lock", "scripts/ios-build.sh", ".github/workflows/ios.yml"]
+  workflow_dispatch:
+
+jobs:
+  ipa:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+      - run: ./scripts/ios-build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tartan-ipa
+          path: build/*.ipa

@@ -1,0 +1,1 @@
+- Polish: session lines don't repeat themselves, ranges read 103–119, the readiness scale reads as a scale, extra workouts show a tick, only measured vitals show, the PC has its own icon, and Lift shows a mark while exercise figures load.

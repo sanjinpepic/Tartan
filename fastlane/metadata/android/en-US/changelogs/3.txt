@@ -1,0 +1,3 @@
+- Health Connect's settings are shorter. Where the plan goes (Suunto, Garmin through intervals.icu, Health Connect, .fit files) is chosen in one place: Settings → Sources → Plan on your watch.
+- The app's words are ready for translation.
+- Smaller fixes before translations and a wider release.

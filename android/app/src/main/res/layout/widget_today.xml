@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Today on the home screen, in the wallpaper's colours. Left: how you are (a pill) and the date,
+     today's session big, what it is, when things last synced. Right: the week as on Today, the
+     wavy ring with its kilometres in the app's numerals and a bar a day (a picture TodayWidget
+     draws). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:paddingStart="18dp"
+    android:paddingEnd="14dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="14dp"
+    android:background="@drawable/widget_bg">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/w_ready"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/widget_pill_accent"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:textColor="@color/widget_on_accent_container"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/w_when"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/common_today"
+                android:textColor="@color/widget_muted"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/w_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:maxLines="1"
+            android:textColor="@color/widget_muted"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/w_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:text="Tartan"
+            android:textColor="@color/widget_on_surface"
+            android:textSize="24sp" />
+
+        <!-- A run being recorded: its moving time, ticking by itself (the system's clock). -->
+        <Chronometer
+            android:id="@+id/w_clock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/barlow_condensed_600"
+            android:maxLines="1"
+            android:textColor="@color/widget_on_surface"
+            android:textSize="36sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/w_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="@color/widget_on_surface"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:id="@+id/w_foot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/w_week"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textColor="@color/widget_on_surface"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/w_lanes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textColor="@color/widget_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/w_week_img"
+        android:layout_width="112dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="10dp"
+        android:contentDescription="@string/common_this_week"
+        android:scaleType="fitCenter" />
+</LinearLayout>

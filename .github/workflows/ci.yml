@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    # Docs, store images and released APKs test nothing.
+    paths-ignore: ["**.md", "brand/**", "docs/**", "apk/**", "screenshots/**", "icon.png", "fastlane/**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: sudo apt-get install -y --no-install-recommends dbus
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run check:public
+
+  # The APK takes a while: built by hand (Actions → CI → Run workflow).
+  android:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: bun install --frozen-lockfile
+      - run: bun run android:sync
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleOwnerDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tartan-debug-apk
+          path: android/app/build/outputs/apk/owner/debug/app-owner-debug.apk
+          if-no-files-found: error
