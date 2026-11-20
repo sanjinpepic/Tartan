@@ -11,7 +11,7 @@ struct TartanWidgets: WidgetBundle {
     }
 }
 
-private let tint = Color(red: 0.886, green: 0.353, blue: 0.263)
+private let runTint = Color(red: 0.886, green: 0.353, blue: 0.263)
 
 struct RunLiveActivity: Widget {
     var body: some WidgetConfiguration {
@@ -36,7 +36,7 @@ struct RunLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.bottom) {
                     HStack {
                         Label(ctx.state.status == "paused" ? "Paused" : ctx.attributes.title, systemImage: ctx.state.status == "paused" ? "pause.fill" : "figure.run")
-                            .foregroundStyle(ctx.state.status == "paused" ? .orange : tint)
+                            .foregroundStyle(ctx.state.status == "paused" ? .orange : runTint)
                         Spacer()
                         if let step = ctx.state.step { Text(step).lineLimit(1) }
                         else if let p = ctx.state.paceS { Text("\(p / 60):\(String(format: "%02d", p % 60)) /km").monospacedDigit() }
@@ -45,11 +45,11 @@ struct RunLiveActivity: Widget {
                     .font(.subheadline.weight(.medium))
                 }
             } compactLeading: {
-                Image(systemName: ctx.state.status == "paused" ? "pause.fill" : "figure.run").foregroundStyle(tint)
+                Image(systemName: ctx.state.status == "paused" ? "pause.fill" : "figure.run").foregroundStyle(runTint)
             } compactTrailing: {
-                Text(String(format: "%.1f", ctx.state.distanceKm)).monospacedDigit().foregroundStyle(tint)
+                Text(String(format: "%.1f", ctx.state.distanceKm)).monospacedDigit().foregroundStyle(runTint)
             } minimal: {
-                Image(systemName: "figure.run").foregroundStyle(tint)
+                Image(systemName: "figure.run").foregroundStyle(runTint)
             }
         }
     }
@@ -77,7 +77,7 @@ struct LockScreenRun: View {
             HStack {
                 Label(s.status == "paused" ? "Paused" : title, systemImage: s.status == "paused" ? "pause.fill" : "figure.run")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(s.status == "paused" ? .orange : tint)
+                    .foregroundStyle(s.status == "paused" ? .orange : runTint)
                 Spacer()
                 Text("Tartan").font(.caption.weight(.semibold)).foregroundStyle(.white.opacity(0.6))
             }
@@ -95,7 +95,7 @@ struct LockScreenRun: View {
             }
             .font(.subheadline.weight(.medium))
             if let g = goalKm, g > 0 {
-                ProgressView(value: min(1, s.distanceKm / g)).tint(tint)
+                ProgressView(value: min(1, s.distanceKm / g)).runTint(runTint)
             }
         }
         .foregroundStyle(.white)
