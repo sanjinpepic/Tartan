@@ -1,0 +1,1 @@
+- Behind the scenes: every iPhone Settings page is native, and iPhone backups load in Settings. Nothing changes on Android.
