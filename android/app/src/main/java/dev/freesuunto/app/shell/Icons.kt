@@ -16,7 +16,8 @@ object Glyphs {
     private val cache = HashMap<String, ImageVector>()
 
     private val PATHS = mapOf(
-        "today" to "M4 7.5h16M4 12h11M4 16.5h7M18.5 13v8",
+        "today" to "M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z",
+        "record" to "M12 20.5a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM12 12h.01",
         "list" to "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",
         "trends" to "M4 19V9M10 19V5M16 19v-7M21 19H3",
         "coach" to "M4.5 5.5h15v10h-9l-4.5 4v-4h-1.5z M9 10.5h.01M12 10.5h.01M15 10.5h.01",

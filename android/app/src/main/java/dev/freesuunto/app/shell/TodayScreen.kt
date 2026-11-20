@@ -217,7 +217,7 @@ private fun Title(date: LocalDate, actions: TodayActions) {
     val view = LocalView.current
     PageHeader(stringResource(R.string.common_today), Modifier.padding(bottom = 4.dp), subtitle = date.format(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.getDefault()))) {
         FilledTonalButton(onClick = { actions.go("record") }, shapes = ButtonDefaults.shapes()) {
-            Icon(Glyphs["play"], contentDescription = null, Modifier.size(18.dp))
+            Icon(Glyphs["record"], contentDescription = null, Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.common_record))
         }

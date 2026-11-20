@@ -49,7 +49,7 @@ function pairHint(): HTMLElement | null {
 }
 
 export async function renderToday(root: HTMLElement): Promise<void> {
-  const record = el("a", { class: "btn tonal", href: "#record" }, icon("play"), "Record");
+  const record = el("a", { class: "btn tonal", href: "#record" }, icon("record"), "Record");
   root.replaceChildren(largeTitle("Today", dateLong(new Date()), record));
   const body = el("div", { class: "today-body" }, el("div", { class: "skeleton-card" }), el("div", { class: "skeleton-card" }));
   root.append(body);

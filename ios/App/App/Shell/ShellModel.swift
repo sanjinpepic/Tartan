@@ -30,9 +30,9 @@ struct Tab: Identifiable, Equatable {
 
     static let all = [
         Tab(id: "today", label: "Today", icon: "sun.max"),
-        Tab(id: "coach", label: "Coach", icon: "figure.run"),
+        Tab(id: "coach", label: "Coach", icon: "ellipsis.bubble"),
         Tab(id: "activities", label: "Activities", icon: "list.bullet"),
-        Tab(id: "trends", label: "Progress", icon: "chart.line.uptrend.xyaxis"),
+        Tab(id: "trends", label: "Progress", icon: "chart.bar"),
     ]
 
     /// The tab a view belongs to (as the web's own nav and Android's FloatingBar.kt count it).

@@ -9,6 +9,24 @@ hands all of it to LLM agents over MCP. It works with Strava alone, with a watch
 *Tartan was called FreeSuunto until October 2026. The Android app updates in place and keeps its
 data; agents need the new MCP server name `tartan` (see below).*
 
+## Screenshots
+
+Android on top, iPhone below: the same screens, each in its own phone's style. More, in light
+and dark, in [`screenshots/android/`](screenshots/android/) and [`screenshots/ios/`](screenshots/ios/).
+
+<p>
+<img src="screenshots/android/light-1-today.png" width="180" alt="Today on Android">
+<img src="screenshots/android/light-3-coach.png" width="180" alt="Coach on Android">
+<img src="screenshots/android/light-3b-chat.png" width="180" alt="Ask your coach on Android">
+<img src="screenshots/android/light-7-body.png" width="180" alt="Body on Android">
+</p>
+<p>
+<img src="screenshots/ios/light-1-today.png" width="180" alt="Today on iPhone">
+<img src="screenshots/ios/light-3-coach.png" width="180" alt="Coach on iPhone">
+<img src="screenshots/ios/light-3b-chat.png" width="180" alt="Ask your coach on iPhone">
+<img src="screenshots/ios/light-7-body.png" width="180" alt="Body on iPhone">
+</p>
+
 ## Install (Android)
 
 Get the APK from [the latest release](https://github.com/sanjinpepic/Tartan/releases/latest),
