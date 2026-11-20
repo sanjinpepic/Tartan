@@ -32,7 +32,7 @@ struct TodayScreen: View {
                     shell.scrolled(by: new - old, at: new)
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    Color.clear.frame(height: shell.navOn ? 76 : 0)
+                    BarSpace(on: shell.navOn)
                 }
                 .onChange(of: shell.toTop) {
                     withAnimation(.smooth) { proxy.scrollTo("top", anchor: .top) }

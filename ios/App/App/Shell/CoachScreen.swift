@@ -75,8 +75,17 @@ struct CoachScreen: View {
                 }
             }
             .padding(.horizontal, 16)
+            .padding(.top, 12)
             .padding(.bottom, shell.navOn ? (shell.navFolded ? 56 : 72) : 8)
+            .background {
+                LinearGradient(stops: [.init(color: Brand.ground.opacity(0), location: 0), .init(color: Brand.ground.opacity(0.92), location: 0.3), .init(color: Brand.ground, location: 1)],
+                               startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea(edges: .bottom)
+                    .allowsHitTesting(false)
+            }
             .animation(.spring(response: 0.38, dampingFraction: 0.82), value: shell.navFolded)
+        } else {
+            BarSpace(on: shell.navOn)
         }
     }
 

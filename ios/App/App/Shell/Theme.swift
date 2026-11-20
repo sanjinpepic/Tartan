@@ -105,3 +105,24 @@ struct Flow: Layout {
         }
     }
 }
+
+/// The room a native screen leaves for the floating tab bar: the page's own colour fading in
+/// beneath it (through the home indicator), so nothing reads through between the bar's glass
+/// shapes. Content scrolls under it and ends above it.
+struct BarSpace: View {
+    let on: Bool
+    var extra: CGFloat = 0
+
+    var body: some View {
+        Color.clear
+            .frame(height: (on ? 76 : 0) + extra)
+            .background {
+                if on {
+                    LinearGradient(stops: [.init(color: Brand.ground.opacity(0), location: 0), .init(color: Brand.ground.opacity(0.92), location: 0.45), .init(color: Brand.ground, location: 1)],
+                                   startPoint: .top, endPoint: .bottom)
+                        .ignoresSafeArea(edges: .bottom)
+                        .allowsHitTesting(false)
+                }
+            }
+    }
+}

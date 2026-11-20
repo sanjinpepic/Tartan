@@ -166,7 +166,7 @@ struct ActivitiesScreen: View {
             .searchable(text: Binding(get: { m.query }, set: { m.query = $0 }), placement: .navigationBarDrawer(displayMode: .always), prompt: "Search workouts")
             .refreshable { m.stale = true; await m.fetch() }
             .onScrollGeometryChange(for: CGFloat.self) { g in g.contentOffset.y + g.contentInsets.top } action: { old, new in shell.scrolled(by: new - old, at: new) }
-            .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: shell.navOn ? 76 : 0) }
+            .safeAreaInset(edge: .bottom, spacing: 0) { BarSpace(on: shell.navOn) }
             .navigationTitle("Activities")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { SyncChip(lanes: shell.board) { shell.openBoard() } }
