@@ -99,7 +99,7 @@ export async function renderSettings(root: HTMLElement): Promise<void> {
     b.onclick = () => {
       if (group === g.id) return;
       // Tartan 2: the group is in the address, so the native Settings can take the groups it draws.
-      if (shellParts().settings) {
+      if (shellParts().settings && !location.hash.endsWith("/all")) {
         location.hash = `settings/${g.id}`;
         return;
       }
@@ -624,6 +624,7 @@ function tartan2Card(): HTMLElement | undefined {
       switchRow("Native Activities", "Your workouts drawn by iOS, by week, searchable. Routes stay as they are.", p.activities, (on) => setShellParts({ activities: on })),
       switchRow("Native Progress", "The long view drawn by iOS: charts you can slide across, your bests, the week.", p.progress, (on) => setShellParts({ progress: on })),
       switchRow("Native chat", "Talking to your coach, drawn by iOS: its answer as it comes, routes, photos.", p.chat, (on) => setShellParts({ chat: on })),
+      switchRow("Native Settings", "Settings drawn by iOS; what isn't native yet opens this page's group.", p.settings, (on) => setShellParts({ settings: on })),
     );
   return el(
     "section",

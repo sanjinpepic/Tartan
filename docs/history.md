@@ -1260,3 +1260,14 @@ The owner's go-ahead on three points from the 2.65 review:
   covers the page.
 - The demo's sample data is written by the full web app too (the iPhone, the PC), not only by the
   phone's engine bundle: on the iPhone the demo had no workouts.
+
+## Native iPhone screens, phase 3 (20 Nov 2026, after 2.70)
+
+- **Nothing reads through the tab bar any more**: every native screen leaves its room for the bar
+  with a fade of its own background (Today's words showed between the bar and the Record circle).
+- **The chat, native**: the answer streams through the bridge (steps as chips, words as they come,
+  route cards, plan changes), Ask again, Copy and Report (a GitHub issue you check first), a photo;
+  the box rides the keyboard. The page's chat action prefers the native chat.
+- **Settings, native**: the five groups, with the everyday settings native and a row to the page's
+  whole group (`#settings/<group>/all`) for the rest.
+- Screenshots add the chat (a made-up conversation, `-TartanChatSample`) and Settings.

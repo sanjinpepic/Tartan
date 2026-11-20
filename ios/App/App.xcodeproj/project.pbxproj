@@ -37,6 +37,8 @@
 		B87F79C373EB1D0B1D2C8DBD /* ProgressScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88BBCBA2B2B7906431CD95D /* ProgressScreen.swift */; };
 		19CBED7FD1F5964154BE680E /* ChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3B881C88556686F9A1EB0F /* ChatModel.swift */; };
 		268F8BC2EEED51DFEBA99393 /* ChatScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA386988D30A88B18C6E4992 /* ChatScreen.swift */; };
+		58E5C0243C76229ADC8A72CA /* SettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA3A620BFF2DB52ED1FDA99D /* SettingsModel.swift */; };
+		7A726A51CBA21F69CC3DED02 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73D3897DBF6E2A96E499ECB5 /* SettingsScreen.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,6 +74,8 @@
 		F88BBCBA2B2B7906431CD95D /* ProgressScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressScreen.swift; sourceTree = "<group>"; };
 		9B3B881C88556686F9A1EB0F /* ChatModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModel.swift; sourceTree = "<group>"; };
 		AA386988D30A88B18C6E4992 /* ChatScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScreen.swift; sourceTree = "<group>"; };
+		DA3A620BFF2DB52ED1FDA99D /* SettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModel.swift; sourceTree = "<group>"; };
+		73D3897DBF6E2A96E499ECB5 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +148,8 @@
 				F88BBCBA2B2B7906431CD95D /* ProgressScreen.swift */,
 				9B3B881C88556686F9A1EB0F /* ChatModel.swift */,
 				AA386988D30A88B18C6E4992 /* ChatScreen.swift */,
+				DA3A620BFF2DB52ED1FDA99D /* SettingsModel.swift */,
+				73D3897DBF6E2A96E499ECB5 /* SettingsScreen.swift */,
 			);
 			path = Shell;
 			sourceTree = "<group>";
@@ -231,6 +237,8 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				7A726A51CBA21F69CC3DED02 /* SettingsScreen.swift in Sources */,
+				58E5C0243C76229ADC8A72CA /* SettingsModel.swift in Sources */,
 				268F8BC2EEED51DFEBA99393 /* ChatScreen.swift in Sources */,
 				19CBED7FD1F5964154BE680E /* ChatModel.swift in Sources */,
 				B87F79C373EB1D0B1D2C8DBD /* ProgressScreen.swift in Sources */,

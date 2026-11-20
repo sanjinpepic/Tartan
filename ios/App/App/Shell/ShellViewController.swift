@@ -131,6 +131,9 @@ struct ShellScreens: View {
             } else if model.shown == "chat" {
                 ChatScreen(shell: model, chat: model.chat)
                     .transition(.opacity)
+            } else if model.shown == "settings" {
+                SettingsScreen(shell: model, m: model.settings)
+                    .transition(.opacity)
             }
         }
         .animation(.smooth(duration: 0.25), value: model.shown)

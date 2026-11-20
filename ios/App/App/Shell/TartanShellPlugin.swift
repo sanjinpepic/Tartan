@@ -8,7 +8,7 @@ import Capacitor
 enum NativeParts {
     static let names = ["nav", "today", "coach", "chat", "activities", "progress", "settings", "workout", "body", "routes", "record"]
     /** The parts iOS has natively so far. */
-    static let built: Set<String> = ["nav", "today", "workout", "coach", "activities", "progress", "chat"]
+    static let built: Set<String> = ["nav", "today", "workout", "coach", "activities", "progress", "chat", "settings"]
 
     /** Switched on (Settings → More → Native screens), whether or not it shows now. */
     static func wanted(_ name: String) -> Bool {

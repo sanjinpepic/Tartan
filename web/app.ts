@@ -74,8 +74,11 @@ nav.append(
 
 
 let current: View | null = null;
-/** Native Settings draws every group (#sync, back from Strava's sign-in, is Sources). */
-const nativeSettings = () => true;
+/**
+ * Native Settings draws every group (#sync, back from Strava's sign-in, is Sources), except
+ * #settings/<group>/all: the page's whole group, for what the iPhone doesn't draw natively yet.
+ */
+const nativeSettings = () => !/^#settings\/[a-z]+\/all/.test(location.hash);
 const TAB_ORDER = ["today", "coach", "activities", "trends"];
 /** Where a view sits in the bar (screens opened from a tab count as that tab). */
 const tabIndex = (v: View | null) => (v === null ? -1 : TAB_ORDER.indexOf(v === "chat" ? "coach" : v === "route" || v === "routes" ? "activities" : v === "lift" || v === "you" ? "today" : v));

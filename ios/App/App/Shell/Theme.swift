@@ -115,10 +115,10 @@ struct BarSpace: View {
 
     var body: some View {
         Color.clear
-            .frame(height: (on ? 76 : 0) + extra)
+            .frame(height: (on ? 84 : 0) + extra)
             .background {
                 if on {
-                    LinearGradient(stops: [.init(color: Brand.ground.opacity(0), location: 0), .init(color: Brand.ground.opacity(0.92), location: 0.45), .init(color: Brand.ground, location: 1)],
+                    LinearGradient(stops: [.init(color: Brand.ground.opacity(0), location: 0), .init(color: Brand.ground.opacity(0.96), location: 0.22), .init(color: Brand.ground, location: 0.34)],
                                    startPoint: .top, endPoint: .bottom)
                         .ignoresSafeArea(edges: .bottom)
                         .allowsHitTesting(false)
