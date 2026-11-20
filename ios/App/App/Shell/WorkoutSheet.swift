@@ -30,7 +30,6 @@ struct WorkoutSheetView: View {
                 .padding(.bottom, 32)
             }
             .background(Brand.ground)
-            .navigationTitle(m.workout.map { $0.name ?? $0.sport } ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -56,7 +55,7 @@ private struct WorkoutContent: View {
                 .background(Brand.container, in: Circle())
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(w.name ?? w.sport).font(.title2.weight(.bold)).accessibilityAddTraits(.isHeader)
+                Text(w.name ?? sportTitle(w.sport)).font(.title2.weight(.bold)).accessibilityAddTraits(.isHeader)
                 Text(whenLine(w)).font(.subheadline).foregroundStyle(.secondary)
             }
         }
@@ -76,7 +75,7 @@ private struct WorkoutContent: View {
             }
         }
         if let d = w.description { Text(d).font(.body) }
-        if w.route.count >= 2 { RouteMap(route: w.route, label: "Route of \(w.name ?? w.sport)") }
+        if w.route.count >= 2 { RouteMap(route: w.route, label: "Route of \(w.name ?? sportTitle(w.sport))") }
         StatsGrid(w: w)
         if w.isRun, let f = m.finish { FinishCard(f: f, m: m, shell: shell) }
         if let l = w.load, let rank = l.rank {

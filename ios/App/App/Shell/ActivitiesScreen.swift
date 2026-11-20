@@ -44,7 +44,7 @@ func parseActivities(_ json: String) -> [Act] {
     f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
     return J(json: json).array.map { o in
         let start = String((o["start_local"].str ?? o["start"].str ?? "").prefix(19))
-        return Act(id: o["id"].text, start: f.date(from: start), sport: o["sport"].str ?? "Workout", name: o["name"].str ?? o["sport"].str ?? "Workout",
+        return Act(id: o["id"].text, start: f.date(from: start), sport: o["sport"].str ?? "Workout", name: o["name"].str ?? sportTitle(o["sport"].str ?? ""),
                    km: o["distance_km"].num, minutes: o["moving_min"].num, pace: o["avg_pace_min_km"].str, hr: o["avg_hr"].num.map { Int($0) },
                    sources: o["sources"].strings, device: o["device"].str)
     }

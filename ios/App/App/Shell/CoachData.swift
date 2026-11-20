@@ -58,7 +58,7 @@ private func psession(_ date: String, _ s: J) -> PSession {
     let line: String
     if a.object != nil {
         let bits = [a["distance_km"].num.map { "\(km1($0)) km" }, a["moving_min"].num.map(duration)].compactMap { $0 }
-        line = "Did " + (bits.isEmpty ? (a["name"].str ?? a["sport"].text) : bits.joined(separator: " · "))
+        line = "Did " + (bits.isEmpty ? (a["name"].str ?? sportTitle(a["sport"].text)) : bits.joined(separator: " · "))
     } else {
         line = [kindWord(s["kind"].text, s["title"].text), s["duration_min"].num.map(duration), s["distance_km"].num.map { "\(kmText($0)) km" }].compactMap { $0 }.joined(separator: " · ")
     }
@@ -79,7 +79,7 @@ func parseCoach(_ planJson: String, _ statusJson: String?, _ weeklyJson: String?
         let days = w["days"].array.map { d -> PDay in
             let date = d["date"].text
             return PDay(date: date, sessions: d["sessions"].array.map { psession(date, $0) }.filter { $0.kind != "rest" }, extras: d["extra"].array.map { a in
-                let n = a["name"].str ?? a["sport"].text
+                let n = a["name"].str ?? sportTitle(a["sport"].text)
                 return Extra(id: a["id"].text, label: a["distance_km"].num.map { "Extra: \(n) · \(km1($0)) km" } ?? "Extra: \(n)")
             })
         }

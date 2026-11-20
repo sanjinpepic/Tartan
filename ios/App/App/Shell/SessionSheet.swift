@@ -25,7 +25,6 @@ struct SessionSheetView: View {
                 .padding(.bottom, 32)
             }
             .background(Brand.ground)
-            .navigationTitle(m.session?.title ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -62,7 +61,7 @@ struct SessionSheetView: View {
         if let t = s.target {
             HStack(spacing: 12) {
                 Text("Target").font(.subheadline.weight(.medium)).foregroundStyle(.secondary).frame(width: 60, alignment: .leading)
-                Text(tidyTarget(t, kind: nil)).font(.headline)
+                Text(tidyTarget(t, kind: s.kind)).font(.headline)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16).padding(.vertical, 12)

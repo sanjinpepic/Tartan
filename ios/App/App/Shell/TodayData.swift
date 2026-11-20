@@ -165,7 +165,7 @@ func parseToday(_ todayJson: String, _ planJson: String?, today: Date = Date(), 
             now.timeIntervalSince(started!) < 36 * 3600 && ((km ?? 0) >= 0.5 || (minutes ?? 0) >= 5)
         let cap = zones.count > 1 ? zones[1]["bpm"].array.dropFirst().first?.int : nil
         last = Last(
-            id: a["id"].text, name: a["name"].str ?? a["sport"].text, sport: a["sport"].text, start: a["start_local"].str ?? a["start"].text,
+            id: a["id"].text, name: a["name"].str ?? sportTitle(a["sport"].text), sport: a["sport"].text, start: a["start_local"].str ?? a["start"].text,
             km: km, minutes: minutes, pace: a["avg_pace_min_km"].str, hr: a["avg_hr"].int, label: l["label"].text,
             effort: l["effort"].num ?? 0, rank: l["rank"].str, estimated: l["estimated"].bool, feeling: a["feeling"].int,
             zones: zones.map { $0["seconds"].num ?? 0 }, easyCap: cap, justIn: fresh
@@ -458,5 +458,11 @@ func whenText(_ start: String) -> String {
 let AREAS = ["back", "hip", "hamstring", "quad", "knee", "shin", "calf", "achilles", "ankle", "foot", "other"]
 private let AREA_NAME = ["foot": "Foot", "ankle": "Ankle", "achilles": "Achilles", "calf": "Calf", "shin": "Shin", "knee": "Knee", "hamstring": "Hamstring", "quad": "Thigh", "hip": "Hip", "back": "Back", "other": "Elsewhere"]
 func areaName(_ a: String) -> String { AREA_NAME[a] ?? a.capitalized }
+
+/** A workout without a name: its sport, as a title ("running" → "Running"). */
+func sportTitle(_ sport: String) -> String {
+    guard let f = sport.first else { return "Workout" }
+    return f.uppercased() + sport.dropFirst().replacingOccurrences(of: "_", with: " ")
+}
 
 let FEELING = [1: "Poor", 2: "Average", 3: "Good", 4: "Very good", 5: "Excellent"]
