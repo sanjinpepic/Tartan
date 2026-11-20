@@ -21,16 +21,6 @@ struct CoachScreen: View {
                         content(c, p)
                     } else if let c = coach.data, c.intake != nil {
                         NoPlanView(shell: shell, coach: c, maker: coach.maker)
-                            .task {
-                                // Screenshots: a plan made by Tartan's rules, from the answers as they stand.
-                                guard Launch.makePlan, !coach.maker.shown, let a = c.intake else { return }
-                                try? await Task.sleep(for: .seconds(1.5))
-                                var avail: [String: Any] = [:]
-                                if let d = a.days { avail["days_per_week"] = d }
-                                if let h = a.hours { avail["hours_per_week"] = h }
-                                if let l = a.longDay { avail["long_run_day"] = l }
-                                coach.maker.make(target: a.raceDate, availability: avail, ai: false)
-                            }
                     } else if coach.failed {
                         ContentUnavailableView {
                             Label("Your plan couldn't be read", systemImage: "exclamationmark.triangle")

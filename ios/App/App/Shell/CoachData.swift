@@ -177,6 +177,8 @@ final class CoachModel {
     @ObservationIgnored var stale = true
     @ObservationIgnored private var readOn: String?
     @ObservationIgnored private var fetching = false
+    /** Asked again while a read was under way: read once more when it's done. */
+    @ObservationIgnored private var again = false
 
     /** Whether there's a plan (kept for the plugin: the page hears when one is made or gone). */
     nonisolated static var hasPlan: Bool { UserDefaults.standard.bool(forKey: "tartan.coach.hasPlan") }
@@ -195,9 +197,17 @@ final class CoachModel {
     }
 
     func fetch() async {
-        guard !fetching else { return }
+        guard !fetching else { again = true; return }
         fetching = true
-        defer { fetching = false }
+        await read()
+        fetching = false
+        if again {
+            again = false
+            await fetch()
+        }
+    }
+
+    private func read() async {
         stale = false
         async let p = engine.get("/api/plan")
         async let s = engine.get("/api/coach/status")

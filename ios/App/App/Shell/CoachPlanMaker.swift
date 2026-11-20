@@ -82,6 +82,11 @@ final class PlanMaker {
         Haptics.feel("confirm")
         coach?.stale = true
         await coach?.fetch()
+        // A read already under way may have been before the plan: until it shows (10 s at most).
+        for _ in 0..<20 where coach?.data?.plan == nil {
+            try? await Task.sleep(for: .milliseconds(500))
+            await coach?.fetch()
+        }
         Launch.ready("planmade")
     }
 }

@@ -233,6 +233,15 @@ final class ShellModel {
             if J(json: plan)["plan"].object != nil { _ = await engine.call("/api/plan/reset", method: "POST") }
             coach.stale = true
             await coach.fetch()
+            // Then (TartanMakePlan) a plan by Tartan's rules from the answers as they stand, as Make my plan makes it.
+            if Launch.makePlan, let a = coach.data?.intake {
+                try? await Task.sleep(for: .seconds(1.5))
+                var avail: [String: Any] = [:]
+                if let d = a.days { avail["days_per_week"] = d }
+                if let h = a.hours { avail["hours_per_week"] = h }
+                if let l = a.longDay { avail["long_run_day"] = l }
+                coach.maker.make(target: a.raceDate, availability: avail, ai: false)
+            }
             return
         }
         if J(json: plan)["plan"].object == nil {
