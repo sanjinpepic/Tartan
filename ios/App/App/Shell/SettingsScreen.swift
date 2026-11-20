@@ -260,7 +260,7 @@ private struct TrainingGroup: View {
         HStack {
             Text(label)
             Spacer()
-            TextField(unit.isEmpty ? "–" : unit, text: text)
+            TextField("–", text: text)
                 .multilineTextAlignment(.trailing)
                 .keyboardType(number ? .decimalPad : .numbersAndPunctuation)
                 .frame(maxWidth: 120)
