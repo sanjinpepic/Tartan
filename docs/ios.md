@@ -13,7 +13,10 @@ A Mac in the cloud builds it, unsigned: `scripts/ios-build.sh` (Xcode 26+), whic
 
 GitHub Actions does it, free on this public repository: `.github/workflows/ios.yml` runs on each
 push that changes the app (or by hand, Actions → iPhone app → Run workflow). The .ipa is the
-run's artifact, "tartan-ipa" (a zip with the .ipa in it).
+run's artifact, "tartan-ipa" (a zip with the .ipa in it). From `main` it also goes on the **ios** pre-release
+(regular releases stay Android's, so Obtainium and Orion Store aren't affected), with a SideStore
+source: add `https://github.com/sanjinpepic/Tartan/releases/download/ios/sidestore.json` in
+SideStore (Sources → +) once, and it offers each new build.
 
 ## Installing it (free)
 
