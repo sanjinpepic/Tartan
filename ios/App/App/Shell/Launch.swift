@@ -14,6 +14,8 @@ enum Launch {
     static var open: String? { UserDefaults.standard.string(forKey: "TartanOpen").flatMap { $0.isEmpty ? nil : $0 } }
     /** The chat with a made-up conversation (no coach asked, nothing sent). */
     static var chatSample: Bool { UserDefaults.standard.bool(forKey: "TartanChatSample") }
+    /** The intro at this step (0 the welcome … 4), over the app. */
+    static var intro: Int? { UserDefaults.standard.string(forKey: "TartanIntro").flatMap { Int($0) } }
     /** Dark, whatever the phone is set to. */
     static var dark: Bool { UserDefaults.standard.bool(forKey: "TartanDark") }
 

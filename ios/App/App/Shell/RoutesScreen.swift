@@ -59,9 +59,12 @@ struct RoutesScreen: View {
                     }
                     .pickerStyle(.segmented)
                     Button { shell.go("route/new") } label: {
-                        Label("New route", systemImage: "plus").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 4)
+                        Label("New route", systemImage: "plus").font(.headline).foregroundStyle(Brand.onTint)
+                            .frame(maxWidth: .infinity, minHeight: 50)
+                            .background(Brand.tint, in: Capsule())
+                            .contentShape(Capsule())
                     }
-                    .buttonStyle(.glassProminent)
+                    .buttonStyle(Press())
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
@@ -140,9 +143,13 @@ struct RoutesScreen: View {
             HStack(spacing: 6) {
                 ForEach([5, 8, 10, 15, 21], id: \.self) { k in
                     Button { shell.go("route/new/loop-\(k)") } label: {
-                        Text("\(k) km").font(.subheadline.weight(.semibold)).lineLimit(1).frame(maxWidth: .infinity)
+                        Text("\(k) km").font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                            .foregroundStyle(Brand.onContainer)
+                            .frame(maxWidth: .infinity, minHeight: 40)
+                            .background(Brand.container, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .contentShape(Rectangle())
                     }
-                    .buttonStyle(.glass)
+                    .buttonStyle(Press())
                     .accessibilityLabel("A \(k) km loop")
                 }
             }
@@ -353,6 +360,8 @@ struct RouteEditorScreen: View {
             }
             .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
             .mapControls { MapScaleView() }
+            // You: the blue dot, as on Android (the route's points are the red ones).
+            .tint(Brand.fitness)
             .onMapCameraChange { ctx in centre = ctx.region.center }
             .onTapGesture(coordinateSpace: .local) { pt in tapped(pt, proxy: proxy) }
             .ignoresSafeArea()
@@ -515,10 +524,11 @@ struct RouteEditorScreen: View {
                 Button { e.save() } label: {
                     Text(e.busy == "save" ? "Saving…" : "Save").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 4)
                 }
+                .frame(maxWidth: 110)
                 .buttonStyle(.glassProminent)
                 .disabled(!can || e.busy != nil)
                 Button { e.send() } label: {
-                    Label(e.busy == "send" ? "Sending…" : "Send to watch", systemImage: "watch.analog").font(.headline).lineLimit(1).frame(maxWidth: .infinity).padding(.vertical, 4)
+                    Label(e.busy == "send" ? "Sending…" : "Send to watch", systemImage: "watch.analog").font(.headline).lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: .infinity).padding(.vertical, 4)
                 }
                 .buttonStyle(.glass)
                 .disabled(!can || e.busy != nil)

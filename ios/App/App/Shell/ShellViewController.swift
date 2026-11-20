@@ -194,6 +194,9 @@ struct ShellBar: View {
         .animation(.smooth(duration: 0.3), value: model.barHidden)
         .animation(.smooth(duration: 0.3), value: model.snack)
         .tint(Brand.tint)
+        .fullScreenCover(item: Binding(get: { model.intro }, set: { model.intro = $0 })) { m in
+            IntroScreen(m: m, shell: model)
+        }
         .sheet(item: Binding(get: { model.sheet }, set: { model.sheet = $0 })) { sheet in
             Group {
                 switch sheet {

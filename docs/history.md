@@ -1289,3 +1289,6 @@ The owner's go-ahead on three points from the 2.65 review:
   Apple's map (MapKit): points tapped, dragged or taken out, legs along paths or straight, undo,
   to start, out and back, reverse, the height profile, three loops from here, Save, Send to watch,
   Share as GPX, and race pacing. The same engine calls as Android's editor.
+- **The intro, native**: Tartan's mark drawing itself in, the welcome's timing board, guided
+  setups for Strava, the watch and intervals.icu, the coach's AI with the key checked before it's
+  saved, training times, and bringing it all over from the PC or a backup.

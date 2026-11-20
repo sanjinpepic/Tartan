@@ -56,8 +56,8 @@ iPhone would be Apple's Foundation Models, later).
 ## Native iPhone screens
 
 Since Nov 2026 the tab bar, Today, Coach (with a plan), Activities, Progress and the session and
-workout sheets, the chat, Settings, Body, Record and Lift, and Routes are native SwiftUI with Liquid Glass; the
-rest (making the first plan, the intro, and the parts of Settings below) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
+workout sheets, the chat, Settings, Body, Record and Lift, Routes and the intro are native SwiftUI with
+Liquid Glass; the rest (making the first plan, and the parts of Settings below) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
 same as Android's.
 
 - **The plugin** (`TartanShellPlugin.swift`): the `TartanShell` Capacitor plugin, with every
@@ -129,6 +129,12 @@ same as Android's.
 - **Activities** (`ActivitiesScreen.swift`) and **Progress** (`ProgressScreen.swift`,
   `ProgressData.swift`): the list by week with search and the sport filter, and the ranges and the
   Week, with Swift Charts.
+- **The intro** (`IntroScreen.swift`): the page asks for it (`intro`, at the step it kept) the
+  first time. Tartan's mark draws itself in, then the welcome (the timing board, the ways in: new,
+  from your PC, from a backup, or the sample data), bringing workouts in (Strava, the watch and
+  intervals.icu, each a guided setup in `SetupFlows.swift` on `SourcesModel.swift`), the coach's AI
+  (`CoachSetup.swift`), when you train, and the four tabs. `rpc:introStep` keeps where you are;
+  `rpc:introDone` ends it. The watch's state comes with every change (`watch`).
 - **Routes** (`RoutesScreen.swift`, `RoutesData.swift`): the list (a loop of 5 to 21 km from here,
   your routes with their line, distance, climb and whether they're on the watch, a GPX file to
   import) and the editor on a MapKit map: tap to add a point, tap the start to close the loop or

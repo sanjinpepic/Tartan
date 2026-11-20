@@ -52,6 +52,10 @@
 		10FBD997071E4E14846A0D26 /* TartanWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1D6C511EC2A7CAF827A6AF4C /* TartanWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FDD44E667EFE27F9EFDDCC53 /* RoutesData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135884C397C61D3A884E92E3 /* RoutesData.swift */; };
 		4DF30E01EA0F3DE4237F455A /* RoutesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32EED04F8BD087E165512B39 /* RoutesScreen.swift */; };
+		6C0FB4CF22CC21EF3E1A8E2A /* SourcesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6047B8DA4E60D89B07D7E409 /* SourcesModel.swift */; };
+		0F6C322677974238D7682B3D /* SetupFlows.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE962D3821CA6D61A7143C2E /* SetupFlows.swift */; };
+		21C47D0DB6E66A9A9174DA23 /* CoachSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA5C729492BE64EADE48073 /* CoachSetup.swift */; };
+		A0113A235C3A075385EB9634 /* IntroScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94231B3394C3A22969DE282 /* IntroScreen.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -112,6 +116,10 @@
 		1D6C511EC2A7CAF827A6AF4C /* TartanWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TartanWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		135884C397C61D3A884E92E3 /* RoutesData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutesData.swift; sourceTree = "<group>"; };
 		32EED04F8BD087E165512B39 /* RoutesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutesScreen.swift; sourceTree = "<group>"; };
+		6047B8DA4E60D89B07D7E409 /* SourcesModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourcesModel.swift; sourceTree = "<group>"; };
+		DE962D3821CA6D61A7143C2E /* SetupFlows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupFlows.swift; sourceTree = "<group>"; };
+		FDA5C729492BE64EADE48073 /* CoachSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachSetup.swift; sourceTree = "<group>"; };
+		B94231B3394C3A22969DE282 /* IntroScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroScreen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -219,6 +227,10 @@
 				11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */,
 				135884C397C61D3A884E92E3 /* RoutesData.swift */,
 				32EED04F8BD087E165512B39 /* RoutesScreen.swift */,
+				6047B8DA4E60D89B07D7E409 /* SourcesModel.swift */,
+				DE962D3821CA6D61A7143C2E /* SetupFlows.swift */,
+				FDA5C729492BE64EADE48073 /* CoachSetup.swift */,
+				B94231B3394C3A22969DE282 /* IntroScreen.swift */,
 			);
 			path = Shell;
 			sourceTree = "<group>";
@@ -343,6 +355,10 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				A0113A235C3A075385EB9634 /* IntroScreen.swift in Sources */,
+				21C47D0DB6E66A9A9174DA23 /* CoachSetup.swift in Sources */,
+				0F6C322677974238D7682B3D /* SetupFlows.swift in Sources */,
+				6C0FB4CF22CC21EF3E1A8E2A /* SourcesModel.swift in Sources */,
 				4DF30E01EA0F3DE4237F455A /* RoutesScreen.swift in Sources */,
 				FDD44E667EFE27F9EFDDCC53 /* RoutesData.swift in Sources */,
 				D876D5724CA8E7E5A014353D /* LiveRunAttributes.swift in Sources */,

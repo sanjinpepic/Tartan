@@ -41,7 +41,7 @@ enum NativeParts {
 /// The page says where it is after each route (`route`) and answers the native screens' API
 /// calls (the "api" event, answered with `reply`, or `chunk` lines then `reply` for a stream), so
 /// they read exactly what the web screens read. Parts iOS doesn't have natively yet answer so the
-/// page draws its own (`workout`, `intro`, `pair`, `scan`).
+/// page draws its own (`workout` when switched off, `pair`, `scan`).
 @objc(TartanShellPlugin)
 public class TartanShellPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "TartanShellPlugin"
@@ -142,8 +142,11 @@ public class TartanShellPlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve(["native": true])
     }
 
-    /// The watch's state, for a native Sources (not on iPhone yet).
+    /// The watch's state, for the native setups (the intro's, Settings').
     @objc func watch(_ call: CAPPluginCall) {
+        if let st = call.getString("state"), let w = parseWatch(st) {
+            onMain { ShellModel.shared.sources.watch = w }
+        }
         call.resolve()
     }
 
@@ -156,9 +159,11 @@ public class TartanShellPlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve()
     }
 
-    /// The intro is the page's on iPhone: refusing tells it to open its own.
+    /// The intro, native, at the step the page kept.
     @objc func intro(_ call: CAPPluginCall) {
-        call.reject("The intro isn't native on iPhone yet")
+        let step = call.getInt("step") ?? 0
+        onMain { ShellModel.shared.openIntro(step) }
+        call.resolve()
     }
 
     /// The page's messages, native, over everything (their buttons take the touch).

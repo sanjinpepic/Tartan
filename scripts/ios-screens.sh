@@ -88,6 +88,8 @@ for look in light dark; do
   shot "$look-9-lift" lift -TartanTab lift
   shot "$look-10-routes" routes -TartanTab routes
   shot "$look-11-route" route -TartanTab route
+  shot "$look-12-intro" intro -TartanIntro 0
+  shot "$look-13-intro-coach" coachsetup -TartanIntro 2
 done
 xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
 ls -la "$OUT"

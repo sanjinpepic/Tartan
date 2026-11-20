@@ -74,6 +74,10 @@ final class ShellModel {
     let body: BodyModel
     let record: RecordModel
     let routes: RoutesModel
+    let sources: SourcesModel
+    let coachSetup: CoachSetupModel
+    /** The intro, open over everything (the page asks for it the first time). */
+    var intro: IntroModel?
     /** The route editor open (by the address: route/<id>, route/new, route/new/loop-10). */
     var routeEditor: RouteEditor?
     /** The strength session open (by the address: lift/<date>). */
@@ -127,6 +131,10 @@ final class ShellModel {
         self.body = BodyModel(engine: engine)
         self.record = RecordModel(engine: engine)
         self.routes = RoutesModel(engine: engine)
+        self.sources = SourcesModel(engine: engine)
+        self.coachSetup = CoachSetupModel(engine: engine)
+        sources.shell = self
+        coachSetup.shell = self
         today.shell = self
         coach.shell = self
         settings.shell = self
@@ -161,6 +169,7 @@ final class ShellModel {
         coach.stale = true
         showScreen()
         if Launch.demo { Task { await demoForScreens() } }
+        if let step = Launch.intro { openIntro(step) }
         if let tab = Launch.tab {
             if tab == "lift" {
                 // Screenshots: the plan's strength session nearest today.
@@ -251,6 +260,14 @@ final class ShellModel {
             if onWatch { body["watch"] = ["id": 3, "sent": ISO8601DateFormatter().string(from: Date()), "name": name] as [String: Any] }
             _ = await engine.send("/api/routes/new", method: "PUT", body: body)
         }
+    }
+
+    /** The intro at a step, over everything. */
+    func openIntro(_ step: Int) {
+        let m = IntroModel(step: step)
+        m.shell = self
+        sheet = nil
+        intro = m
     }
 
     /** The tab the bar lights: the view's. */
@@ -410,6 +427,8 @@ final class ShellModel {
         if shown == "trends" { progress.ensure() }
         routes.forget()
         if shown == "routes" { routes.ensure() }
+        sources.forget()
+        if intro != nil { Task { await sources.fetch() } }
         today.syncDone()
         if shown == "today" { today.freshen() }
         if view == "coach" && NativeParts.wanted("coach") { coach.freshen() }
