@@ -75,7 +75,9 @@ public class TartanShellPlugin: CAPPlugin, CAPBridgedPlugin {
 
     // MARK: - What the page asks
 
+    /// Asked first by every page that starts (the app opening, or the page reloading).
     @objc func parts(_ call: CAPPluginCall) {
+        onMain { ShellModel.shared.pageStarted() }
         var out = NativeParts.all()
         out["available"] = true
         call.resolve(out)

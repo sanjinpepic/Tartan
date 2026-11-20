@@ -25,6 +25,7 @@
 		40C4F994BDAEAC5A96375B9F /* TodayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85432B932216439148FE6134 /* TodayModel.swift */; };
 		7DC7CCF976379ECBDEA36C90 /* TodayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39674D117FDCDB391F6BFA7B /* TodayScreen.swift */; };
 		A55BE05E1B93E5D7F8F0469E /* TodayCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5CD06DCC7F73E9B1FB129C /* TodayCards.swift */; };
+		098CB5BAA04622BF0EB6EABB /* Launch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8386D56D7620F5C9FFB4FE12 /* Launch.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +49,7 @@
 		85432B932216439148FE6134 /* TodayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayModel.swift; sourceTree = "<group>"; };
 		39674D117FDCDB391F6BFA7B /* TodayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScreen.swift; sourceTree = "<group>"; };
 		3D5CD06DCC7F73E9B1FB129C /* TodayCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayCards.swift; sourceTree = "<group>"; };
+		8386D56D7620F5C9FFB4FE12 /* Launch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Launch.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +110,7 @@
 				85432B932216439148FE6134 /* TodayModel.swift */,
 				39674D117FDCDB391F6BFA7B /* TodayScreen.swift */,
 				3D5CD06DCC7F73E9B1FB129C /* TodayCards.swift */,
+				8386D56D7620F5C9FFB4FE12 /* Launch.swift */,
 			);
 			path = Shell;
 			sourceTree = "<group>";
@@ -195,6 +198,7 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				098CB5BAA04622BF0EB6EABB /* Launch.swift in Sources */,
 				B7C85020072CCF35796D919E /* TartanShellPlugin.swift in Sources */,
 				C57C6D727182156026AD0FCE /* ShellModel.swift in Sources */,
 				408A1732733D44FEBAEC936A /* ShellViewController.swift in Sources */,

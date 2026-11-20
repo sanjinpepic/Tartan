@@ -1,0 +1,45 @@
+name: iPhone screenshots
+
+# The iPhone app in the simulator, screen by screen, light and dark, with the sample data only
+# (scripts/ios-screens.sh). The pictures are committed to screenshots/ios/, so each has a stable
+# address on raw.githubusercontent.com (a push with this workflow's token starts no other workflow).
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: [main]
+    paths: ["ios/**", "web/**", "src/**", "scripts/ios-*.sh", ".github/workflows/ios-screens.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-screens
+  cancel-in-progress: true
+
+jobs:
+  screens:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+      - run: ./scripts/ios-screens.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-screens
+          path: screenshots/ios/*.png
+      - name: Commit the screenshots
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A screenshots/ios
+          if git diff --cached --quiet; then echo "No change."; exit 0; fi
+          git commit -m "iPhone screenshots from the simulator, for ${GITHUB_SHA::7}"
+          for i in 1 2 3; do git pull --rebase --autostash origin main && git push origin HEAD:main && exit 0; sleep 5; done
+          exit 1

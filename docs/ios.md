@@ -18,6 +18,15 @@ run's artifact, "tartan-ipa" (a zip with the .ipa in it). From `main` it also go
 source: add `https://github.com/sanjinpepic/Tartan/releases/download/ios/sidestore.json` in
 SideStore (Sources → +) once, and it offers each new build.
 
+**Screenshots:** `.github/workflows/ios-screens.yml` (on each push that changes the app, or by
+hand) builds for the simulator and runs `scripts/ios-screens.sh`: Today (top, and More today),
+Coach, Activities and Progress, light and dark, with the sample data only. They're committed to
+[`screenshots/ios/`](../screenshots/ios/), e.g.
+`https://raw.githubusercontent.com/sanjinpepic/Tartan/main/screenshots/ios/light-1-today.png`.
+The app takes launch arguments for it (`ios/App/App/Shell/Launch.swift`): `-TartanDemo YES` (the
+sample data, no intro), `-TartanTab coach`, `-TartanMore YES`, `-TartanDark YES`; they last for
+that launch only. `scripts/ios-prepare.sh` holds the steps both builds share.
+
 ## Installing it (free)
 
 SideStore (or AltStore) signs the .ipa with your own free Apple ID as it installs it. Apple lets

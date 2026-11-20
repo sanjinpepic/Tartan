@@ -34,6 +34,7 @@ class ShellViewController: UIViewController, ShellHost {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemGroupedBackground
+        if Launch.dark { overrideUserInterfaceStyle = .dark }
 
         let bridge = TartanBridgeViewController()
         bridgeController = bridge

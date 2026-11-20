@@ -37,6 +37,14 @@ struct TodayScreen: View {
                 .onChange(of: shell.toTop) {
                     withAnimation(.smooth) { proxy.scrollTo("top", anchor: .top) }
                 }
+                .task {
+                    // Screenshots (Launch): More today open, scrolled to, once Today has its data.
+                    guard Launch.more else { return }
+                    for _ in 0..<120 where today.data == nil { try? await Task.sleep(for: .milliseconds(500)) }
+                    today.moreOpen = true
+                    try? await Task.sleep(for: .milliseconds(800))
+                    proxy.scrollTo("more", anchor: .top)
+                }
             }
             .overlay(alignment: .bottomTrailing) {
                 RecordButton { shell.go("record") }
@@ -132,6 +140,7 @@ struct TodayCards: View {
         MoreToday(open: today.moreOpen, inside: inside(justIn: justIn, worth: worth.count)) {
             withAnimation(.smooth(duration: 0.35)) { today.moreOpen.toggle() }
         }
+        .id("more")
         if today.moreOpen {
             VStack(alignment: .leading, spacing: 12) {
                 NumbersCard(r: t.readiness, vitals: today.vitals, openBody: { shell.go("you") })

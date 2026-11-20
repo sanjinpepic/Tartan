@@ -105,6 +105,21 @@ final class ShellModel {
         showScreen()
     }
 
+    /**
+     * A page started (the app opening, or the page reloading after the demo, a restore…): it hears
+     * again whether a native screen shows, reads still waiting for the old page go to the new one,
+     * and native screens read again. Launched for screenshots (Launch), it starts the sample data
+     * and opens the tab asked for.
+     */
+    func pageStarted() {
+        told = false
+        engine.pageStarted()
+        today.stale = true
+        showScreen()
+        if Launch.demo { Task { _ = await engine.rpc("demo", ["op": "start"]) } }
+        if let tab = Launch.tab { go(tab, retain: true) }
+    }
+
     /** The tab the bar lights: the view's. */
     var tab: String? { Tab.of(view) }
 
@@ -155,8 +170,8 @@ final class ShellModel {
     }
 
     /** Ask the web app to show a screen (an address, "settings/sources"...). */
-    func go(_ hash: String) {
-        plugin?.emit("go", ["hash": hash])
+    func go(_ hash: String, retain: Bool = false) {
+        plugin?.emit("go", ["hash": hash], retain: retain)
     }
 
     /** Ask the web app for something: "sync", "board", or a workout's or a session's sheet. */
@@ -224,6 +239,8 @@ final class ShellModel {
 final class EngineBridge {
     weak var plugin: TartanShellPlugin?
     private var pending: [String: CheckedContinuation<(Int, String), Never>] = [:]
+    /** What each read asked, to ask a page that started since (the old one won't answer). */
+    private var asked: [String: [String: Any]] = [:]
     private var timers: [String: Task<Void, Never>] = [:]
     private var streams: [String: (String) -> Void] = [:]
 
@@ -241,13 +258,20 @@ final class EngineBridge {
                 guard !Task.isCancelled else { return }
                 self?.finish(id, 599, "")
             }
+            if method == "GET" && onLine == nil { asked[id] = data }
             plugin.emit("api", data, retain: true)
         }
         streams[id] = nil
         return (answer.0, answer.1)
     }
 
+    /** A new page: the reads the old one didn't answer, asked again (only reads: a write may have gone through). */
+    func pageStarted() {
+        for data in asked.values { plugin?.emit("api", data, retain: true) }
+    }
+
     func finish(_ id: String, _ status: Int, _ body: String) {
+        asked[id] = nil
         timers.removeValue(forKey: id)?.cancel()
         guard let cont = pending.removeValue(forKey: id) else { return }
         cont.resume(returning: (status, body))
