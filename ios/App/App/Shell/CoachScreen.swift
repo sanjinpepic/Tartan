@@ -5,7 +5,7 @@ import SwiftUI
 /// sessions; the coach's suggestion (or what it last changed) and the week's review under the
 /// week they change; the plan at a glance, the paces and zones, the pointers; the ask bar above
 /// the tab bar. A session opens its sheet; the ask bar opens the chat (the page's for now).
-/// Without a plan Coach is the page's (making the first plan).
+/// Without a plan, making the first one (NoPlanView).
 struct CoachScreen: View {
     let shell: ShellModel
     let coach: CoachModel
@@ -19,6 +19,18 @@ struct CoachScreen: View {
                         Text("Plan updated \(ago(p.updated)) · \(c.weeks.count) week\(c.weeks.count == 1 ? "" : "s")")
                             .font(.subheadline.weight(.medium)).foregroundStyle(.secondary).padding(.horizontal, 4)
                         content(c, p)
+                    } else if let c = coach.data, c.intake != nil {
+                        NoPlanView(shell: shell, coach: c, maker: coach.maker)
+                            .task {
+                                // Screenshots: a plan made by Tartan's rules, from the answers as they stand.
+                                guard Launch.makePlan, !coach.maker.shown, let a = c.intake else { return }
+                                try? await Task.sleep(for: .seconds(1.5))
+                                var avail: [String: Any] = [:]
+                                if let d = a.days { avail["days_per_week"] = d }
+                                if let h = a.hours { avail["hours_per_week"] = h }
+                                if let l = a.longDay { avail["long_run_day"] = l }
+                                coach.maker.make(target: a.raceDate, availability: avail, ai: false)
+                            }
                     } else if coach.failed {
                         ContentUnavailableView {
                             Label("Your plan couldn't be read", systemImage: "exclamationmark.triangle")

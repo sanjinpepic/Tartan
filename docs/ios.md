@@ -57,7 +57,8 @@ iPhone would be Apple's Foundation Models, later).
 
 Since Nov 2026 the tab bar, Today, Coach (with a plan), Activities, Progress and the session and
 workout sheets, the chat, Settings (every group), Body, Record and Lift, Routes and the intro are native
-SwiftUI with Liquid Glass; the rest (making the first plan, the face builder) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
+SwiftUI with Liquid Glass, and so are making the first plan and the face builder: no screen is the
+web app's any more. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
 same as Android's.
 
 - **The plugin** (`TartanShellPlugin.swift`): the `TartanShell` Capacitor plugin, with every
@@ -139,6 +140,16 @@ same as Android's.
   intervals.icu, each a guided setup in `SetupFlows.swift` on `SourcesModel.swift`), the coach's AI
   (`CoachSetup.swift`), when you train, and the four tabs. `rpc:introStep` keeps where you are;
   `rpc:introDone` ends it. The watch's state comes with every change (`watch`).
+- **The first plan** (`CoachPlanMaker.swift`): Coach with no plan yet, as Android's: what Tartan
+  knows of your last four weeks and your race, then one question at a time (days, hours, the long
+  run's day, a date, and notes for an AI coach), then Make my plan: `PUT /api/plan/availability`,
+  then `POST /api/plan/basic` (Tartan's rules) or the coach planning out loud (`/api/plan/update`,
+  streamed: its steps, its words). Without a key, the coach's AI setup waits folded below.
+- **The face builder** (`FaceBuilder.swift`, `face/<id>`, `face/new`, `face/copy`): the preview
+  drawn by the page (`rpc:facePreview`), start from a design or Surprise me, the background (a
+  photo too), track and marks, numbers and text, hands, colours part by part, the watch's data;
+  Save, Install on watch, .zip, Remove from watch, Delete (`faceStart`, `faceSave`, `faceInstall`,
+  `facePackage`, `faceRemove`, `faceSurprise`).
 - **Routes** (`RoutesScreen.swift`, `RoutesData.swift`): the list (a loop of 5 to 21 km from here,
   your routes with their line, distance, climb and whether they're on the watch, a GPX file to
   import) and the editor on a MapKit map: tap to add a point, tap the start to close the loop or

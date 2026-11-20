@@ -1296,3 +1296,10 @@ The owner's go-ahead on three points from the 2.65 review:
   sending watch workouts to Strava, where the plan goes for your watch, a day's own training time,
   the calendar, exercise demos, shoes, the coach's AI, the watch's reminders and the week on a
   face, your PC, backups, feedback and the advanced parts. Nothing opens the page's Settings now.
+
+## Native iPhone screens, phase 6 (20 Nov 2026, after 2.74)
+
+- **The first plan, native**: Coach with no plan asks one question at a time and makes the plan by
+  Tartan's rules or with the coach, planning out loud, as on Android.
+- **The face builder, native**: a watch face designed with its preview in view, saved and installed
+  on the watch.

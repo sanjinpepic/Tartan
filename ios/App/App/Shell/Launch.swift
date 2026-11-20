@@ -16,6 +16,10 @@ enum Launch {
     static var chatSample: Bool { UserDefaults.standard.bool(forKey: "TartanChatSample") }
     /** The intro at this step (0 the welcome … 4), over the app. */
     static var intro: Int? { UserDefaults.standard.string(forKey: "TartanIntro").flatMap { Int($0) } }
+    /** Coach before the first plan: the plan cleared first (screenshots of making one). */
+    static var noPlan: Bool { UserDefaults.standard.bool(forKey: "TartanNoPlan") }
+    /** As noPlan, then a plan made by Tartan's rules, as Make my plan does. */
+    static var makePlan: Bool { UserDefaults.standard.bool(forKey: "TartanMakePlan") }
     /** Dark, whatever the phone is set to. */
     static var dark: Bool { UserDefaults.standard.bool(forKey: "TartanDark") }
 

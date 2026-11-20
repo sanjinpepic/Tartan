@@ -79,6 +79,8 @@ final class ShellModel {
     let watchSettings: WatchGroupModel
     let more: MoreModel
     let shoes: ShoesModel
+    /** The face builder open (by the address: face/<id>, face/new, face/copy). */
+    var face: FaceModel?
     /** The intro, open over everything (the page asks for it the first time). */
     var intro: IntroModel?
     /** The route editor open (by the address: route/<id>, route/new, route/new/loop-10). */
@@ -146,6 +148,8 @@ final class ShellModel {
         coachSetup.shell = self
         today.shell = self
         coach.shell = self
+        coach.maker.coach = coach
+        coach.maker.shell = self
         settings.shell = self
         record.shell = self
         NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { _ in
@@ -224,6 +228,13 @@ final class ShellModel {
             try? await Task.sleep(for: .seconds(1))
         }
         guard seeded, let plan = await engine.get("/api/plan") else { return }
+        if Launch.noPlan || Launch.makePlan {
+            // Screenshots of Coach before the first plan: none, whatever an earlier launch made.
+            if J(json: plan)["plan"].object != nil { _ = await engine.call("/api/plan/reset", method: "POST") }
+            coach.stale = true
+            await coach.fetch()
+            return
+        }
         if J(json: plan)["plan"].object == nil {
             let cal = Calendar(identifier: .gregorian)
             let race = isoDay(cal.date(byAdding: .day, value: 63, to: Date()) ?? Date())
@@ -351,6 +362,15 @@ final class ShellModel {
             }
             return "lift"
         }
+        if v == "face" && settingsOn {
+            let p = hash.split(separator: "/").map(String.init)
+            let arg = p.count > 1 && !p[1].isEmpty ? (p[1].removingPercentEncoding ?? p[1]) : "new"
+            if let f = face, f.arg == arg || f.savedId == arg { return "face" }
+            let f = FaceModel(engine: engine, arg: arg)
+            f.shell = self
+            face = f
+            return "face"
+        }
         if v == "settings" && settingsOn {
             // settings/<group>/all: the page's whole group, for what isn't native yet.
             let parts = hash.split(separator: "/").map(String.init)
@@ -391,6 +411,11 @@ final class ShellModel {
             return
         }
         go(id)
+    }
+
+    /** Back, as the page's history goes (where the screen was opened from). */
+    func back() {
+        plugin?.emit("back", [:])
     }
 
     /** Ask the web app to show a screen (an address, "settings/sources"...). */

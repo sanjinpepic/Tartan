@@ -60,6 +60,8 @@
 		7387AFDC4AD242521B0CB6E4 /* SettingsWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACF3D5FE19D5BA725C65D9C1 /* SettingsWatch.swift */; };
 		5B218CC9836BC650E4BCC592 /* SettingsMore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E679AB27FA07A8A9803D43B9 /* SettingsMore.swift */; };
 		32EB4806CCABE73742480EF4 /* SettingsShoes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2834344488E3815DCAE45411 /* SettingsShoes.swift */; };
+		434D994BB340695584B66D72 /* CoachPlanMaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4ECE218588D930AA4103F57 /* CoachPlanMaker.swift */; };
+		4D2E2353FC5DB3344E7E86CE /* FaceBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F096A3D843811BE50B088F42 /* FaceBuilder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -128,6 +130,8 @@
 		ACF3D5FE19D5BA725C65D9C1 /* SettingsWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWatch.swift; sourceTree = "<group>"; };
 		E679AB27FA07A8A9803D43B9 /* SettingsMore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMore.swift; sourceTree = "<group>"; };
 		2834344488E3815DCAE45411 /* SettingsShoes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsShoes.swift; sourceTree = "<group>"; };
+		D4ECE218588D930AA4103F57 /* CoachPlanMaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachPlanMaker.swift; sourceTree = "<group>"; };
+		F096A3D843811BE50B088F42 /* FaceBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceBuilder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -243,6 +247,8 @@
 				ACF3D5FE19D5BA725C65D9C1 /* SettingsWatch.swift */,
 				E679AB27FA07A8A9803D43B9 /* SettingsMore.swift */,
 				2834344488E3815DCAE45411 /* SettingsShoes.swift */,
+				D4ECE218588D930AA4103F57 /* CoachPlanMaker.swift */,
+				F096A3D843811BE50B088F42 /* FaceBuilder.swift */,
 			);
 			path = Shell;
 			sourceTree = "<group>";
@@ -367,6 +373,8 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				4D2E2353FC5DB3344E7E86CE /* FaceBuilder.swift in Sources */,
+				434D994BB340695584B66D72 /* CoachPlanMaker.swift in Sources */,
 				32EB4806CCABE73742480EF4 /* SettingsShoes.swift in Sources */,
 				5B218CC9836BC650E4BCC592 /* SettingsMore.swift in Sources */,
 				7387AFDC4AD242521B0CB6E4 /* SettingsWatch.swift in Sources */,

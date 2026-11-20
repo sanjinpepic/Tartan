@@ -15,6 +15,24 @@ struct Coach {
     let ready: Bool
     /** Said you're ill (since this date): Better now leads the life changes. */
     let ill: String?
+    /** No plan yet: what the first plan's questions ask, and what the coach already knows. */
+    var intake: Intake? = nil
+}
+
+/// The first plan's questions (web/views/plan.ts intakeCard): the answers so far, the last four weeks, the race.
+struct Intake {
+    let days: Int?
+    let hours: Int?
+    let longDay: String?
+    let notes: String
+    let runs: Int
+    let kmWeek: Double
+    let longest: Double
+    let workouts: Int
+    let hoursWeek: Double
+    let raceName: String?
+    let raceKm: Double?
+    let raceDate: String?
 }
 
 struct PlanInfo { let title: String; let summary: String; let advice: [String]; let zones: [Zone]; let updated: String; let conversation: String? }
@@ -105,7 +123,16 @@ func parseCoach(_ planJson: String, _ statusJson: String?, _ weeklyJson: String?
         ? Weekly(week: wj["week"].text, at: wj["at"].text, text: wj["text"].text, changed: wj["changed"].bool, proposed: wj["proposed"].int ?? 0, conversation: wj["conversation"].str) : nil
     let st = J(json: statusJson)
     let ready = st.object == nil ? true : (st.has("ready") ? st["ready"].bool : true)
-    return Coach(plan: plan, weeks: weeks, today: v["today"].text, goal: goal, proposal: proposal, lastChange: last, weekly: weekly, ready: ready, ill: v["life"]["ill"]["from"].str)
+    var intake: Intake?
+    if plan == nil {
+        let a = v["availability"], rc = v["recent"]
+        let upcoming = race["date"].str.flatMap { $0 >= v["today"].text ? $0 : nil }
+        intake = Intake(days: a["days_per_week"].int.flatMap { $0 > 0 ? $0 : nil }, hours: a["hours_per_week"].int.flatMap { $0 > 0 ? $0 : nil }, longDay: a["long_run_day"].str,
+                        notes: a["notes"].str ?? "", runs: rc["runs"].int ?? 0, kmWeek: rc["run_km_per_week"].num ?? 0, longest: rc["longest_run_km"].num ?? 0,
+                        workouts: rc["workouts"].int ?? 0, hoursWeek: rc["hours_per_week"].num ?? 0,
+                        raceName: upcoming != nil ? race["name"].str : nil, raceKm: upcoming != nil ? race["distance_km"].num : nil, raceDate: upcoming)
+    }
+    return Coach(plan: plan, weeks: weeks, today: v["today"].text, goal: goal, proposal: proposal, lastChange: last, weekly: weekly, ready: ready, ill: v["life"]["ill"]["from"].str, intake: intake)
 }
 
 extension String {
@@ -139,6 +166,8 @@ final class CoachModel {
     private let keys = UserDefaults.standard
     var data: Coach?
     var failed = false
+    /** Making the first plan. */
+    let maker: PlanMaker
     /** The whole plan rather than this week. */
     var whole = false
     var busy: String?
@@ -149,11 +178,12 @@ final class CoachModel {
     @ObservationIgnored private var readOn: String?
     @ObservationIgnored private var fetching = false
 
-    /** Whether there's a plan (Coach is native only then: making the first one is the page's). Kept for the plugin. */
+    /** Whether there's a plan (kept for the plugin: the page hears when one is made or gone). */
     nonisolated static var hasPlan: Bool { UserDefaults.standard.bool(forKey: "tartan.coach.hasPlan") }
 
     init(engine: EngineBridge) {
         self.engine = engine
+        maker = PlanMaker(engine: engine)
         weeklySeen = keys.string(forKey: "tartan.coach.weeklySeen")
         if let p = keys.string(forKey: "tartan.coach.plan") {
             data = parseCoach(p, keys.string(forKey: "tartan.coach.status"), keys.string(forKey: "tartan.coach.weekly"))
@@ -181,7 +211,7 @@ final class CoachModel {
         failed = false
         data = c
         readOn = isoDay(Date())
-        if c.plan != nil { Launch.ready("coach") }
+        Launch.ready(c.plan != nil ? "coach" : "noplan")
         keys.set(planJson, forKey: "tartan.coach.plan")
         keys.set(statusJson, forKey: "tartan.coach.status")
         keys.set(weeklyJson, forKey: "tartan.coach.weekly")

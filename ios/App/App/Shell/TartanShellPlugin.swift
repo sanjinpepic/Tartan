@@ -16,12 +16,8 @@ enum NativeParts {
         return UserDefaults.standard.object(forKey: "tartan.shell.\(name)") as? Bool ?? true
     }
 
-    /** Native now: Coach only with a plan (making the first one is the page's). */
-    static func isOn(_ name: String) -> Bool {
-        guard wanted(name) else { return false }
-        if name == "coach" { return CoachModel.hasPlan }
-        return true
-    }
+    /** Switched on and built (Coach with or without a plan: making the first one is native too). */
+    static func isOn(_ name: String) -> Bool { wanted(name) }
 
     static func set(_ name: String, _ on: Bool) {
         guard built.contains(name) else { return }

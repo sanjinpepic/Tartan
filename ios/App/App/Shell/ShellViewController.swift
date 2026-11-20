@@ -147,6 +147,10 @@ struct ShellScreens: View {
                 RouteEditorScreen(shell: model, e: e)
                     .id(ObjectIdentifier(e))
                     .transition(.opacity)
+            } else if model.shown == "face", let f = model.face {
+                FaceBuilderScreen(shell: model, m: f)
+                    .id(ObjectIdentifier(f))
+                    .transition(.opacity)
             } else if model.shown == "lift", let l = model.lift {
                 LiftScreen(shell: model, m: l)
                     .id(l.date)
