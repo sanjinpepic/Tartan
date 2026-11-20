@@ -20,11 +20,12 @@ SideStore (Sources → +) once, and it offers each new build.
 
 **Screenshots:** `.github/workflows/ios-screens.yml` (on each push that changes the app, or by
 hand) builds for the simulator and runs `scripts/ios-screens.sh`: Today (top, and More today),
-Coach, Activities and Progress, light and dark, with the sample data only. They're committed to
+a session's and a workout's sheet, Coach, Activities and Progress, light and dark, with the sample
+data only. They're committed to
 [`screenshots/ios/`](../screenshots/ios/), e.g.
 `https://raw.githubusercontent.com/sanjinpepic/Tartan/main/screenshots/ios/light-1-today.png`.
 The app takes launch arguments for it (`ios/App/App/Shell/Launch.swift`): `-TartanDemo YES` (the
-sample data, no intro), `-TartanTab coach`, `-TartanMore YES`, `-TartanDark YES`; they last for
+sample data, no intro), `-TartanTab coach`, `-TartanMore YES`, `-TartanOpen session|workout`, `-TartanDark YES`; they last for
 that launch only. `scripts/ios-prepare.sh` holds the steps both builds share.
 
 ## Installing it (free)
@@ -51,8 +52,9 @@ iPhone would be Apple's Foundation Models, later).
 
 ## Native iPhone screens
 
-Since Nov 2026 (after 2.68) the tab bar and Today are native SwiftUI with Liquid Glass; every other screen is still
-the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
+Since Nov 2026 the tab bar, Today, Coach (with a plan), Activities, Progress and the session and
+workout sheets are native SwiftUI with Liquid Glass; the rest (the chat, Settings, Body, Record and
+Lift, Routes, making the first plan) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
 same as Android's.
 
 - **The plugin** (`TartanShellPlugin.swift`): the `TartanShell` Capacitor plugin, with every
@@ -80,9 +82,22 @@ same as Android's.
   It folds to its icons while Today scrolls down. A tab sends `go` with its address, as Android's
   bar does; the page's own bar is hidden (`html.native-nav`).
 - **Today** (`TodayScreen.swift`, `TodayCards.swift`, data in `TodayData.swift`, reads and writes
-  in `TodayModel.swift`): the same JSON as Android's `TodayData.kt` and `TodayMore.kt`. Taps on a
-  session or a workout open the page's sheet (`go` with `session` or `activity`); pull to refresh
-  is `go` with `action: "sync"`, then Today reads again when the page says `changed`.
+  in `TodayModel.swift`): the same JSON as Android's `TodayData.kt` and `TodayMore.kt`. Pull to
+  refresh is `go` with `action: "sync"`, then Today reads again when the page says `changed`.
+- **Sheets** (`SessionSheet.swift`, `WorkoutSheet.swift`, `SheetData.swift`, `SheetModels.swift`):
+  a planned session (steps, target, the review against the plan, a strength routine, Mark done,
+  Log the sets, Ask your coach, a .fit file) and a workout (route on a MapKit map, the numbers,
+  against the plan with next time's change, your notes, Swift Charts along the way, zones, shoes,
+  splits, sources). `ShellModel.sheet` presents them over everything; the page's own workout
+  links come here too (`workout` says native while that part is on).
+- **Coach** (`CoachScreen.swift`, `CoachData.swift`): native only while there's a plan
+  (`CoachModel.hasPlan`, kept so `parts` can answer); without one the page makes the first plan,
+  and when one appears the shell sends `parts` so the page steps aside. This week or the whole
+  plan, Change plan (ill, better, away, busy: `POST /api/plan/life`), the watch line
+  (`rpc:watchWeek`), the suggestion, undo and the week's review; the ask bar opens the page's chat.
+- **Activities** (`ActivitiesScreen.swift`) and **Progress** (`ProgressScreen.swift`,
+  `ProgressData.swift`): the list by week with search and the sport filter (Routes is the page's),
+  and the ranges and the Week, with Swift Charts.
 
 **The next native screen:** add its name to `NativeParts.built`, return it from
 `ShellModel.nativeFor`, draw it in `ShellScreens`, and give it a model that reads through

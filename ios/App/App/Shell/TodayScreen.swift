@@ -38,6 +38,15 @@ struct TodayScreen: View {
                     withAnimation(.smooth) { proxy.scrollTo("top", anchor: .top) }
                 }
                 .task {
+                    // Screenshots (Launch): a sheet open, once Today has its data.
+                    guard let open = Launch.open else { return }
+                    for _ in 0..<120 where today.data == nil { try? await Task.sleep(for: .milliseconds(500)) }
+                    try? await Task.sleep(for: .seconds(2))
+                    guard let t = today.data else { return }
+                    if open == "workout", let l = t.last { shell.openActivity(l.id) }
+                    if open == "session", let s = t.sessions.first ?? t.next { shell.openSession(date: s.date, kind: s.kind) }
+                }
+                .task {
                     // Screenshots (Launch): More today open, scrolled to, once Today has its data.
                     guard Launch.more else { return }
                     for _ in 0..<120 where today.data == nil { try? await Task.sleep(for: .milliseconds(500)) }

@@ -10,6 +10,8 @@ enum Launch {
     static var tab: String? { UserDefaults.standard.string(forKey: "TartanTab").flatMap { $0.isEmpty ? nil : $0 } }
     /** Today with More today open, scrolled to it. */
     static var more: Bool { UserDefaults.standard.bool(forKey: "TartanMore") }
+    /** Open a sheet from Today once it has its data: "session" (today's or the next) or "workout" (the last). */
+    static var open: String? { UserDefaults.standard.string(forKey: "TartanOpen").flatMap { $0.isEmpty ? nil : $0 } }
     /** Dark, whatever the phone is set to. */
     static var dark: Bool { UserDefaults.standard.bool(forKey: "TartanDark") }
 }

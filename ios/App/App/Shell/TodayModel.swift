@@ -119,7 +119,7 @@ final class TodayModel {
 
     /** A word after something done here ("Marked done."), as the page's messages show. */
     func say(_ text: String) {
-        shell?.show(Snack(id: -1, text: text, error: false, action: nil, ms: 4000))
+        shell?.say(text)
     }
 
     func syncDone() {

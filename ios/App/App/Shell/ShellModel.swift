@@ -66,6 +66,9 @@ final class ShellModel {
     @ObservationIgnored weak var host: ShellHost?
     let engine: EngineBridge
     let today: TodayModel
+    let coach: CoachModel
+    let activities: ActivitiesModel
+    let progress: ProgressModel
 
     /** The web app's view ("today", "coach", "chat"...) and its address after the #. */
     var view = "today"
@@ -74,12 +77,17 @@ final class ShellModel {
     var pageOpen = false
     var navOn = NativeParts.isOn("nav")
     var todayOn = NativeParts.isOn("today")
+    var coachOn = NativeParts.isOn("coach")
+    var activitiesOn = NativeParts.isOn("activities")
+    var progressOn = NativeParts.isOn("progress")
     /** The native screen showing; nil while the page shows its own. */
     var shown: String?
     /** The bar folded small while a screen scrolls down. */
     var navFolded = false
     var board: [Lane] = []
     var snack: Snack?
+    /** The native sheet open over everything (a session's, a workout's), if any. */
+    var sheet: ShellSheet?
     /** Bumped to scroll Today back to the top (its tab tapped again). */
     var toTop = 0
 
@@ -93,7 +101,11 @@ final class ShellModel {
         let engine = EngineBridge()
         self.engine = engine
         self.today = TodayModel(engine: engine)
+        self.coach = CoachModel(engine: engine)
+        self.activities = ActivitiesModel(engine: engine)
+        self.progress = ProgressModel(engine: engine)
         today.shell = self
+        coach.shell = self
         NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { _ in
             MainActor.assumeIsolated { ShellModel.shared.resumed() }
         }
@@ -115,6 +127,7 @@ final class ShellModel {
         told = false
         engine.pageStarted()
         today.stale = true
+        coach.stale = true
         showScreen()
         if Launch.demo { Task { _ = await engine.rpc("demo", ["op": "start"]) } }
         if let tab = Launch.tab { go(tab, retain: true) }
@@ -134,15 +147,23 @@ final class ShellModel {
         showScreen()
     }
 
-    func partsChanged() {
+    /** Parts switched on or off (or Coach's plan made or gone): `tell` the page too, which draws the rest. */
+    func partsChanged(tell: Bool = false) {
         navOn = NativeParts.isOn("nav")
         todayOn = NativeParts.isOn("today")
+        coachOn = NativeParts.isOn("coach")
+        activitiesOn = NativeParts.isOn("activities")
+        progressOn = NativeParts.isOn("progress")
+        if tell { plugin?.emit("parts", NativeParts.all()) }
         showScreen()
     }
 
     /** Which native screen this view gets, if any. */
     private func nativeFor(_ v: String) -> String? {
         if v == "today" && todayOn { return "today" }
+        if v == "coach" && coachOn { return "coach" }
+        if v == "activities" && activitiesOn { return "activities" }
+        if v == "trends" && progressOn { return "trends" }
         return nil
     }
 
@@ -157,6 +178,9 @@ final class ShellModel {
         shown = next
         host?.layout(animated: true)
         if next == "today" { today.freshen() }
+        if next == "activities" { activities.freshen() }
+        // Coach reads whenever it's asked for, so it knows whether there's a plan to draw.
+        if view == "coach" && NativeParts.wanted("coach") { coach.freshen() }
     }
 
     /** A tab tapped (or slid to) in the native bar. */
@@ -182,20 +206,40 @@ final class ShellModel {
         plugin?.emit("go", data)
     }
 
-    func openActivity(_ id: String) { goAction("", extra: ["activity": id]) }
-    func openSession(date: String, kind: String) { goAction("", extra: ["session": date, "kind": kind]) }
+    /** A workout's sheet: native when that part is, else the page's. */
+    func openActivity(_ id: String) {
+        if NativeParts.isOn("workout") { sheet = .workout(WorkoutModel(engine: engine, id: id)) } else { goAction("", extra: ["activity": id]) }
+    }
+
+    /** A planned session's sheet, native (as Android's). */
+    func openSession(date: String, kind: String?) {
+        sheet = .session(SessionModel(engine: engine, date: date, kind: kind))
+    }
+
+    /** A word after something done in a native screen, as the page's messages show. */
+    func say(_ text: String) {
+        show(Snack(id: -1, text: text, error: false, action: nil, ms: 4000))
+    }
     func openBoard() {
         if board.isEmpty { go("settings/sources") } else { goAction("board") }
     }
 
     func changed() {
         today.stale = true
+        coach.stale = true
+        activities.stale = true
+        progress.forget()
+        if shown == "trends" { progress.ensure() }
         today.syncDone()
         if shown == "today" { today.freshen() }
+        if view == "coach" && NativeParts.wanted("coach") { coach.freshen() }
+        if shown == "activities" { activities.freshen() }
     }
 
     private func resumed() {
         if shown == "today" { today.freshen() }
+        if shown == "coach" { coach.freshen() }
+        if shown == "activities" { activities.freshen() }
     }
 
     func show(_ s: Snack) {

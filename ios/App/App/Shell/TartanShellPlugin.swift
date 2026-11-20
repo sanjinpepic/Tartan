@@ -8,11 +8,19 @@ import Capacitor
 enum NativeParts {
     static let names = ["nav", "today", "coach", "chat", "activities", "progress", "settings", "workout", "body", "routes", "record"]
     /** The parts iOS has natively so far. */
-    static let built: Set<String> = ["nav", "today"]
+    static let built: Set<String> = ["nav", "today", "workout", "coach", "activities", "progress"]
 
-    static func isOn(_ name: String) -> Bool {
+    /** Switched on (Settings → More → Native screens), whether or not it shows now. */
+    static func wanted(_ name: String) -> Bool {
         guard built.contains(name) else { return false }
         return UserDefaults.standard.object(forKey: "tartan.shell.\(name)") as? Bool ?? true
+    }
+
+    /** Native now: Coach only with a plan (making the first one is the page's). */
+    static func isOn(_ name: String) -> Bool {
+        guard wanted(name) else { return false }
+        if name == "coach" { return CoachModel.hasPlan }
+        return true
     }
 
     static func set(_ name: String, _ on: Bool) {
@@ -121,9 +129,12 @@ public class TartanShellPlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve()
     }
 
-    /// A workout's sheet: the page's own on iPhone for now.
+    /// A workout's sheet, asked for by the page (a workout opened from one of its screens): native when that part is on.
     @objc func workout(_ call: CAPPluginCall) {
-        call.resolve(["native": false])
+        guard let id = call.getString("id") else { return call.reject("no id") }
+        guard NativeParts.isOn("workout") else { return call.resolve(["native": false]) }
+        onMain { ShellModel.shared.openActivity(id) }
+        call.resolve(["native": true])
     }
 
     /// The watch's state, for a native Sources (not on iPhone yet).

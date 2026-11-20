@@ -58,6 +58,8 @@ for look in light dark; do
   echo "$look:"
   shot "$look-1-today" 25 -TartanTab today
   shot "$look-2-today-more" 28 -TartanTab today -TartanMore YES
+  shot "$look-2b-session" 30 -TartanTab today -TartanOpen session
+  shot "$look-2c-workout" 34 -TartanTab today -TartanOpen workout
   shot "$look-3-coach" 25 -TartanTab coach
   shot "$look-4-activities" 25 -TartanTab activities
   shot "$look-5-progress" 25 -TartanTab trends

@@ -118,8 +118,19 @@ struct ShellScreens: View {
         ZStack {
             if model.shown == "today" {
                 TodayScreen(shell: model, today: model.today)
+                    .transition(.opacity)
+            } else if model.shown == "coach" {
+                CoachScreen(shell: model, coach: model.coach)
+                    .transition(.opacity)
+            } else if model.shown == "activities" {
+                ActivitiesScreen(shell: model, m: model.activities)
+                    .transition(.opacity)
+            } else if model.shown == "trends" {
+                ProgressScreen(shell: model, m: model.progress)
+                    .transition(.opacity)
             }
         }
+        .animation(.smooth(duration: 0.25), value: model.shown)
         .tint(Brand.tint)
     }
 }
@@ -160,6 +171,15 @@ struct ShellBar: View {
         .animation(.smooth(duration: 0.3), value: model.barHidden)
         .animation(.smooth(duration: 0.3), value: model.snack)
         .tint(Brand.tint)
+        .sheet(item: Binding(get: { model.sheet }, set: { model.sheet = $0 })) { sheet in
+            Group {
+                switch sheet {
+                case .session(let m): SessionSheetView(m: m, shell: model)
+                case .workout(let m): WorkoutSheetView(m: m, shell: model)
+                }
+            }
+            .tint(Brand.tint)
+        }
     }
 }
 

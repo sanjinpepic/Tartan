@@ -619,6 +619,10 @@ function tartan2Card(): HTMLElement | undefined {
       el("p", { class: "sub" }, "Parts of Tartan drawn by iOS itself, with Liquid Glass, instead of the web page. More come one at a time. Turn them off to compare."),
       switchRow("Native tab bar", "Slide along it to switch tabs, with a click you feel.", p.nav, (on) => setShellParts({ nav: on })),
       switchRow("Native Today", "Today drawn by iOS: your session, how you are, the morning check, the week.", p.today, (on) => setShellParts({ today: on })),
+      switchRow("Native workout sheet", "A workout drawn by iOS: its route on the map, charts you can slide across, your notes.", p.workout, (on) => setShellParts({ workout: on })),
+      switchRow("Native Coach", "Your plan drawn by iOS: this week, the whole plan, the coach's suggestions, Change plan. Making the first plan stays here.", p.coach, (on) => setShellParts({ coach: on })),
+      switchRow("Native Activities", "Your workouts drawn by iOS, by week, searchable. Routes stay as they are.", p.activities, (on) => setShellParts({ activities: on })),
+      switchRow("Native Progress", "The long view drawn by iOS: charts you can slide across, your bests, the week.", p.progress, (on) => setShellParts({ progress: on })),
     );
   return el(
     "section",

@@ -1240,3 +1240,19 @@ The owner's go-ahead on three points from the 2.65 review:
   shows iPhone's own Native screens switches. Android doesn't change.
 - `test/contract.test.ts` checks the Swift plugin against `web/lib/contract.ts` too.
 - Built by CI only (no Mac here): not yet tried on a phone.
+
+## Native iPhone screens, phase 2 (20 Nov 2026, after 2.69)
+
+- **Screenshots from the simulator in CI** (`.github/workflows/ios-screens.yml`,
+  `scripts/ios-screens.sh`): the newest iPhone simulator, sample data only, each screen light and
+  dark, committed to `screenshots/ios/`. The shell takes launch arguments for it
+  (`Shell/Launch.swift`). A page that starts again (the demo's reload) now hears again whether a
+  native screen shows, and reads it hadn't answered are asked again.
+- **The session and workout sheets, native**: what Today, Coach, Activities and Progress open
+  (and the page's own workout links).
+- **Coach, native while there's a plan**: this week or the whole plan, Change plan, the watch
+  line, the coach's suggestion, undo and the week's review, the ask bar. The first plan is still
+  made on the page.
+- **Activities and Progress, native**: the list by week, searchable; the ranges, the Week, the
+  charts (Swift Charts) and the bests.
+- Settings → More → Native screens has a switch for each.
