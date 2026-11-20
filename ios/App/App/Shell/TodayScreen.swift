@@ -32,7 +32,7 @@ struct TodayScreen: View {
                     shell.scrolled(by: new - old, at: new)
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    Color.clear.frame(height: shell.navOn ? 136 : 72)
+                    Color.clear.frame(height: shell.navOn ? 76 : 0)
                 }
                 .onChange(of: shell.toTop) {
                     withAnimation(.smooth) { proxy.scrollTo("top", anchor: .top) }
@@ -53,18 +53,19 @@ struct TodayScreen: View {
                     today.moreOpen = true
                     try? await Task.sleep(for: .milliseconds(800))
                     proxy.scrollTo("more", anchor: .top)
+                    try? await Task.sleep(for: .milliseconds(800))
+                    Launch.ready("more")
                 }
-            }
-            .overlay(alignment: .bottomTrailing) {
-                RecordButton { shell.go("record") }
-                    .padding(.trailing, 16)
-                    .padding(.bottom, shell.navOn ? (shell.navFolded ? 64 : 78) : 12)
-                    .animation(.spring(response: 0.38, dampingFraction: 0.82), value: shell.navFolded)
             }
             .navigationTitle("Today")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     SyncChip(lanes: shell.board) { shell.openBoard() }
+                }
+                if !shell.navOn {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { shell.go("record") } label: { Image(systemName: "record.circle") }.accessibilityLabel("Record")
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { shell.go("settings") } label: {

@@ -181,6 +181,7 @@ final class CoachModel {
         failed = false
         data = c
         readOn = isoDay(Date())
+        if c.plan != nil { Launch.ready("coach") }
         keys.set(planJson, forKey: "tartan.coach.plan")
         keys.set(statusJson, forKey: "tartan.coach.status")
         keys.set(weeklyJson, forKey: "tartan.coach.weekly")

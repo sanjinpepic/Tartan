@@ -129,8 +129,40 @@ final class ShellModel {
         today.stale = true
         coach.stale = true
         showScreen()
-        if Launch.demo { Task { _ = await engine.rpc("demo", ["op": "start"]) } }
+        if Launch.demo { Task { await demoForScreens() } }
         if let tab = Launch.tab { go(tab, retain: true) }
+    }
+
+    @ObservationIgnored private var settingUp = false
+
+    /**
+     * Screenshots (Launch.demo): the sample data, as the intro's "Try it with sample data" (the page
+     * reloads into it and writes ten weeks of workouts), then what a runner would add to see the
+     * whole app: a half marathon nine weeks out and a plan by Tartan's own rules. Done once; each
+     * later start finds the plan and leaves it.
+     */
+    private func demoForScreens() async {
+        guard !settingUp else { return }
+        settingUp = true
+        defer { settingUp = false }
+        let r = await engine.rpc("demo", ["op": "start"])
+        guard case .success(let j) = r, J(json: j)["on"].bool else { return }
+        // The sample written: Today has a last workout.
+        var seeded = false
+        for _ in 0..<90 {
+            if let t = await engine.get("/api/today"), J(json: t)["last"].object != nil { seeded = true; break }
+            try? await Task.sleep(for: .seconds(1))
+        }
+        guard seeded, let plan = await engine.get("/api/plan") else { return }
+        if J(json: plan)["plan"].object == nil {
+            let cal = Calendar(identifier: .gregorian)
+            let race = isoDay(cal.date(byAdding: .day, value: 63, to: Date()) ?? Date())
+            _ = await engine.send("/api/goals", method: "PUT", body: ["weekly_km": 40, "race": ["name": "Helsinki Half", "distance_km": 21.1, "date": race, "target_s": 6300] as [String: Any]])
+            _ = await engine.send("/api/plan/availability", method: "PUT", body: ["days_per_week": 5, "hours_per_week": 6, "long_run_day": "Sun"])
+            _ = await engine.send("/api/plan/basic", method: "POST", body: ["target": race])
+            changed()
+        }
+        Launch.ready("plan")
     }
 
     /** The tab the bar lights: the view's. */

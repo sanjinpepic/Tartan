@@ -17,20 +17,40 @@ struct TabBar: View {
     private var lit: Int? { hover ?? current }
     private var folded: Bool { model.navFolded && hover == nil }
 
+    /** On Today: Record, a glass circle beside the bar (as iOS 26 puts Search), so it never covers the page. */
+    private var record: Bool { model.shown == "today" }
+
     var body: some View {
-        GlassEffectContainer {
-            HStack(spacing: 0) {
-                ForEach(Array(Tab.all.enumerated()), id: \.element.id) { i, t in
-                    item(t, on: lit == i)
+        GlassEffectContainer(spacing: 10) {
+            HStack(spacing: 10) {
+                HStack(spacing: 0) {
+                    ForEach(Array(Tab.all.enumerated()), id: \.element.id) { i, t in
+                        item(t, on: lit == i)
+                    }
+                }
+                .padding(4)
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+                .contentShape(Capsule())
+                .gesture(slide)
+                .glassEffect(.regular.interactive(), in: Capsule())
+                if record {
+                    Button { model.go("record") } label: {
+                        Image(systemName: "record.circle")
+                            .font(.system(size: folded ? 20 : 24, weight: .semibold))
+                            .foregroundStyle(Brand.tint)
+                            .frame(width: folded ? 48 : 62, height: folded ? 48 : 62)
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(.regular.interactive(), in: Circle())
+                    .accessibilityLabel("Record")
+                    .accessibilityHint("Record a run with the phone")
+                    .transition(.scale.combined(with: .opacity))
                 }
             }
-            .padding(4)
-            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
-            .contentShape(Capsule())
-            .gesture(slide)
-            .glassEffect(.regular.interactive(), in: Capsule())
         }
-        .padding(.horizontal, folded ? 56 : 20)
+        .padding(.horizontal, folded ? 40 : 16)
+        .animation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.82), value: record)
         .animation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.82), value: folded)
         .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: lit)
         .sensoryFeedback(.selection, trigger: lit)

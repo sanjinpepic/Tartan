@@ -99,6 +99,7 @@ final class ActivitiesModel {
         failed = false
         all = parseActivities(json)
         readOn = isoDay(Date())
+        if all?.isEmpty == false { Launch.ready("activities") }
         try? Data(json.utf8).write(to: ActivitiesModel.file)
     }
 }

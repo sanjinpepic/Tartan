@@ -39,6 +39,7 @@ final class SessionModel {
     func load() async {
         guard let json = await engine.get("/api/plan"), let s = findSession(json, date: date, kind: kind) else { missing = true; return }
         session = s
+        Launch.ready("session")
         if s.activityId != nil && (!s.steps.isEmpty || s.target != nil) {
             let k = s.kind.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? s.kind
             if let r = await engine.get("/api/plan/review?date=\(s.date)&kind=\(k)") { review = parseReview(r) }
@@ -123,6 +124,7 @@ final class WorkoutModel {
             notes = parseNotes(o)
             if let felt = o["feeling"].num { feeling = Int(felt.rounded()) }
         }
+        Launch.ready("workout")
         if let j = await sh {
             let o = J(json: j)
             shoes = o["shoes"].array.map { Shoe(id: $0["id"].text, name: $0["name"].text, retired: $0["retired"].bool) }

@@ -36,33 +36,49 @@ xcrun simctl status_bar "$UDID" override --time 9:41 --dataNetwork wifi --wifiBa
 OUT=screenshots/ios
 rm -rf "$OUT" && mkdir -p "$OUT"
 
-# One launch per screen: the arguments, then time for the page to start and the data to come.
+# The app marks what it has loaded (Shell/Launch.swift ready): a file in its Documents.
+DOCS="$(xcrun simctl get_app_container "$UDID" "$BUNDLE" data)/Documents"
+mkdir -p "$DOCS"
+wait_for() {
+  local what=$1 limit=$2 t=0
+  until [ -f "$DOCS/ready-$what" ]; do
+    sleep 1; t=$((t + 1))
+    if [ "$t" -ge "$limit" ]; then echo "  (no $what after ${limit}s)"; return 0; fi
+  done
+}
+
+# One launch per screen: the arguments, then until what it shows has its data, and a moment for
+# the animations to settle.
 shot() {
-  local name=$1 wait=$2; shift 2
+  local name=$1 ready=$2; shift 2
   xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
+  rm -f "$DOCS"/ready-*
   xcrun simctl launch "$UDID" "$BUNDLE" -TartanDemo YES "$@" >/dev/null
-  sleep "$wait"
+  wait_for "$ready" 120
+  sleep 4
   xcrun simctl io "$UDID" screenshot --type=png "$OUT/$name.png" >/dev/null
   # Two thirds of the phone's size: enough to read, lighter in the repository.
   sips --resampleWidth 804 "$OUT/$name.png" >/dev/null
   echo "  $name"
 }
 
-# The first start writes the sample data and reloads into it.
+# The first start: the sample data (the page reloads into it and writes ten weeks of workouts),
+# then a race and a plan by Tartan's rules.
 xcrun simctl ui "$UDID" appearance light
+rm -f "$DOCS"/ready-*
 xcrun simctl launch "$UDID" "$BUNDLE" -TartanDemo YES >/dev/null
-sleep 60
+wait_for plan 300
 
 for look in light dark; do
   xcrun simctl ui "$UDID" appearance "$look"
   echo "$look:"
-  shot "$look-1-today" 25 -TartanTab today
-  shot "$look-2-today-more" 28 -TartanTab today -TartanMore YES
-  shot "$look-2b-session" 30 -TartanTab today -TartanOpen session
-  shot "$look-2c-workout" 34 -TartanTab today -TartanOpen workout
-  shot "$look-3-coach" 25 -TartanTab coach
-  shot "$look-4-activities" 25 -TartanTab activities
-  shot "$look-5-progress" 25 -TartanTab trends
+  shot "$look-1-today" today -TartanTab today
+  shot "$look-2-today-more" more -TartanTab today -TartanMore YES
+  shot "$look-2b-session" session -TartanTab today -TartanOpen session
+  shot "$look-2c-workout" workout -TartanTab today -TartanOpen workout
+  shot "$look-3-coach" coach -TartanTab coach
+  shot "$look-4-activities" activities -TartanTab activities
+  shot "$look-5-progress" trends -TartanTab trends
 done
 xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
 ls -la "$OUT"

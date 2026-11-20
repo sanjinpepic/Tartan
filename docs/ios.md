@@ -25,8 +25,10 @@ data only. They're committed to
 [`screenshots/ios/`](../screenshots/ios/), e.g.
 `https://raw.githubusercontent.com/sanjinpepic/Tartan/main/screenshots/ios/light-1-today.png`.
 The app takes launch arguments for it (`ios/App/App/Shell/Launch.swift`): `-TartanDemo YES` (the
-sample data, no intro), `-TartanTab coach`, `-TartanMore YES`, `-TartanOpen session|workout`, `-TartanDark YES`; they last for
-that launch only. `scripts/ios-prepare.sh` holds the steps both builds share.
+sample data as the intro's "Try it with sample data" starts it, then a half marathon nine weeks out
+and a plan by Tartan's rules, once), `-TartanTab coach`, `-TartanMore YES`, `-TartanOpen session|workout`, `-TartanDark YES`; they last for
+that launch only. The script waits for each screen's data: the app writes a `ready-<screen>` file in
+its Documents when it has it (only with `-TartanDemo`). `scripts/ios-prepare.sh` holds the steps both builds share.
 
 ## Installing it (free)
 

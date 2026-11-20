@@ -179,7 +179,7 @@ final class ProgressModel {
             async let d = engine.get("/api/dashboard?days=\(r)")
             async let s = engine.get("/api/race-shape?weeks=\(min(52, max(8, r / 7)))")
             async let u = engine.get("/api/durability?weeks=\(max(8, r / 7))")
-            if let j = await d, let v = parseDash(j) { dash[r] = v } else { asked.remove("r\(r)") }
+            if let j = await d, let v = parseDash(j) { dash[r] = v; if !v.weeks.isEmpty { Launch.ready("trends") } } else { asked.remove("r\(r)") }
             if let j = await s { shape[r] = parseShape(j) }
             if let j = await u { durability[r] = parseDurability(j) }
         }

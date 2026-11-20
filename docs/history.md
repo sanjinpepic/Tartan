@@ -1256,3 +1256,7 @@ The owner's go-ahead on three points from the 2.65 review:
 - **Activities and Progress, native**: the list by week, searchable; the ranges, the Week, the
   charts (Swift Charts) and the bests.
 - Settings → More → Native screens has a switch for each.
+- **Record** is a glass circle beside the tab bar on Today (as iOS 26 places Search), so it never
+  covers the page.
+- The demo's sample data is written by the full web app too (the iPhone, the PC), not only by the
+  phone's engine bundle: on the iPhone the demo had no workouts.

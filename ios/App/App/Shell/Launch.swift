@@ -14,4 +14,13 @@ enum Launch {
     static var open: String? { UserDefaults.standard.string(forKey: "TartanOpen").flatMap { $0.isEmpty ? nil : $0 } }
     /** Dark, whatever the phone is set to. */
     static var dark: Bool { UserDefaults.standard.bool(forKey: "TartanDark") }
+
+    /**
+     * For the screenshot script: a mark that what was asked has its data ("today", "coach",
+     * "workout", "plan"…), a file in the app's Documents it waits for. Only with -TartanDemo.
+     */
+    static func ready(_ what: String) {
+        guard demo, let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        try? Data(what.utf8).write(to: dir.appendingPathComponent("ready-\(what)"))
+    }
 }
