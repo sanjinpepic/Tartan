@@ -71,6 +71,7 @@ final class ShellModel {
     let progress: ProgressModel
     let chat: ChatModel
     let settings: SettingsModel
+    let body: BodyModel
 
     /** The web app's view ("today", "coach", "chat"...) and its address after the #. */
     var view = "today"
@@ -84,6 +85,7 @@ final class ShellModel {
     var progressOn = NativeParts.isOn("progress")
     var chatOn = NativeParts.isOn("chat")
     var settingsOn = NativeParts.isOn("settings")
+    var bodyOn = NativeParts.isOn("body")
     /** The Settings group showing (from the address: settings/coach). */
     var settingsGroup = "sources"
     /** The keyboard is up (over a native screen: the bar steps aside). */
@@ -114,6 +116,7 @@ final class ShellModel {
         self.progress = ProgressModel(engine: engine)
         self.chat = ChatModel(engine: engine)
         self.settings = SettingsModel(engine: engine)
+        self.body = BodyModel(engine: engine)
         today.shell = self
         coach.shell = self
         settings.shell = self
@@ -205,6 +208,7 @@ final class ShellModel {
         progressOn = NativeParts.isOn("progress")
         chatOn = NativeParts.isOn("chat")
         settingsOn = NativeParts.isOn("settings")
+        bodyOn = NativeParts.isOn("body")
         if tell { plugin?.emit("parts", NativeParts.all()) }
         showScreen()
     }
@@ -222,6 +226,7 @@ final class ShellModel {
         if v == "activities" && activitiesOn { return "activities" }
         if v == "trends" && progressOn { return "trends" }
         if v == "chat" && chatOn { return "chat" }
+        if v == "you" && bodyOn { return "you" }
         if v == "settings" && settingsOn {
             // settings/<group>/all: the page's whole group, for what isn't native yet.
             let parts = hash.split(separator: "/").map(String.init)
@@ -247,6 +252,7 @@ final class ShellModel {
         if next == "activities" { activities.freshen() }
         if next == "chat" { chat.ensure() }
         if next == "settings" { settings.ensure() }
+        if next == "you" { body.ensure() }
         // Coach reads whenever it's asked for, so it knows whether there's a plan to draw.
         if view == "coach" && NativeParts.wanted("coach") { coach.freshen() }
     }
@@ -298,6 +304,8 @@ final class ShellModel {
         activities.stale = true
         settings.forget()
         if shown == "settings" { settings.ensure() }
+        body.forget()
+        if shown == "you" { body.ensure() }
         progress.forget()
         if shown == "trends" { progress.ensure() }
         today.syncDone()

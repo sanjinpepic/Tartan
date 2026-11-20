@@ -55,7 +55,7 @@ iPhone would be Apple's Foundation Models, later).
 ## Native iPhone screens
 
 Since Nov 2026 the tab bar, Today, Coach (with a plan), Activities, Progress and the session and
-workout sheets, the chat and Settings are native SwiftUI with Liquid Glass; the rest (Body, Record
+workout sheets, the chat, Settings and Body are native SwiftUI with Liquid Glass; the rest (Record
 and Lift, Routes, making the first plan, and the parts of Settings below) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
 same as Android's.
 
@@ -111,6 +111,10 @@ same as Android's.
   switches, the log, the version. The rest (Strava's setup, the coach's key, faces, backups, pairing
   by code, agents) is a row that opens the page's whole group: `settings/<group>/all`, which the
   page draws (`nativeSettings` in `web/app.ts`); Android never uses that address.
+- **Body** (`BodyScreen.swift`, `BodyData.swift`, `SVGPath.swift`): the 2D muscle map drawn from
+  `Shell/musclemap.json` (MuscleMap, MIT; `scripts/musclemap-asset.ts` writes it for both apps),
+  shaded on the heat scale, a tap opens a muscle; sleep and vitals. An exercise shows the 3D body
+  moving through it, drawn by the page's WebGL as pictures (`rpc:body`, `BodyFrames`), drag to turn.
 - **Activities** (`ActivitiesScreen.swift`) and **Progress** (`ProgressScreen.swift`,
   `ProgressData.swift`): the list by week with search and the sport filter (Routes is the page's),
   and the ranges and the Week, with Swift Charts.

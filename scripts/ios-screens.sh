@@ -81,6 +81,7 @@ for look in light dark; do
   shot "$look-4-activities" activities -TartanTab activities
   shot "$look-5-progress" trends -TartanTab trends
   shot "$look-6-settings" settings -TartanTab settings/training
+  shot "$look-7-body" you -TartanTab you
 done
 xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
 ls -la "$OUT"

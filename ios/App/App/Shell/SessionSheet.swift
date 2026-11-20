@@ -31,7 +31,7 @@ struct SessionSheetView: View {
                     Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Close")
                 }
             }
-            .sheet(item: $exercise) { e in ExerciseSheet(e: e) }
+            .sheet(item: $exercise) { e in ExerciseDetail(e: e, engine: shell.engine) }
         }
         .task { await m.load() }
         .onChange(of: m.done) {
@@ -232,39 +232,6 @@ private struct ReviewCard: View {
         case "no data": return Color.secondary
         default: return Brand.watch
         }
-    }
-}
-
-/// One exercise: the dose, three cues, why.
-private struct ExerciseSheet: View {
-    let e: Routine.Exercise
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    Text(e.dose).font(.title3.weight(.semibold))
-                    if let eq = e.equipment { LabeledContent("Equipment", value: eq) }
-                }
-                if !e.cues.isEmpty {
-                    Section("How") {
-                        ForEach(Array(e.cues.enumerated()), id: \.offset) { i, c in
-                            Label { Text(c) } icon: { Text("\(i + 1)").font(.headline).foregroundStyle(Brand.tint) }
-                        }
-                    }
-                }
-                if !e.why.isEmpty { Section("Why") { Text(e.why) } }
-            }
-            .navigationTitle(e.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Close")
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
     }
 }
 

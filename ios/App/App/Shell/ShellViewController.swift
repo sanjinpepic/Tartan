@@ -134,6 +134,9 @@ struct ShellScreens: View {
             } else if model.shown == "settings" {
                 SettingsScreen(shell: model, m: model.settings)
                     .transition(.opacity)
+            } else if model.shown == "you" {
+                BodyScreen(shell: model, m: model.body)
+                    .transition(.opacity)
             }
         }
         .animation(.smooth(duration: 0.25), value: model.shown)
