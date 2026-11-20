@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 VERSION=$(node -p "require('./package.json').version")
 CODE=$(node -p "require('./package.json').versionCode")
 bun install --frozen-lockfile
-bun run build:web
+bun run build:web:public
 npx cap sync ios
 # Capacitor writes its package for the app's iOS 26 target but marks it Swift tools 5.9, which
 # doesn't know iOS 26 ("'v26' is unavailable"); 6.2 does (Xcode 26).
