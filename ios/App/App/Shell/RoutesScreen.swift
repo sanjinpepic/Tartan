@@ -215,7 +215,7 @@ private final class HereDelegate: NSObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let c = locations.last?.coordinate else { return }
         let p = LngLat(c)
-        Task { @MainActor in fix(p) }
+        Task { @MainActor in self.fix(p) }
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -586,7 +586,7 @@ struct RouteEditorScreen: View {
                 HStack(spacing: 6) {
                     ForEach(Array(Set([5, 10, 15, 21] + (e.wantLoop > 0 ? [e.wantLoop] : []))).sorted(), id: \.self) { k in
                         Button {
-                            guard let start = here.at ?? centre.map { LngLat($0) } else { return }
+                            guard let start = here.at ?? centre.map({ LngLat($0) }) else { return }
                             e.findLoops(k, from: start)
                         } label: {
                             Text(e.finding == k ? "Finding…" : "\(k) km").font(.subheadline.weight(.semibold)).lineLimit(1).frame(maxWidth: .infinity)

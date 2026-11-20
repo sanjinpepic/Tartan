@@ -469,7 +469,7 @@ final class RouteEditor {
         busy = "pace"
         pacingLine = "Sending the course…"
         Task {
-            switch await engine.rpc("courseToWatch", ["name": title, "line": p["line"] ?? [], "marks": p["marks"] ?? []]) {
+            switch await engine.rpc("courseToWatch", ["name": title, "line": p["line"] ?? [Any](), "marks": p["marks"] ?? [Any]()]) {
             case .success(let j):
                 let o = J(json: j)
                 pacingLine = "On your watch with a split every km (route \(o["id"].int ?? o.int ?? 0))."
@@ -486,7 +486,7 @@ final class RouteEditor {
         pacingLine = "Sending the pacing workout…"
         let target = (p["target"] as? NSNumber)?.intValue ?? 0
         Task {
-            switch await engine.rpc("splitsToWatch", ["name": "\(title) \(clock(target))", "splits": p["splits"] ?? []]) {
+            switch await engine.rpc("splitsToWatch", ["name": "\(title) \(clock(target))", "splits": p["splits"] ?? [Any]()]) {
             case .success:
                 pacingLine = "The pacing workout is on your watch: start it from the sport mode's workout options."
             case .failure(let e):
