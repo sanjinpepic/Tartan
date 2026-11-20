@@ -1218,3 +1218,25 @@ The owner's go-ahead on three points from the 2.65 review:
 - With themed icons on, Tartan's showed its whole icon shrunk inside a ring: the adaptive icon had
   no monochrome layer, so the launcher made one. `drawable/ic_launcher_monochrome.xml` (the T
   alone) is now the `<monochrome>` of both launcher icons, tinted with the wallpaper's colours.
+
+## Native iPhone screens, phase 1 (20 Nov 2026, after 2.68)
+
+- **The iPhone gets Tartan's native layer** (`ios/App/App/Shell/`, SwiftUI, iOS 26): the
+  `TartanShell` plugin in Swift with every method the page calls, the API bridge (async/await,
+  Android's timeouts), a native tab bar and a native Today. The other tabs stay the web app's in
+  the same web view. Only nav and today are reported native; the page hides its bar and its Today
+  and draws everything else, and its sheets open over native Today (the page comes on top,
+  see-through, while one is open).
+- **The tab bar** is a floating Liquid Glass capsule (`glassEffect`), not `TabView`: one web view
+  serves every web tab, the page scrolls inside itself (so `tabBarMinimizeBehavior` couldn't see
+  it), and the page's address is where the app is. Slide along it like Android's; it folds to
+  icons as Today scrolls down; a tick on each tab.
+- **Today** mirrors Android's 2.64 to 2.67: today's session (a tap opens the page's sheet), how
+  you are with the scale as a quiet track and the morning check (Sleep, Legs, what hurts; open
+  until every question asked is answered), race week, the countdown, This week (ring and day
+  bars), More today (numbers and vitals, last workout, worth knowing, notes), new bests at the top.
+  Pull to sync; a glass Record button; loading, failed and empty states; dark mode; Dynamic Type.
+- **The page:** `hidden` also counts the web intro (iPhone shows the page's), and Settings → More
+  shows iPhone's own Native screens switches. Android doesn't change.
+- `test/contract.test.ts` checks the Swift plugin against `web/lib/contract.ts` too.
+- Built by CI only (no Mac here): not yet tried on a phone.

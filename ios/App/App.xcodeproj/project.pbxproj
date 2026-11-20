@@ -16,6 +16,15 @@
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
+		B7C85020072CCF35796D919E /* TartanShellPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B24FD9EE6C9BB15B49CB6DC /* TartanShellPlugin.swift */; };
+		C57C6D727182156026AD0FCE /* ShellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 206430853AA384BAD4258A0C /* ShellModel.swift */; };
+		408A1732733D44FEBAEC936A /* ShellViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29696DD462BD1053F3C98F54 /* ShellViewController.swift */; };
+		838086257F85A3779D3875E5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB0F58926D479CB33E6804B /* Theme.swift */; };
+		A89CE74156C10087E77753CE /* TabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC91B3914BAD014A99F2DA39 /* TabBar.swift */; };
+		C7B72D8C9BC8134E99B22858 /* TodayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D022AD1329E267C8189E33C /* TodayData.swift */; };
+		40C4F994BDAEAC5A96375B9F /* TodayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85432B932216439148FE6134 /* TodayModel.swift */; };
+		7DC7CCF976379ECBDEA36C90 /* TodayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39674D117FDCDB391F6BFA7B /* TodayScreen.swift */; };
+		A55BE05E1B93E5D7F8F0469E /* TodayCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5CD06DCC7F73E9B1FB129C /* TodayCards.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +39,15 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		8B24FD9EE6C9BB15B49CB6DC /* TartanShellPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TartanShellPlugin.swift; sourceTree = "<group>"; };
+		206430853AA384BAD4258A0C /* ShellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellModel.swift; sourceTree = "<group>"; };
+		29696DD462BD1053F3C98F54 /* ShellViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellViewController.swift; sourceTree = "<group>"; };
+		8EB0F58926D479CB33E6804B /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		AC91B3914BAD014A99F2DA39 /* TabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBar.swift; sourceTree = "<group>"; };
+		6D022AD1329E267C8189E33C /* TodayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayData.swift; sourceTree = "<group>"; };
+		85432B932216439148FE6134 /* TodayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayModel.swift; sourceTree = "<group>"; };
+		39674D117FDCDB391F6BFA7B /* TodayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScreen.swift; sourceTree = "<group>"; };
+		3D5CD06DCC7F73E9B1FB129C /* TodayCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayCards.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
+				AF2253B7017F21CE1F9B0720 /* Shell */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -75,6 +94,22 @@
 				50B271D01FEDC1A000F3C39B /* public */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		AF2253B7017F21CE1F9B0720 /* Shell */ = {
+			isa = PBXGroup;
+			children = (
+				8B24FD9EE6C9BB15B49CB6DC /* TartanShellPlugin.swift */,
+				206430853AA384BAD4258A0C /* ShellModel.swift */,
+				29696DD462BD1053F3C98F54 /* ShellViewController.swift */,
+				8EB0F58926D479CB33E6804B /* Theme.swift */,
+				AC91B3914BAD014A99F2DA39 /* TabBar.swift */,
+				6D022AD1329E267C8189E33C /* TodayData.swift */,
+				85432B932216439148FE6134 /* TodayModel.swift */,
+				39674D117FDCDB391F6BFA7B /* TodayScreen.swift */,
+				3D5CD06DCC7F73E9B1FB129C /* TodayCards.swift */,
+			);
+			path = Shell;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -160,6 +195,15 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				B7C85020072CCF35796D919E /* TartanShellPlugin.swift in Sources */,
+				C57C6D727182156026AD0FCE /* ShellModel.swift in Sources */,
+				408A1732733D44FEBAEC936A /* ShellViewController.swift in Sources */,
+				838086257F85A3779D3875E5 /* Theme.swift in Sources */,
+				A89CE74156C10087E77753CE /* TabBar.swift in Sources */,
+				C7B72D8C9BC8134E99B22858 /* TodayData.swift in Sources */,
+				40C4F994BDAEAC5A96375B9F /* TodayModel.swift in Sources */,
+				7DC7CCF976379ECBDEA36C90 /* TodayScreen.swift in Sources */,
+				A55BE05E1B93E5D7F8F0469E /* TodayCards.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

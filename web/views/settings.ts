@@ -1,4 +1,5 @@
 /** Settings in five groups: Sources (Strava, watch, Health Connect), Training (targets, heart rate, plan), Coach (AI key), Watch (guided workouts, the week face), More (PC, data, and under Advanced agents, the face builder, the log). */
+import { Capacitor } from "@capacitor/core";
 import pkg from "../../package.json";
 import { publicBuild, runnerChoice, setRunnerChoice, type RunnerChoice } from "../lib/runner.ts";
 import { setShellParts, shellAvailable, shellParts } from "../lib/shell.ts";
@@ -609,6 +610,16 @@ function coloursCard(): HTMLElement {
 function tartan2Card(): HTMLElement | undefined {
   if (!shellAvailable()) return undefined;
   const p = shellParts();
+  // iPhone: the SwiftUI parts built so far (ios/App/App/Shell), each on or off.
+  if (Capacitor.getPlatform() === "ios")
+    return el(
+      "section",
+      { class: "card" },
+      el("h2", {}, icon("spark", "ic"), "Native screens"),
+      el("p", { class: "sub" }, "Parts of Tartan drawn by iOS itself, with Liquid Glass, instead of the web page. More come one at a time. Turn them off to compare."),
+      switchRow("Native tab bar", "Slide along it to switch tabs, with a click you feel.", p.nav, (on) => setShellParts({ nav: on })),
+      switchRow("Native Today", "Today drawn by iOS: your session, how you are, the morning check, the week.", p.today, (on) => setShellParts({ today: on })),
+    );
   return el(
     "section",
     { class: "card" },

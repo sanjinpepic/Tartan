@@ -1,0 +1,294 @@
+import Foundation
+import Observation
+import UIKit
+
+/// A lane of the sync board: watch or strava; busy, fail, on or ok; "5m", "on", "···".
+struct Lane: Equatable, Identifiable {
+    let id: String
+    let state: String
+    let text: String
+    let glyph: String
+    let name: String
+    let status: String
+    let failed: Bool
+}
+
+/// A message from the page (state.ts notify), drawn natively over everything.
+struct Snack: Equatable {
+    let id: Int
+    let text: String
+    let error: Bool
+    let action: String?
+    let ms: Int?
+}
+
+/// One of the app's four tabs (Settings is the gear).
+struct Tab: Identifiable, Equatable {
+    let id: String
+    let label: String
+    let icon: String
+
+    static let all = [
+        Tab(id: "today", label: "Today", icon: "sun.max"),
+        Tab(id: "coach", label: "Coach", icon: "figure.run"),
+        Tab(id: "activities", label: "Activities", icon: "list.bullet"),
+        Tab(id: "trends", label: "Progress", icon: "chart.line.uptrend.xyaxis"),
+    ]
+
+    /// The tab a view belongs to (as the web's own nav and Android's FloatingBar.kt count it).
+    static func of(_ view: String) -> String? {
+        switch view {
+        case "chat": return "coach"
+        case "route", "routes": return "activities"
+        case "lift", "you": return "today"
+        case "today", "coach", "activities", "trends": return view
+        default: return nil
+        }
+    }
+}
+
+/// What the root view controller does when the native layer changes: show or hide the native
+/// screen, and put it over or under the page.
+@MainActor
+protocol ShellHost: AnyObject {
+    func layout(animated: Bool)
+}
+
+/// The native layer's state: where the web app is, which native screen shows, the bar, the
+/// board and the page's messages. The plugin feeds it (on the main thread); the SwiftUI views and
+/// the root view controller read it.
+@MainActor
+@Observable
+final class ShellModel {
+    static let shared = ShellModel()
+
+    @ObservationIgnored weak var plugin: TartanShellPlugin?
+    @ObservationIgnored weak var host: ShellHost?
+    let engine: EngineBridge
+    let today: TodayModel
+
+    /** The web app's view ("today", "coach", "chat"...) and its address after the #. */
+    var view = "today"
+    var hash = ""
+    /** Something of the page's is open over everything (a sheet, the intro, the keyboard). */
+    var pageOpen = false
+    var navOn = NativeParts.isOn("nav")
+    var todayOn = NativeParts.isOn("today")
+    /** The native screen showing; nil while the page shows its own. */
+    var shown: String?
+    /** The bar folded small while a screen scrolls down. */
+    var navFolded = false
+    var board: [Lane] = []
+    var snack: Snack?
+    /** Bumped to scroll Today back to the top (its tab tapped again). */
+    var toTop = 0
+
+    /** Where the bar and the messages are drawn (window coordinates), for the overlay's hit test. */
+    @ObservationIgnored var touchRects: [String: CGRect] = [:]
+    @ObservationIgnored private var told = false
+    @ObservationIgnored private var run: CGFloat = 0
+    @ObservationIgnored private var snackTimer: Task<Void, Never>?
+
+    private init() {
+        let engine = EngineBridge()
+        self.engine = engine
+        self.today = TodayModel(engine: engine)
+        today.shell = self
+        NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { ShellModel.shared.resumed() }
+        }
+    }
+
+    func attach(_ plugin: TartanShellPlugin) {
+        self.plugin = plugin
+        engine.plugin = plugin
+        showScreen()
+    }
+
+    /** The tab the bar lights: the view's. */
+    var tab: String? { Tab.of(view) }
+
+    /** Screens that take the whole screen: no bar over them (as on Android). */
+    var barHidden: Bool { !navOn || pageOpen || ["lift", "record", "face"].contains(view) }
+
+    func route(view next: String, hash: String, pageOpen: Bool) {
+        if next != view { navFolded = false }
+        view = next
+        self.hash = hash
+        self.pageOpen = pageOpen
+        showScreen()
+    }
+
+    func partsChanged() {
+        navOn = NativeParts.isOn("nav")
+        todayOn = NativeParts.isOn("today")
+        showScreen()
+    }
+
+    /** Which native screen this view gets, if any. */
+    private func nativeFor(_ v: String) -> String? {
+        if v == "today" && todayOn { return "today" }
+        return nil
+    }
+
+    func showScreen() {
+        let next = nativeFor(view)
+        // The page goes see-through over a native screen (so its sheets open over it), and back
+        // to itself over its own.
+        if (next != nil) != (shown != nil) || !told, let plugin {
+            told = true
+            plugin.emit("screen", ["native": next != nil], retain: true)
+        }
+        shown = next
+        host?.layout(animated: true)
+        if next == "today" { today.freshen() }
+    }
+
+    /** A tab tapped (or slid to) in the native bar. */
+    func select(_ id: String) {
+        navFolded = false
+        if view == id {
+            if id == "today" { toTop += 1 }
+            return
+        }
+        go(id)
+    }
+
+    /** Ask the web app to show a screen (an address, "settings/sources"...). */
+    func go(_ hash: String) {
+        plugin?.emit("go", ["hash": hash])
+    }
+
+    /** Ask the web app for something: "sync", "board", or a workout's or a session's sheet. */
+    func goAction(_ action: String, extra: [String: Any] = [:]) {
+        var data: [String: Any] = ["hash": ""]
+        if !action.isEmpty { data["action"] = action }
+        for (k, v) in extra { data[k] = v }
+        plugin?.emit("go", data)
+    }
+
+    func openActivity(_ id: String) { goAction("", extra: ["activity": id]) }
+    func openSession(date: String, kind: String) { goAction("", extra: ["session": date, "kind": kind]) }
+    func openBoard() {
+        if board.isEmpty { go("settings/sources") } else { goAction("board") }
+    }
+
+    func changed() {
+        today.stale = true
+        today.syncDone()
+        if shown == "today" { today.freshen() }
+    }
+
+    private func resumed() {
+        if shown == "today" { today.freshen() }
+    }
+
+    func show(_ s: Snack) {
+        snackTimer?.cancel()
+        snack = s
+        guard let ms = s.ms else { return }
+        snackTimer = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(ms))
+            guard !Task.isCancelled else { return }
+            self?.dismissSnack(s.id)
+        }
+    }
+
+    func dismissSnack(_ id: Int) {
+        if snack?.id == id { snack = nil }
+    }
+
+    /** The snack's button: the page runs what it stands for. */
+    func snackAction(_ s: Snack) {
+        plugin?.emit("snack", ["id": s.id])
+        dismissSnack(s.id)
+    }
+
+    /** A screen scrolled: a run of 24 points down folds the bar, back up (or at the top) unfolds it, so a nudge doesn't. */
+    func scrolled(by dy: CGFloat, at y: CGFloat) {
+        if y <= 8 {
+            run = 0
+            if navFolded { navFolded = false }
+            return
+        }
+        if (dy < 0) != (run < 0) { run = 0 }
+        run += dy
+        if run > 24, !navFolded { navFolded = true } else if run < -24, navFolded { navFolded = false }
+    }
+}
+
+/// The API bridge to the engine: a call goes to the page as an "api" event and comes back as
+/// `reply` (or `chunk` lines, then `reply`). Kept for the page if it isn't listening yet. A call
+/// that isn't answered in time ends with 599, as on Android (GET 20 s, a stream 10 min, else 2 min).
+@MainActor
+final class EngineBridge {
+    weak var plugin: TartanShellPlugin?
+    private var pending: [String: CheckedContinuation<(Int, String), Never>] = [:]
+    private var timers: [String: Task<Void, Never>] = [:]
+    private var streams: [String: (String) -> Void] = [:]
+
+    func call(_ path: String, method: String = "GET", body: String? = nil, onLine: ((String) -> Void)? = nil) async -> (status: Int, body: String) {
+        guard let plugin else { return (599, "") }
+        let id = UUID().uuidString
+        let seconds: Double = method == "GET" && onLine == nil ? 20 : onLine != nil ? 600 : 120
+        if let onLine { streams[id] = onLine }
+        var data: [String: Any] = ["id": id, "method": method, "path": path, "stream": onLine != nil]
+        if let body { data["body"] = body }
+        let answer: (Int, String) = await withCheckedContinuation { cont in
+            pending[id] = cont
+            timers[id] = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(seconds))
+                guard !Task.isCancelled else { return }
+                self?.finish(id, 599, "")
+            }
+            plugin.emit("api", data, retain: true)
+        }
+        streams[id] = nil
+        return (answer.0, answer.1)
+    }
+
+    func finish(_ id: String, _ status: Int, _ body: String) {
+        timers.removeValue(forKey: id)?.cancel()
+        guard let cont = pending.removeValue(forKey: id) else { return }
+        cont.resume(returning: (status, body))
+    }
+
+    func line(_ id: String, _ line: String) {
+        streams[id]?(line)
+    }
+
+    /** A read: the body, or nil when it didn't come. */
+    func get(_ path: String) async -> String? {
+        let r = await call(path)
+        return (200..<300).contains(r.status) ? r.body : nil
+    }
+
+    /** A write: the body, or what went wrong in words. */
+    func send(_ path: String, method: String, body: [String: Any]) async -> Result<String, ShellError> {
+        let r = await call(path, method: method, body: jsonText(body))
+        return answer(r)
+    }
+
+    /** A typed engine call (web/lib/contract.ts EngineCalls). */
+    func rpc(_ name: String, _ args: [String: Any] = [:]) async -> Result<String, ShellError> {
+        let r = await call("rpc:\(name)", method: "POST", body: jsonText(args))
+        return answer(r)
+    }
+
+    private func answer(_ r: (status: Int, body: String)) -> Result<String, ShellError> {
+        let error = J(json: r.body)["error"].str
+        if (200..<300).contains(r.status), error == nil { return .success(r.body) }
+        if let error, !error.isEmpty { return .failure(ShellError(message: error)) }
+        if r.status == 599 { return .failure(ShellError(message: "No answer. Is the app busy?")) }
+        return .failure(ShellError(message: "It didn't go through (\(r.status))."))
+    }
+}
+
+struct ShellError: Error {
+    let message: String
+}
+
+func jsonText(_ value: Any) -> String {
+    guard JSONSerialization.isValidJSONObject(value), let data = try? JSONSerialization.data(withJSONObject: value) else { return "{}" }
+    return String(decoding: data, as: UTF8.self)
+}

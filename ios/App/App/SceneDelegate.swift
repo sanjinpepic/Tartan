@@ -7,8 +7,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
 
-        window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = CAPBridgeViewController()
+        // The shell: the web app with Tartan's native screens and bar over it (Shell/). The
+        // storyboard makes the same one; a window without it gets one here.
+        if !(window?.rootViewController is ShellViewController) {
+            window = UIWindow(windowScene: windowScene)
+            window?.rootViewController = ShellViewController()
+        }
         window?.makeKeyAndVisible()
 
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)

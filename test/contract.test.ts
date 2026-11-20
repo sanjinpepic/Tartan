@@ -51,3 +51,25 @@ test("every event the native side sends is one the contract lists", () => {
   const sent = new Set([...kotlin.matchAll(/notifyListeners\("([a-zA-Z]+)"/g)].map((m) => m[1]!));
   expect([...sent].filter((n) => !events.has(n))).toEqual([]);
 });
+
+// The iPhone's TartanShell (ios/App/App/Shell, SwiftUI): the same plugin, so the same contract.
+const iosDir = join(root, "ios/App/App/Shell");
+const swift = readdirSync(iosDir).filter((f) => f.endsWith(".swift")).map((f) => readFileSync(join(iosDir, f), "utf8")).join("\n");
+
+test("iPhone: the plugin has every method the page calls, each registered and implemented", () => {
+  const registered = new Set([...swift.matchAll(/CAPPluginMethod\(name: "([a-zA-Z]+)"/g)].map((m) => m[1]!));
+  const implemented = new Set([...swift.matchAll(/@objc func ([a-zA-Z]+)\(_ call: CAPPluginCall\)/g)].map((m) => m[1]!));
+  expect([...screenCalls].filter((n) => !registered.has(n))).toEqual([]);
+  expect([...registered].filter((n) => !screenCalls.has(n))).toEqual([]);
+  expect([...registered].filter((n) => !implemented.has(n))).toEqual([]);
+  expect(swift).toContain('jsName = "TartanShell"');
+});
+
+test("iPhone: every call and event is in the contract", () => {
+  const used = new Set([...swift.matchAll(/\brpc\("([a-zA-Z]+)"/g)].map((m) => m[1]!));
+  expect(used.size).toBeGreaterThan(3);
+  expect([...used].filter((n) => !calls.has(n))).toEqual([]);
+  const sent = new Set([...swift.matchAll(/emit\("([a-zA-Z]+)"/g)].map((m) => m[1]!));
+  expect(sent.has("api")).toBe(true);
+  expect([...sent].filter((n) => !events.has(n))).toEqual([]);
+});

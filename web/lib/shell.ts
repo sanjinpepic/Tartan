@@ -84,8 +84,12 @@ const ready = new Promise<void>((r) => (markReady = r));
 let parts: ShellParts = { nav: false, today: false, coach: false, chat: false, activities: false, progress: false, settings: false, workout: false, body: false, routes: false, record: false };
 let view = "today";
 
-/** What the native bar needs to hide for: the keyboard, or a sheet or dialog over the page. */
-const hidden = () => document.documentElement.classList.contains("kb-open") || !!document.querySelector("dialog[open]");
+/**
+ * What the native bar needs to hide for: the keyboard, or a sheet or dialog over the page (or the
+ * web's intro, which iPhone shows: Android's is native). On iPhone the page then comes on top of
+ * the native screen, see-through, so what it opened shows.
+ */
+const hidden = () => document.documentElement.classList.contains("kb-open") || !!document.querySelector("dialog[open], .onboard");
 
 function mark(): void {
   document.documentElement.classList.toggle("native-nav", parts.nav);
@@ -855,5 +859,12 @@ export async function startShell(): Promise<void> {
       shellRoute();
     }
   }).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["open", "class"] });
+  // The web intro coming and going (iPhone): it's added to and removed from the body.
+  new MutationObserver(() => {
+    if (hidden() !== last) {
+      last = hidden();
+      shellRoute();
+    }
+  }).observe(document.body, { childList: true });
   shellRoute();
 }
