@@ -621,11 +621,12 @@ function tartan2Card(): HTMLElement | undefined {
       switchRow("Native Today", "Today drawn by iOS: your session, how you are, the morning check, the week.", p.today, (on) => setShellParts({ today: on })),
       switchRow("Native workout sheet", "A workout drawn by iOS: its route on the map, charts you can slide across, your notes.", p.workout, (on) => setShellParts({ workout: on })),
       switchRow("Native Coach", "Your plan drawn by iOS: this week, the whole plan, the coach's suggestions, Change plan. Making the first plan stays here.", p.coach, (on) => setShellParts({ coach: on })),
-      switchRow("Native Activities", "Your workouts drawn by iOS, by week, searchable. Routes stay as they are.", p.activities, (on) => setShellParts({ activities: on })),
+      switchRow("Native Activities", "Your workouts drawn by iOS, by week, searchable.", p.activities, (on) => setShellParts({ activities: on })),
       switchRow("Native Progress", "The long view drawn by iOS: charts you can slide across, your bests, the week.", p.progress, (on) => setShellParts({ progress: on })),
       switchRow("Native chat", "Talking to your coach, drawn by iOS: its answer as it comes, routes, photos.", p.chat, (on) => setShellParts({ chat: on })),
       switchRow("Native Settings", "Settings drawn by iOS; what isn't native yet opens this page's group.", p.settings, (on) => setShellParts({ settings: on })),
       switchRow("Native Body", "Your muscles on the map, sleep and the watch's vitals, drawn by iOS.", p.body, (on) => setShellParts({ body: on })),
+      switchRow("Native Routes", "Your routes, and the route editor on Apple's map: paths, loops from here, race pacing, to the watch.", p.routes, (on) => setShellParts({ routes: on })),
       switchRow("Native Record and Lift", "Recording a run (on the lock screen while it runs), and a strength session set by set, drawn by iOS.", p.record, (on) => setShellParts({ record: on })),
     );
   return el(

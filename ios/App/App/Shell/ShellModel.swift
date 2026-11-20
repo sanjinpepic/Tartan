@@ -73,6 +73,9 @@ final class ShellModel {
     let settings: SettingsModel
     let body: BodyModel
     let record: RecordModel
+    let routes: RoutesModel
+    /** The route editor open (by the address: route/<id>, route/new, route/new/loop-10). */
+    var routeEditor: RouteEditor?
     /** The strength session open (by the address: lift/<date>). */
     var lift: LiftModel?
 
@@ -90,6 +93,7 @@ final class ShellModel {
     var settingsOn = NativeParts.isOn("settings")
     var bodyOn = NativeParts.isOn("body")
     var recordOn = NativeParts.isOn("record")
+    var routesOn = NativeParts.isOn("routes")
     /** The Settings group showing (from the address: settings/coach). */
     var settingsGroup = "sources"
     /** The keyboard is up (over a native screen: the bar steps aside). */
@@ -122,6 +126,7 @@ final class ShellModel {
         self.settings = SettingsModel(engine: engine)
         self.body = BodyModel(engine: engine)
         self.record = RecordModel(engine: engine)
+        self.routes = RoutesModel(engine: engine)
         today.shell = self
         coach.shell = self
         settings.shell = self
@@ -166,6 +171,14 @@ final class ShellModel {
                     // None planned: today's, with a runner's basic routine.
                     go("lift/\(strength.first(where: { $0 >= today }) ?? strength.last ?? today)", retain: true)
                 }
+            } else if tab == "route" {
+                // Screenshots: the latest route (the sample's, written with the plan).
+                Task {
+                    for _ in 0..<120 {
+                        if let id = parseRoutes(await engine.get("/api/routes") ?? "{}").routes.first?.id { go("route/\(id)", retain: true); return }
+                        try? await Task.sleep(for: .seconds(1))
+                    }
+                }
             } else {
                 go(tab, retain: true)
             }
@@ -201,14 +214,50 @@ final class ShellModel {
             _ = await engine.send("/api/plan/basic", method: "POST", body: ["target": race])
             changed()
         }
+        if parseRoutes(await engine.get("/api/routes") ?? "{}").routes.isEmpty {
+            await sampleRoutes()
+            changed()
+        }
         Launch.ready("plan")
+    }
+
+    /**
+     * Screenshots: two routes in Helsinki, where the sample runs are, drawn along paths as the
+     * editor draws them (straight where the path finder can't be reached), with their heights.
+     */
+    private func sampleRoutes() async {
+        let routes: [(String, [[Double]], Bool)] = [
+            ("To Seurasaari", [[24.9205, 60.1806], [24.9045, 60.1838], [24.8868, 60.1829]], false),
+            ("Töölönlahti loop", [[24.9336, 60.1760], [24.9302, 60.1806], [24.9345, 60.1852], [24.9418, 60.1838], [24.9404, 60.1785], [24.9336, 60.1760]], true),
+        ]
+        for (name, wps, onWatch) in routes {
+            let wp = wps.map { LngLat(lng: $0[0], lat: $0[1]) }
+            var segs: [[String: Any]] = []
+            var line: [LngLat] = []
+            for i in wp.indices.dropFirst() {
+                var coords = [wp[i - 1], wp[i]], mode = "straight"
+                if case .success(let j) = await engine.rpc("routePath", ["a": wp[i - 1].json, "b": wp[i].json]) {
+                    let p = points(J(json: j)["line"])
+                    if p.count >= 2 { coords = p; mode = "paths" }
+                }
+                segs.append(["mode": mode, "coords": coords.map(\.json)])
+                line += line.last == coords.first ? Array(coords.dropFirst()) : coords
+            }
+            var body: [String: Any] = ["name": name, "waypoints": wp.map(\.json), "segments": segs]
+            if case .success(let j) = await engine.rpc("routeHeights", ["line": line.map(\.json)]) {
+                let h = J(json: j).array.compactMap(\.num)
+                if h.count == line.count { body["elevation"] = h }
+            }
+            if onWatch { body["watch"] = ["id": 3, "sent": ISO8601DateFormatter().string(from: Date()), "name": name] as [String: Any] }
+            _ = await engine.send("/api/routes/new", method: "PUT", body: body)
+        }
     }
 
     /** The tab the bar lights: the view's. */
     var tab: String? { Tab.of(view) }
 
     /** Screens that take the whole screen: no bar over them (as on Android). */
-    var barHidden: Bool { !navOn || pageOpen || (keyboardUp && shown != nil) || ["lift", "record", "face"].contains(view) }
+    var barHidden: Bool { !navOn || pageOpen || (keyboardUp && shown != nil) || ["lift", "record", "face", "route"].contains(view) }
 
     func route(view next: String, hash: String, pageOpen: Bool) {
         if next != view { navFolded = false }
@@ -229,6 +278,7 @@ final class ShellModel {
         settingsOn = NativeParts.isOn("settings")
         bodyOn = NativeParts.isOn("body")
         recordOn = NativeParts.isOn("record")
+        routesOn = NativeParts.isOn("routes")
         if tell { plugin?.emit("parts", NativeParts.all()) }
         showScreen()
     }
@@ -254,6 +304,18 @@ final class ShellModel {
         if v == "chat" && chatOn { return "chat" }
         if v == "you" && bodyOn { return "you" }
         if v == "record" && recordOn { return "record" }
+        if v == "routes" && routesOn { return "routes" }
+        if v == "route" && routesOn {
+            let parts = hash.split(separator: "/").map(String.init)
+            let id = parts.count > 1 ? (parts[1].removingPercentEncoding ?? parts[1]) : "new"
+            let loop = id == "new" && parts.count > 2 && parts[2].hasPrefix("loop-") ? Int(parts[2].dropFirst(5)) ?? 0 : 0
+            // The same route (or one just saved from new): the editor as it is.
+            if let cur = routeEditor, cur.id == id || cur.savedId == id, cur.wantLoop == loop { return "route" }
+            let e = RouteEditor(engine: engine, id: id, wantLoop: loop)
+            e.shell = self
+            routeEditor = e
+            return "route"
+        }
         if v == "lift" && recordOn {
             let date = hash.split(separator: "/").dropFirst().first.map(String.init) ?? isoDay(Date())
             if lift?.date != date {
@@ -290,6 +352,7 @@ final class ShellModel {
         if next == "settings" { settings.ensure() }
         if next == "you" { body.ensure() }
         if next == "record" { record.ensure() }
+        if next == "routes" || next == "route" { routes.ensure() }
         // Coach reads whenever it's asked for, so it knows whether there's a plan to draw.
         if view == "coach" && NativeParts.wanted("coach") { coach.freshen() }
     }
@@ -345,6 +408,8 @@ final class ShellModel {
         if shown == "you" { body.ensure() }
         progress.forget()
         if shown == "trends" { progress.ensure() }
+        routes.forget()
+        if shown == "routes" { routes.ensure() }
         today.syncDone()
         if shown == "today" { today.freshen() }
         if view == "coach" && NativeParts.wanted("coach") { coach.freshen() }

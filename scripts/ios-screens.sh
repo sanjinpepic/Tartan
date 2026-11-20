@@ -31,6 +31,8 @@ BUNDLE=app.tartan
 xcrun simctl uninstall "$UDID" "$BUNDLE" 2>/dev/null || true
 xcrun simctl install "$UDID" "$APP"
 xcrun simctl privacy "$UDID" grant all "$BUNDLE" 2>/dev/null || true
+# Where the sample runs are (Helsinki), for the route editor's blue dot.
+xcrun simctl location "$UDID" set 60.1790,24.9330 2>/dev/null || true
 xcrun simctl status_bar "$UDID" override --time 9:41 --dataNetwork wifi --wifiBars 3 --cellularBars 4 --batteryState charged --batteryLevel 100
 
 OUT=screenshots/ios
@@ -84,6 +86,8 @@ for look in light dark; do
   shot "$look-7-body" you -TartanTab you
   shot "$look-8-record" record -TartanTab record
   shot "$look-9-lift" lift -TartanTab lift
+  shot "$look-10-routes" routes -TartanTab routes
+  shot "$look-11-route" route -TartanTab route
 done
 xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
 ls -la "$OUT"

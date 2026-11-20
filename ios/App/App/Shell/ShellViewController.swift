@@ -140,6 +140,13 @@ struct ShellScreens: View {
             } else if model.shown == "record" {
                 RecordScreen(shell: model, m: model.record)
                     .transition(.opacity)
+            } else if model.shown == "routes" {
+                RoutesScreen(shell: model, m: model.routes)
+                    .transition(.opacity)
+            } else if model.shown == "route", let e = model.routeEditor {
+                RouteEditorScreen(shell: model, e: e)
+                    .id(ObjectIdentifier(e))
+                    .transition(.opacity)
             } else if model.shown == "lift", let l = model.lift {
                 LiftScreen(shell: model, m: l)
                     .id(l.date)

@@ -1282,3 +1282,10 @@ The owner's go-ahead on three points from the 2.65 review:
   it. While a run is live it's a Live Activity on the lock screen and in the Dynamic Island, drawn
   by a new widget extension (`ios/App/TartanWidgets/`). Lift logs set by set with the rest counting
   down and a notification when it's over.
+
+## Native iPhone screens, phase 5 (20 Nov 2026, after 2.72)
+
+- **Routes, native**: the list (loops from here, your routes, GPX import) and the route editor on
+  Apple's map (MapKit): points tapped, dragged or taken out, legs along paths or straight, undo,
+  to start, out and back, reverse, the height profile, three loops from here, Save, Send to watch,
+  Share as GPX, and race pacing. The same engine calls as Android's editor.

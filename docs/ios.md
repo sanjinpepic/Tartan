@@ -20,7 +20,8 @@ SideStore (Sources → +) once, and it offers each new build.
 
 **Screenshots:** `.github/workflows/ios-screens.yml` (on each push that changes the app, or by
 hand) builds for the simulator and runs `scripts/ios-screens.sh`: Today (top, and More today),
-a session's and a workout's sheet, Coach, Activities and Progress, light and dark, with the sample
+a session's and a workout's sheet, Coach, the chat, Activities, Progress, Settings, Body, Record,
+Lift, Routes and the route editor, light and dark, with the sample
 data only. They're committed to
 [`screenshots/ios/`](../screenshots/ios/), e.g.
 `https://raw.githubusercontent.com/sanjinpepic/Tartan/main/screenshots/ios/light-1-today.png`.
@@ -55,8 +56,8 @@ iPhone would be Apple's Foundation Models, later).
 ## Native iPhone screens
 
 Since Nov 2026 the tab bar, Today, Coach (with a plan), Activities, Progress and the session and
-workout sheets, the chat, Settings, Body, Record and Lift are native SwiftUI with Liquid Glass; the
-rest (Routes, making the first plan, the intro, and the parts of Settings below) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
+workout sheets, the chat, Settings, Body, Record and Lift, and Routes are native SwiftUI with Liquid Glass; the
+rest (making the first plan, the intro, and the parts of Settings below) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
 same as Android's.
 
 - **The plugin** (`TartanShellPlugin.swift`): the `TartanShell` Capacitor plugin, with every
@@ -126,8 +127,17 @@ same as Android's.
   strength session set by set (`/api/lifts`), the rest counting down with a notification when it's
   over (`rpc:restNote`), and Finish shows the records and next time.
 - **Activities** (`ActivitiesScreen.swift`) and **Progress** (`ProgressScreen.swift`,
-  `ProgressData.swift`): the list by week with search and the sport filter (Routes is the page's),
-  and the ranges and the Week, with Swift Charts.
+  `ProgressData.swift`): the list by week with search and the sport filter, and the ranges and the
+  Week, with Swift Charts.
+- **Routes** (`RoutesScreen.swift`, `RoutesData.swift`): the list (a loop of 5 to 21 km from here,
+  your routes with their line, distance, climb and whether they're on the watch, a GPX file to
+  import) and the editor on a MapKit map: tap to add a point, tap the start to close the loop or
+  another point to take it out, drag one to move it; each leg along paths (`rpc:routePath`) or
+  straight; undo, to start, out and back, reverse; heights and the profile once the line settles
+  (`rpc:routeHeights`); three loops from here (`rpc:routeLoops`); Save, Send to watch
+  (`rpc:routeToWatch`), Share as GPX (`rpc:routeGpx`); race pacing for a target time
+  (`rpc:racePacing`, then `courseToWatch` or `splitsToWatch`). Apple's map has no path data to
+  snap a tap onto, so a tap lands where it is and the path finder takes the leg onto the paths.
 
 **The next native screen:** add its name to `NativeParts.built`, return it from
 `ShellModel.nativeFor`, draw it in `ShellScreens`, and give it a model that reads through
