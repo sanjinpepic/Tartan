@@ -95,7 +95,7 @@ struct LockScreenRun: View {
             }
             .font(.subheadline.weight(.medium))
             if let g = goalKm, g > 0 {
-                ProgressView(value: min(1, s.distanceKm / g)).runTint(runTint)
+                ProgressView(value: min(1, s.distanceKm / g)).tint(runTint)
             }
         }
         .foregroundStyle(.white)
