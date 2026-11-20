@@ -132,7 +132,7 @@ struct RoutesScreen: View {
 
     private var loopCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label("A loop from here", systemImage: "arrow.triangle.2.circlepath")
+            Label("A loop from here", systemImage: "arrow.clockwise")
                 .font(.title3.weight(.bold))
                 .labelStyle(TintedIcon())
             Text("Three loops along paths from where you are; pick one, then send it to your watch.")
@@ -443,7 +443,7 @@ struct RouteEditorScreen: View {
                 Button {
                     if let p = here.at ?? shell.routes.home { fit([p]) } else { shell.say("Couldn't find where you are. Allow location for Tartan, or move the map by hand.") }
                 } label: {
-                    Image(systemName: "location").font(.headline).frame(width: 44, height: 44)
+                    Image(systemName: "scope").font(.headline).frame(width: 44, height: 44)
                 }
                 .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
@@ -506,10 +506,10 @@ struct RouteEditorScreen: View {
             if let h { Profile(line: e.line, h: h).frame(height: 56) }
             HStack(spacing: 0) {
                 tool("arrow.uturn.backward", "Undo", e.canUndo) { e.undo() }
-                tool("smallcircle.filled.circle", "To start", can) { e.toStart() }
+                tool("arrow.clockwise", "To start", can) { e.toStart() }
                 tool("arrow.left.arrow.right", "Out & back", can) { e.outAndBack() }
                 tool("arrow.up.arrow.down", "Reverse", can) { e.reverse() }
-                tool("stopwatch", "Race pace", can) { pacing = true }
+                tool("clock", "Race pace", can) { pacing = true }
             }
             HStack(spacing: 8) {
                 Button { e.save() } label: {
@@ -523,7 +523,7 @@ struct RouteEditorScreen: View {
                 .buttonStyle(.glass)
                 .disabled(!can || e.busy != nil)
                 Button { e.gpx() } label: {
-                    Image(systemName: "square.and.arrow.up").font(.headline).padding(.vertical, 4)
+                    Image(systemName: "doc").font(.headline).padding(.vertical, 4)
                 }
                 .buttonStyle(.glass)
                 .disabled(!can || e.busy != nil)
