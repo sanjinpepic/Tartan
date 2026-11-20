@@ -320,8 +320,12 @@ try {
     if (!/target 30 km/.test(week ?? "")) throw new Error(`Today's week card has no target: ${week}`);
     await page.goto(base + "#trends");
     await page.waitForSelector(".trends-body .tiles", { timeout: 10_000 });
-    const body = await page.locator(".trends-body").textContent();
-    if (!/Predicted/.test(body ?? "") || !/target met in \d+ of the last 12 weeks/.test(body ?? "")) throw new Error("Progress lacks the race prediction or the target history");
+    // The prediction and the target history fill in after the tiles: wait for them.
+    const filled = await page.waitForFunction(() => {
+      const t = document.querySelector(".trends-body")?.textContent ?? "";
+      return /Predicted/.test(t) && /target met in \d+ of the last 12 weeks/.test(t);
+    }, null, { timeout: 10_000 }).then(() => true, () => false);
+    if (!filled) throw new Error("Progress lacks the race prediction or the target history");
   });
   await step("record-a-run", async () => {
     await page.goto(base + "#today");

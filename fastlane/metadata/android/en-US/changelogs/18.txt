@@ -1,0 +1,2 @@
+- The same icons on Android and iPhone: a sun for Today and a recording dot for Record.
+- Behind the scenes: native iPhone Routes with the route editor, and the iPhone intro.
