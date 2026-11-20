@@ -56,6 +56,10 @@
 		0F6C322677974238D7682B3D /* SetupFlows.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE962D3821CA6D61A7143C2E /* SetupFlows.swift */; };
 		21C47D0DB6E66A9A9174DA23 /* CoachSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA5C729492BE64EADE48073 /* CoachSetup.swift */; };
 		A0113A235C3A075385EB9634 /* IntroScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94231B3394C3A22969DE282 /* IntroScreen.swift */; };
+		13F0E5E1593C00B1B46895A6 /* SettingsSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D23E344901DA3FD3B088432 /* SettingsSources.swift */; };
+		7387AFDC4AD242521B0CB6E4 /* SettingsWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACF3D5FE19D5BA725C65D9C1 /* SettingsWatch.swift */; };
+		5B218CC9836BC650E4BCC592 /* SettingsMore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E679AB27FA07A8A9803D43B9 /* SettingsMore.swift */; };
+		32EB4806CCABE73742480EF4 /* SettingsShoes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2834344488E3815DCAE45411 /* SettingsShoes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -120,6 +124,10 @@
 		DE962D3821CA6D61A7143C2E /* SetupFlows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupFlows.swift; sourceTree = "<group>"; };
 		FDA5C729492BE64EADE48073 /* CoachSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachSetup.swift; sourceTree = "<group>"; };
 		B94231B3394C3A22969DE282 /* IntroScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroScreen.swift; sourceTree = "<group>"; };
+		7D23E344901DA3FD3B088432 /* SettingsSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSources.swift; sourceTree = "<group>"; };
+		ACF3D5FE19D5BA725C65D9C1 /* SettingsWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWatch.swift; sourceTree = "<group>"; };
+		E679AB27FA07A8A9803D43B9 /* SettingsMore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMore.swift; sourceTree = "<group>"; };
+		2834344488E3815DCAE45411 /* SettingsShoes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsShoes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -231,6 +239,10 @@
 				DE962D3821CA6D61A7143C2E /* SetupFlows.swift */,
 				FDA5C729492BE64EADE48073 /* CoachSetup.swift */,
 				B94231B3394C3A22969DE282 /* IntroScreen.swift */,
+				7D23E344901DA3FD3B088432 /* SettingsSources.swift */,
+				ACF3D5FE19D5BA725C65D9C1 /* SettingsWatch.swift */,
+				E679AB27FA07A8A9803D43B9 /* SettingsMore.swift */,
+				2834344488E3815DCAE45411 /* SettingsShoes.swift */,
 			);
 			path = Shell;
 			sourceTree = "<group>";
@@ -355,6 +367,10 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				32EB4806CCABE73742480EF4 /* SettingsShoes.swift in Sources */,
+				5B218CC9836BC650E4BCC592 /* SettingsMore.swift in Sources */,
+				7387AFDC4AD242521B0CB6E4 /* SettingsWatch.swift in Sources */,
+				13F0E5E1593C00B1B46895A6 /* SettingsSources.swift in Sources */,
 				A0113A235C3A075385EB9634 /* IntroScreen.swift in Sources */,
 				21C47D0DB6E66A9A9174DA23 /* CoachSetup.swift in Sources */,
 				0F6C322677974238D7682B3D /* SetupFlows.swift in Sources */,

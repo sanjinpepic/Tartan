@@ -56,8 +56,8 @@ iPhone would be Apple's Foundation Models, later).
 ## Native iPhone screens
 
 Since Nov 2026 the tab bar, Today, Coach (with a plan), Activities, Progress and the session and
-workout sheets, the chat, Settings, Body, Record and Lift, Routes and the intro are native SwiftUI with
-Liquid Glass; the rest (making the first plan, and the parts of Settings below) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
+workout sheets, the chat, Settings (every group), Body, Record and Lift, Routes and the intro are native
+SwiftUI with Liquid Glass; the rest (making the first plan, the face builder) is still the web app's. The Swift is in `ios/App/App/Shell/`; the page's side is `web/lib/shell.ts`, the
 same as Android's.
 
 - **The plugin** (`TartanShellPlugin.swift`): the `TartanShell` Capacitor plugin, with every
@@ -104,14 +104,18 @@ same as Android's.
   Copy and Report on a long press (Report can open a GitHub issue), a photo from the library; the
   keyboard's own dictation for voice. The box rides the keyboard (the bar steps aside while it's up).
   The page opens it through `chat` (the `go` action `chat` now prefers the native one).
-- **Settings** (`SettingsScreen.swift`, `SettingsModel.swift`): the five groups as an inset
-  grouped list, the group in the address (`settings/training`). Native: Strava's and the watch's
-  state with Sync now, a .fit file in, your PC (sync, unpair, scan its code); targets, heart rate,
-  training times, reminders, plan changes, clearing the plan; who the coach is, the weekly review,
-  what it remembers; the coming week on the watch; the sample data, the intro, the native-screen
-  switches, the log, the version. The rest (Strava's setup, the coach's key, faces, backups, pairing
-  by code, agents) is a row that opens the page's whole group: `settings/<group>/all`, which the
-  page draws (`nativeSettings` in `web/app.ts`); Android never uses that address.
+- **Settings** (`SettingsScreen.swift`, `SettingsModel.swift`, `SettingsSources.swift`,
+  `SettingsWatch.swift`, `SettingsMore.swift`, `SettingsShoes.swift`): the five groups as an inset
+  grouped list, the group in the address (`settings/training`), all native. Sources: Strava (its
+  guided setup, Sync now, the full history again, uploads), the watch (its guided setup, back up,
+  its files), intervals.icu, workout files, watch workouts to Strava, where the plan goes for your
+  watch. Training: targets, heart rate, training times (a day of its own), reminders, the calendar,
+  exercise demos, the plan (CSV, reset), shoes (a photo the coach reads the name off). Coach: the
+  coach's AI (`CoachSetup.swift`), plan changes, the weekly review, what it remembers. Watch: the
+  coming week, drink and gel reminders, the week on a face, routes. More: your PC, backups, your
+  data, feedback, agents, the face builder's list, the step runner, the watch recorder, the log,
+  the native-screen switches. `settings/<group>/all` still opens the page's group if asked for
+  (`nativeSettings` in `web/app.ts`), but nothing links to it now; Android never uses it.
 - **Body** (`BodyScreen.swift`, `BodyData.swift`, `SVGPath.swift`): the 2D muscle map drawn from
   `Shell/musclemap.json` (MuscleMap, MIT; `scripts/musclemap-asset.ts` writes it for both apps),
   shaded on the heat scale, a tap opens a muscle; sleep and vitals. An exercise shows the 3D body

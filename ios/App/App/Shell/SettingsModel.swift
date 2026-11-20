@@ -12,7 +12,7 @@ final class SettingsModel {
 
     struct Goals { var weeklyKm: Double?; var weeklyWorkouts: Int?; var longRunKm: Double?; var raceKm: Double?; var raceName: String?; var raceDate: String?; var raceTarget: Int? }
     struct Profile { let maxHr: Int; let restHr: Int; let maxSource: String; let sex: String?; let fromWatch: Bool; let canUseWatch: Bool }
-    struct Times { let weekday: String; let weekend: String; let remind: Bool; let before: Int; let after: Bool; let morning: Bool; let morningAt: String; let review: Bool; let runNote: Bool; let calendar: Bool; let calendarName: String?; let next: String? }
+    struct Times { let weekday: String; let weekend: String; let days: [String: String]; let remind: Bool; let before: Int; let after: Bool; let morning: Bool; let morningAt: String; let review: Bool; let runNote: Bool; let calendar: Bool; let calendarId: String?; let calendarName: String?; let next: String?; let anySlots: Bool }
     struct Note: Identifiable { let id: String; let text: String; let kind: String }
     struct CoachInfo { let provider: String; let model: String; let ready: Bool }
 
@@ -21,10 +21,16 @@ final class SettingsModel {
     var times: Times?
     var planTitle: String?
     var planWeeks = 0
+    var planUpdated: String?
     var approval = "ask"
     var coach: CoachInfo?
     var notes: [Note] = []
     var weekly = true
+    /** Who shows the strength exercises: "me", "m", "f" or "mix". */
+    var demos = "me"
+    /** A note just forgotten: gone at once, deleted after a few seconds unless undone. */
+    var forgotten: (at: Int, note: Note)?
+    @ObservationIgnored private var forgetting: Task<Void, Never>?
     var demo = false
     var version = ""
     var build = ""
@@ -61,6 +67,7 @@ final class SettingsModel {
                 let v = J(json: j)
                 planTitle = v["plan"].object != nil ? v["plan"]["title"].text : nil
                 planWeeks = v["weeks"].array.count
+                planUpdated = v["plan"]["updated"].str ?? v["plan"]["created"].str
                 approval = v["approval"].str ?? "ask"
             }
             if let j = await c {
@@ -74,6 +81,7 @@ final class SettingsModel {
             if case .success(let j) = await w {
                 let o = J(json: j)
                 weekly = o.has("weekly") ? o["weekly"].bool : true
+                demos = o["demos"].str ?? "me"
                 version = o["version"].text
                 build = o["build"].text
             }
@@ -105,9 +113,12 @@ final class SettingsModel {
             let day = dateOf(start).map { $0.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)) } ?? String(start.prefix(10))
             next = "Next: \(slot["title"].text), \(day) at \(start.dropFirst(11).prefix(5))"
         }
-        return Times(weekday: p["weekday"].text, weekend: p["weekend"].text, remind: r["on"].bool, before: r["before_min"].int ?? 30, after: r.has("after") ? r["after"].bool : true,
+        var days: [String: String] = [:]
+        for (k, v) in p["days"].object ?? [:] { if let t = v as? String, !t.isEmpty { days[k] = t } }
+        return Times(weekday: p["weekday"].text, weekend: p["weekend"].text, days: days, remind: r["on"].bool, before: r["before_min"].int ?? 30, after: r.has("after") ? r["after"].bool : true,
                      morning: n.has("morning") ? n["morning"].bool : true, morningAt: n["morning_at"].str ?? "07:30", review: n.has("review") ? n["review"].bool : true,
-                     runNote: n.has("run") ? n["run"].bool : true, calendar: c["on"].bool, calendarName: c["calendar_name"].str, next: next)
+                     runNote: n.has("run") ? n["run"].bool : true, calendar: c["on"].bool, calendarId: c["calendar_id"].str, calendarName: c["calendar_name"].str, next: next,
+                     anySlots: !v["slots"].array.isEmpty)
     }
 
     /** Save, then read again and say `ok` (nil: say nothing); on failure, say why. */
@@ -166,9 +177,48 @@ final class SettingsModel {
         _ = await engine.rpc("weekly", ["on": on])
     }
 
-    func forgetNote(_ n: Note) async {
-        notes.removeAll { $0.id == n.id }
+    /** Forget a note: gone at once, deleted after a few seconds unless undone. */
+    func forgetNote(_ n: Note) {
+        if let f = forgotten { forgetting?.cancel(); Task { await delete(f.note) } }
+        guard let at = notes.firstIndex(where: { $0.id == n.id }) else { return }
+        notes.remove(at: at)
+        forgotten = (at, n)
+        forgetting = Task {
+            try? await Task.sleep(for: .seconds(5))
+            guard !Task.isCancelled else { return }
+            forgotten = nil
+            await delete(n)
+        }
+    }
+
+    func unforget() {
+        guard let f = forgotten else { return }
+        forgetting?.cancel()
+        notes.insert(f.note, at: min(f.at, notes.count))
+        forgotten = nil
+    }
+
+    private func delete(_ n: Note) async {
         _ = await engine.call("/api/coach/memory/\(n.id.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? n.id)", method: "DELETE")
+    }
+
+    /** Who shows the strength exercises. */
+    func setDemos(_ choice: String) async {
+        demos = choice
+        _ = await engine.rpc("demos", ["choice": choice])
+    }
+
+    /** A file from the engine (the plan as CSV, its calendar) through the share sheet. */
+    func saveFile(_ path: String, name: String, type: String) async {
+        if case .failure = await engine.rpc("saveFile", ["path": path, "name": name, "type": type]) { shell?.say("Couldn't make the file.") }
+    }
+
+    /** The phone's calendars that take events (asking for access first); nil when not allowed. */
+    func calendars() async -> [(id: String, title: String)]? {
+        guard case .success(let j) = await engine.rpc("calendars") else { return nil }
+        let a = J(json: j)
+        guard a.raw is [Any] else { return nil }
+        return a.array.map { (id: $0["id"].text, title: $0["title"].text) }
     }
 
     /** A call through the page (rpc), saying what came of it. */

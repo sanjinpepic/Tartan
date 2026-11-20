@@ -11,16 +11,25 @@ struct WatchNow: Equatable {
     let job: Job?
     let running: Bool
     let canBluetooth: Bool
+    var cwd = "/"
+    var dirs: [String] = []
+    var files: [String] = []
+    /** A watch that hands over workouts from its logbook (no file access). */
+    var logbook = false
+    var noFileAccess = false
 }
 
 func parseWatch(_ json: String) -> WatchNow? {
     let o = J(json: json)
     guard o.object != nil else { return nil }
     let j = o["job"]
+    let l = o["listing"]
     return WatchNow(connected: o["connected"].bool, connecting: o["connecting"].bool, name: o["name"].text,
                     facts: o["facts"].array.map(\.strings),
                     job: j.object == nil ? nil : WatchNow.Job(title: j["title"].text, text: j["text"].text, value: j["value"].num, max: j["max"].num),
-                    running: o["running"].bool, canBluetooth: o.has("canBluetooth") ? o["canBluetooth"].bool : true)
+                    running: o["running"].bool, canBluetooth: o.has("canBluetooth") ? o["canBluetooth"].bool : true,
+                    cwd: o["cwd"].str ?? "/", dirs: l["dirs"].strings.sorted(), files: l["files"].strings.sorted(),
+                    logbook: o["mode"].text == "logbook", noFileAccess: o["noFileAccess"].bool)
 }
 
 /// Strava as it stands (GET /api/strava/status).
@@ -31,6 +40,28 @@ struct StravaNow {
     let name: String
     let lastSync: String?
     let activities: Int
+    var detailed = 0
+    var canUpload = false
+    var rateLimited = false
+}
+
+/// Sending watch workouts to Strava (GET /api/strava/send-watch).
+struct SendWatchNow {
+    var enabled: Bool
+    let since: String?
+    let connected: Bool
+    let canUpload: Bool
+    let sent: Int
+    let lastName: String?
+    let error: String?
+}
+
+func parseSendWatch(_ json: String) -> SendWatchNow? {
+    let o = J(json: json)
+    guard o.object != nil else { return nil }
+    let e = o["errors"].array.first
+    return SendWatchNow(enabled: o["enabled"].bool, since: o["since"].str, connected: o["connected"].bool, canUpload: o["can_upload"].bool, sent: o["sent"].int ?? 0,
+                        lastName: o["last"]["name"].str, error: e.map { "\($0["name"].str ?? "A workout"): \($0["error"].str ?? "couldn't be sent"). Tried again after the next watch sync." })
 }
 
 /// intervals.icu: connected as whom, how many workouts.
@@ -38,6 +69,7 @@ struct IcuNow {
     let connected: Bool
     let name: String?
     let workouts: Int
+    var line: String?
 }
 
 /**
@@ -59,6 +91,9 @@ final class SourcesModel {
     var pcLine: String?
     var busy: String?
     var stravaUrl: String?
+    var sendWatch: SendWatchNow?
+    /** What the last Strava sync by hand did, line by line. */
+    var syncLines: [String] = []
     @ObservationIgnored private var read = false
 
     init(engine: EngineBridge) { self.engine = engine }
@@ -77,15 +112,16 @@ final class SourcesModel {
         async let s = engine.get("/api/strava/status")
         async let i = engine.get("/api/intervals/status")
         async let p = engine.rpc("pcState")
+        async let w = engine.get("/api/strava/send-watch")
         if let j = await s {
             let o = J(json: j), a = o["athlete"]
+            let acts = o["activities"].int ?? 0
             strava = StravaNow(connected: o["connected"].bool, configured: o["configured"].bool, clientId: o["clientId"].str.flatMap { $0.isEmpty ? nil : $0 },
-                               name: [a["firstname"].str, a["lastname"].str].compactMap { $0 }.joined(separator: " "), lastSync: o["lastSync"].str, activities: o["activities"].int ?? 0)
+                               name: [a["firstname"].str, a["lastname"].str].compactMap { $0 }.joined(separator: " "), lastSync: o["lastSync"].str, activities: acts,
+                               detailed: acts - (o["pendingDetails"].int ?? 0), canUpload: o["can_upload"].bool, rateLimited: o["stoppedForRateLimit"].bool)
         }
-        if let j = await i {
-            let o = J(json: j)
-            icu = IcuNow(connected: o["connected"].bool, name: o["name"].str.flatMap { $0.isEmpty ? nil : $0 }, workouts: o["workouts"].int ?? 0)
-        }
+        if let j = await i { icu = parseIcu(j) }
+        if let j = await w { sendWatch = parseSendWatch(j) }
         if case .success(let j) = await p {
             let o = J(json: j)
             pc = o.object == nil ? nil : (url: o["url"].text, name: o["name"].str)
@@ -106,7 +142,131 @@ final class SourcesModel {
         }
     }
 
+    private func parseIcu(_ j: String) -> IcuNow {
+        let o = J(json: j)
+        var line: String?
+        let l = o["last"]
+        if l.object != nil {
+            let at = ago(l["at"].text)
+            if let e = l["error"].str { line = "Last try \(at): \(e)" } else {
+                let pending = l["pending"].int ?? 0, fromStrava = l["strava"].int ?? 0
+                line = "Last round \(at): \(l["added"].int ?? 0) new" + (pending > 0 ? ", \(pending) more next time" : "")
+                    + (fromStrava > 0 ? ". \(fromStrava) came to intervals.icu from Strava, which doesn't let it pass them on: connect Strava here for those" : "") + "."
+            }
+        }
+        return IcuNow(connected: o["connected"].bool, name: o["name"].str.flatMap { $0.isEmpty ? nil : $0 }, workouts: o["workouts"].int ?? 0, line: line)
+    }
+
     func watchConnect() { run("watch", "watchConnect") }
+    func watchDisconnect() { run("watch", "watchDisconnect") }
+    func watchBrowse(_ path: String) { Task { if case .failure(let e) = await engine.rpc("watchBrowse", ["path": path]) { say(e.message) } } }
+    func watchSave(_ path: String) { run("file", "watchSaveOne", ["path": path]) }
+    func watchBackupFolder(_ path: String, force: Bool) {
+        run("watch", "watchBackup", ["path": path, "force": force]) { n in
+            Int(n).map { $0 > 0 ? "Saved \($0) new \($0 == 1 ? "file" : "files") from the watch." : "Nothing new on the watch." }
+        }
+    }
+
+    /** A Strava sync by hand (or the whole history again): what it did, line by line. */
+    func stravaSync(full: Bool) {
+        busy = "strava"
+        syncLines = []
+        Task {
+            switch await engine.rpc("stravaSync", ["full": full]) {
+            case .success(let j):
+                let o = J(json: j)
+                syncLines = o["lines"].strings
+                if o["result"].object != nil {
+                    let n = o["result"]["added"].int ?? 0
+                    say(n > 0 ? "Strava: \(n) new workout\(n == 1 ? "" : "s")." : "Strava: nothing new.")
+                }
+            case .failure(let e): say(e.message)
+            }
+            busy = nil
+            await fetch()
+            shell?.changed()
+        }
+    }
+
+    func setSendWatch(_ on: Bool) {
+        sendWatch?.enabled = on
+        Task {
+            let r = await engine.call("/api/strava/send-watch", method: "PUT", body: jsonText(["enabled": on]))
+            if (200..<300).contains(r.status) {
+                sendWatch = parseSendWatch(r.body) ?? sendWatch
+                say(on ? "On. New watch workouts go to Strava after each watch sync." : "Off. Watch workouts stay in Tartan.")
+            } else {
+                sendWatch?.enabled = !on
+                say("Couldn't change it.")
+            }
+        }
+    }
+
+    func icuSyncNow() {
+        busy = "icu"
+        Task {
+            let r = await engine.call("/api/intervals/sync", method: "POST", body: "{}")
+            let o = J(json: r.body)
+            if (200..<300).contains(r.status) {
+                let pending = o["pending"].int ?? 0
+                say("\(o["added"].int ?? 0) new from intervals.icu\(pending > 0 ? ", \(pending) more next time" : "").")
+            } else {
+                say(o["error"].str ?? "intervals.icu couldn't be reached.")
+            }
+            await fetch()
+            busy = nil
+        }
+    }
+
+    func icuStop() {
+        Task {
+            _ = await engine.call("/api/intervals/config", method: "DELETE")
+            icu = IcuNow(connected: false, name: nil, workouts: 0)
+            say("Disconnected from intervals.icu. The workouts it brought stay here.")
+        }
+    }
+
+    func pcSync() {
+        busy = "pc"
+        pcLine = "Comparing with your PC…"
+        Task {
+            switch await engine.rpc("pcSync") {
+            case .success(let line): pcLine = J(json: line).str ?? line
+            case .failure(let e): pcLine = nil; say(e.message)
+            }
+            busy = nil
+        }
+    }
+
+    func pcUnpair() {
+        Task {
+            _ = await engine.rpc("pcUnpair")
+            pc = nil
+            say("Unpaired. Your data stays on this phone; the PC can forget this phone in its Settings.")
+        }
+    }
+
+    /** Workout files picked on the phone, each through the page into the library. */
+    func importFiles(_ urls: [URL]) {
+        busy = "import"
+        Task {
+            var added = 0, already = 0
+            var failed: String?
+            for url in urls {
+                let ok = url.startAccessingSecurityScopedResource()
+                defer { if ok { url.stopAccessingSecurityScopedResource() } }
+                guard let data = try? Data(contentsOf: url) else { failed = "Couldn't read \(url.lastPathComponent)."; continue }
+                switch await engine.rpc("importFit", ["name": url.lastPathComponent, "data": data.base64EncodedString()]) {
+                case .success(let j): if J(json: j)["already"].bool { already += 1 } else { added += 1 }
+                case .failure(let e): failed = e.message
+                }
+            }
+            let words = [added > 0 ? "Imported \(added) workout\(added == 1 ? "" : "s")." : nil, already > 0 ? "\(already) \(already == 1 ? "was" : "were") already here." : nil, failed].compactMap { $0 }.joined(separator: " ")
+            if !words.isEmpty { say(words) }
+            if added > 0 { shell?.changed() }
+            busy = nil
+        }
+    }
     func watchBackup() {
         run("watch", "watchBackup", ["path": "/", "force": false]) { n in
             Int(n).map { $0 > 0 ? "Saved \($0) new \($0 == 1 ? "file" : "files") from the watch." : "Nothing new on the watch." }

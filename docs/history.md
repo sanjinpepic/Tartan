@@ -1292,3 +1292,7 @@ The owner's go-ahead on three points from the 2.65 review:
 - **The intro, native**: Tartan's mark drawing itself in, the welcome's timing board, guided
   setups for Strava, the watch and intervals.icu, the coach's AI with the key checked before it's
   saved, training times, and bringing it all over from the PC or a backup.
+- **Settings, every group native**: Strava, the watch and intervals.icu with their guided setups,
+  sending watch workouts to Strava, where the plan goes for your watch, a day's own training time,
+  the calendar, exercise demos, shoes, the coach's AI, the watch's reminders and the week on a
+  face, your PC, backups, feedback and the advanced parts. Nothing opens the page's Settings now.

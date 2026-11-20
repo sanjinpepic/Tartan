@@ -76,6 +76,9 @@ final class ShellModel {
     let routes: RoutesModel
     let sources: SourcesModel
     let coachSetup: CoachSetupModel
+    let watchSettings: WatchGroupModel
+    let more: MoreModel
+    let shoes: ShoesModel
     /** The intro, open over everything (the page asks for it the first time). */
     var intro: IntroModel?
     /** The route editor open (by the address: route/<id>, route/new, route/new/loop-10). */
@@ -133,6 +136,12 @@ final class ShellModel {
         self.routes = RoutesModel(engine: engine)
         self.sources = SourcesModel(engine: engine)
         self.coachSetup = CoachSetupModel(engine: engine)
+        self.watchSettings = WatchGroupModel(engine: engine)
+        self.more = MoreModel(engine: engine)
+        self.shoes = ShoesModel(engine: engine)
+        watchSettings.shell = self
+        more.shell = self
+        shoes.shell = self
         sources.shell = self
         coachSetup.shell = self
         today.shell = self
@@ -428,7 +437,8 @@ final class ShellModel {
         routes.forget()
         if shown == "routes" { routes.ensure() }
         sources.forget()
-        if intro != nil { Task { await sources.fetch() } }
+        if intro != nil || shown == "settings" { Task { await sources.fetch() } }
+        watchSettings.forget()
         today.syncDone()
         if shown == "today" { today.freshen() }
         if view == "coach" && NativeParts.wanted("coach") { coach.freshen() }
