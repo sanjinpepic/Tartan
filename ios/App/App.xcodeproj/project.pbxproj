@@ -47,7 +47,20 @@
 		C9D9E1423FAC51B4EEA17B71 /* LiftScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6660C3697BF6595E4714B267 /* LiftScreen.swift */; };
 		64CD5FC1317431ADB784675C /* LiveRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9451A6AC335BE0C95B561B /* LiveRun.swift */; };
 		D876D5724CA8E7E5A014353D /* LiveRunAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */; };
+		3D6EF0EC2E6A918A30BFBD5E /* TartanWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DDB44BD19D4E9C3E7B0F7F5 /* TartanWidgets.swift */; };
+		7235974C2471CE33BD343BCA /* LiveRunAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */; };
+		10FBD997071E4E14846A0D26 /* TartanWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1D6C511EC2A7CAF827A6AF4C /* TartanWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		85C64DD22865B89D4D0BA075 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 53ED4BD8D2DA8B5D9D0E337C;
+			remoteInfo = TartanWidgets;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
@@ -92,7 +105,24 @@
 		6660C3697BF6595E4714B267 /* LiftScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftScreen.swift; sourceTree = "<group>"; };
 		4D9451A6AC335BE0C95B561B /* LiveRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRun.swift; sourceTree = "<group>"; };
 		11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRunAttributes.swift; sourceTree = "<group>"; };
+		5DDB44BD19D4E9C3E7B0F7F5 /* TartanWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TartanWidgets.swift; sourceTree = "<group>"; };
+		DAA03EC6CBECB84C968D081E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1D6C511EC2A7CAF827A6AF4C /* TartanWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TartanWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		151A2045F23B58D2AF81FC9C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				10FBD997071E4E14846A0D26 /* TartanWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		504EC3011FED79650016851F /* Frameworks */ = {
@@ -100,6 +130,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1032BF444717D0E3201A2B94 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -111,6 +148,7 @@
 			children = (
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
+				F49B72BCF61D1D1CA8A84557 /* TartanWidgets */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -119,6 +157,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				1D6C511EC2A7CAF827A6AF4C /* TartanWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -178,6 +217,15 @@
 			path = Shell;
 			sourceTree = "<group>";
 		};
+		F49B72BCF61D1D1CA8A84557 /* TartanWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				5DDB44BD19D4E9C3E7B0F7F5 /* TartanWidgets.swift */,
+				DAA03EC6CBECB84C968D081E /* Info.plist */,
+			);
+			path = TartanWidgets;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -188,10 +236,12 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				151A2045F23B58D2AF81FC9C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AC0125BB2C4EEC1565810B1D /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -200,6 +250,23 @@
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		53ED4BD8D2DA8B5D9D0E337C /* TartanWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D5DCEAB05FC75C3C1FE621CB /* Build configuration list for PBXNativeTarget "TartanWidgets" */;
+			buildPhases = (
+				4FB931EE3DA21CCC7D0F5F83 /* Sources */,
+				1032BF444717D0E3201A2B94 /* Frameworks */,
+				ADF5CE55965EABD4463C4C9C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TartanWidgets;
+			productName = TartanWidgets;
+			productReference = 1D6C511EC2A7CAF827A6AF4C /* TartanWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -234,6 +301,7 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				53ED4BD8D2DA8B5D9D0E337C /* TartanWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -250,6 +318,13 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ADF5CE55965EABD4463C4C9C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -295,7 +370,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4FB931EE3DA21CCC7D0F5F83 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3D6EF0EC2E6A918A30BFBD5E /* TartanWidgets.swift in Sources */,
+				7235974C2471CE33BD343BCA /* LiveRunAttributes.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AC0125BB2C4EEC1565810B1D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 53ED4BD8D2DA8B5D9D0E337C /* TartanWidgets */;
+			targetProxy = 85C64DD22865B89D4D0BA075 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		504EC30B1FED79650016851F /* Main.storyboard */ = {
@@ -470,6 +562,51 @@
 			};
 			name = Release;
 		};
+		25CE93D7F781CB9A5C6B5081 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TartanWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tartan.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		040E74A4400BE46603646DCE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TartanWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tartan.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -487,6 +624,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D5DCEAB05FC75C3C1FE621CB /* Build configuration list for PBXNativeTarget "TartanWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				25CE93D7F781CB9A5C6B5081 /* Debug */,
+				040E74A4400BE46603646DCE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

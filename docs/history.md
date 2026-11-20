@@ -1271,3 +1271,14 @@ The owner's go-ahead on three points from the 2.65 review:
 - **Settings, native**: the five groups, with the everyday settings native and a row to the page's
   whole group (`#settings/<group>/all`) for the rest.
 - Screenshots add the chat (a made-up conversation, `-TartanChatSample`) and Settings.
+
+## Native iPhone screens, phase 4 (20 Nov 2026, after 2.71)
+
+- **Body, native**: the 2D muscle map (MuscleMap's outlines, written for the iPhone too by
+  `scripts/musclemap-asset.ts`, drawn by a small SVG path reader), a muscle's sheet with what trains
+  it, the 3D body moving through an exercise (the page's WebGL as pictures, `rpc:body`), sleep and
+  vitals.
+- **Record and Lift, native**: the page's recorder keeps recording with the screen off; Record draws
+  it. While a run is live it's a Live Activity on the lock screen and in the Dynamic Island, drawn
+  by a new widget extension (`ios/App/TartanWidgets/`). Lift logs set by set with the rest counting
+  down and a notification when it's over.

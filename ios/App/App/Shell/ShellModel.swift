@@ -163,7 +163,8 @@ final class ShellModel {
                     let days = J(json: await engine.get("/api/plan"))["weeks"].array.flatMap { $0["days"].array }
                     let strength = days.filter { d in d["sessions"].array.contains { $0["kind"].text == "strength" } }.map { $0["date"].text }
                     let today = isoDay(Date())
-                    if let d = strength.first(where: { $0 >= today }) ?? strength.last { go("lift/\(d)", retain: true) }
+                    // None planned: today's, with a runner's basic routine.
+                    go("lift/\(strength.first(where: { $0 >= today }) ?? strength.last ?? today)", retain: true)
                 }
             } else {
                 go(tab, retain: true)

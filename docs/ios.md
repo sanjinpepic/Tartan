@@ -119,7 +119,10 @@ same as Android's.
   (`web/recorder.ts`, background location) records the run, with the screen off too; it pushes
   every change through `recorder`, which Record draws (start, pause, finish, a guided run's steps,
   heart rate, Save and Strava). While a run is live it's on the lock screen and in the Dynamic
-  Island (`LiveRun.swift`, ActivityKit; `RunAttributes` in `LiveRunAttributes.swift`). Lift logs a
+  Island (`LiveRun.swift`, ActivityKit; `RunAttributes` in `LiveRunAttributes.swift`, shared with the
+  widget extension `ios/App/TartanWidgets/`, which draws it: the moving clock ticks by itself,
+  distance, pace or the guided step, heart rate, the plan's distance as a bar). The extension is a
+  second bundle (`app.tartan.widgets`): with a free Apple ID SideStore signs it with one more App ID. Lift logs a
   strength session set by set (`/api/lifts`), the rest counting down with a notification when it's
   over (`rpc:restNote`), and Finish shows the records and next time.
 - **Activities** (`ActivitiesScreen.swift`) and **Progress** (`ProgressScreen.swift`,
