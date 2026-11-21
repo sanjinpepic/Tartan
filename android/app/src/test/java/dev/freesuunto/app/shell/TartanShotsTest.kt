@@ -963,24 +963,16 @@ class TartanShotsTest {
     private fun badWeatherShot(name: String, dark: Boolean) {
         val m = settingsModel()
         m.ensure()
-        rule.mainClock.autoAdvance = false
-        rule.setContent {
-            TartanTheme(wallpaper = false, dark = dark) {
-                Box(Modifier.fillMaxSize()) {
-                    SettingsScreen(m, "training", settingsActions)
-                    Chrome(folded = true)
-                }
-            }
-        }
-        rule.mainClock.advanceTimeBy(2500)
+        rule.setContent { TartanTheme(wallpaper = false, dark = dark) { SettingsScreen(m, "training", settingsActions) } }
+        rule.waitForIdle()
         rule.onNodeWithText("The dark").performScrollTo()
-        rule.mainClock.advanceTimeBy(1500)
+        rule.waitForIdle()
         save(name)
         rule.onNodeWithText("Swim").performClick()
-        rule.mainClock.advanceTimeBy(500)
+        rule.waitForIdle()
         assertEquals("swim", org.json.JSONObject(sent.last { it.first == "/api/schedule" }.third!!).getString("bad_weather"))
         rule.onNodeWithText("Ice and snow").performClick()
-        rule.mainClock.advanceTimeBy(500)
+        rule.waitForIdle()
         assertEquals("[\"ice\"]", org.json.JSONObject(sent.last { it.first == "/api/schedule" }.third!!).getJSONArray("avoid").toString())
     }
 
