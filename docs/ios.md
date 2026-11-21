@@ -62,9 +62,11 @@ native side is `ios/App/App/TartanAppleHealthPlugin.swift` (the `TartanAppleHeal
 page drives it (`web/lib/apple-health.ts`) and the engine keeps each workout as a FIT file in a
 folder per app (`src/apple-health.ts`), as Health Connect's on Android.
 
-The app asks for HealthKit in `App/App.entitlements`; `scripts/ios-build.sh` signs the .ipa ad hoc
-with it, so SideStore or AltStore sees it and asks your Apple ID for it (a free one may). Without
-it (or on an iPad, or when you say no), Apple Health says so in Settings → Sources and nothing
+The app asks for HealthKit in `App/App.entitlements`. `scripts/ios-build.sh` makes two builds:
+`Tartan-<version>.ipa`, unsigned as always (it installs with any Apple ID, without Apple Health),
+and `Tartan-<version>-health.ipa`, signed ad hoc with that entitlement so SideStore or AltStore asks
+your Apple ID for it. Whether a free Apple ID is allowed it isn't sure, so the SideStore source
+lists the plain one; try the -health one by hand. Without it (or on an iPad, or when you say no), Apple Health says so in Settings → Sources and nothing
 else changes. Apple Health never tells an app whether you said no: Tartan then sees no workouts,
 and says where to allow it (the Health app: Sharing, Apps, Tartan).
 

@@ -52,7 +52,9 @@ jobs:
                 "localizedDescription": "The latest build from main.",
                 "downloadURL": f"{base}/releases/download/ios/Tartan-{v}.ipa", "size": size, "minOSVersion": "26.0",
               }],
-              "appPermissions": {"entitlements": ["com.apple.developer.healthkit"], "privacy": {"NSHealthShareUsageDescription": "Tartan reads your workouts from Apple Health, with their heart rate, distance and route. It writes nothing there."}},
+              # The listed build is the plain one (installs with any Apple ID); the -health.ipa beside it
+              # on the release asks for Apple Health, which a free Apple ID may not be allowed.
+              "appPermissions": {"entitlements": [], "privacy": {"NSHealthShareUsageDescription": "Tartan reads your workouts from Apple Health, with their heart rate, distance and route. It writes nothing there."}},
             }],
             "news": [],
           }
@@ -72,3 +74,4 @@ jobs:
           body: |
             The iPhone app, unsigned: install it with SideStore or AltStore, which sign it with your own Apple ID (see docs/ios.md).
             In SideStore, add this source once and it offers each new build: https://github.com/sanjinpepic/Tartan/releases/download/ios/sidestore.json
+            Tartan-<version>-health.ipa is the same app asking for Apple Health. A free Apple ID may not be allowed that; if it won't install, use the plain one.
