@@ -83,6 +83,8 @@ interface TodayActions {
     fun refresh()
     /** Out of the demo: the sample deleted, back to your own data. */
     fun leaveDemo() {}
+    /** The coach's chat (from Tartan's T in the header). */
+    fun chat() {}
 }
 
 private val CARD = RoundedCornerShape(28.dp)
@@ -132,7 +134,7 @@ fun TodayScreen(today: Today?, refreshing: Boolean, actions: TodayActions, date:
                     .padding(start = 16.dp, end = 16.dp, top = top + 60.dp, bottom = bottom + if (navSpace) 104.dp else 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Title(date, actions)
+                Title(date, actions, today?.mark)
                 if (today == null) {
                     Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { LoadingIndicator(Modifier.size(64.dp)) }
                 } else {
@@ -219,9 +221,11 @@ fun TodayScreen(today: Today?, refreshing: Boolean, actions: TodayActions, date:
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun Title(date: LocalDate, actions: TodayActions) {
+private fun Title(date: LocalDate, actions: TodayActions, mark: Mark?) {
     val view = LocalView.current
     PageHeader(stringResource(R.string.common_today), Modifier.padding(bottom = 4.dp), subtitle = date.format(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.getDefault()))) {
+        // Tartan's T, taking on the day; it opens the coach.
+        mark?.let { TodayMark(it, Modifier.padding(end = 8.dp)) { actions.chat() } }
         FilledTonalButton(onClick = { actions.go("record") }, shapes = ButtonDefaults.shapes()) {
             Icon(Glyphs["record"], contentDescription = null, Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))

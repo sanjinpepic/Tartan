@@ -253,6 +253,7 @@ class TartanShellPlugin : Plugin() {
 
     private val todayActions = object : TodayActions {
         override fun go(hash: String) = go(hash, null)
+        override fun chat() { notifyListeners("go", JSObject().put("hash", "").put("action", "chat")) }
         override fun leaveDemo() { scope.launch { shellApi.call("demo", org.json.JSONObject().put("op", "leave")) } }
         override fun openActivity(id: String) = openWorkout(id)
         override fun openSession(date: String, kind: String) = this@TartanShellPlugin.openSession(date, kind)

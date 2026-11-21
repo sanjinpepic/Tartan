@@ -99,13 +99,13 @@ export function stanceFor(o: {
   /** Something you said puts you off is in today's forecast. */
   dislike?: boolean;
 }): Stance {
-  if (o.niggle) return { lead: "others", line: "With that niggle, an easy change is the right call." };
-  if (o.tired) return { lead: "others", line: "Your body says go easy today, so any of these is fine." };
+  if (o.niggle) return { lead: "others", line: "With that niggle, back off today. Any of these will do." };
+  if (o.tired) return { lead: "others", line: "You're due an easy day. Any of these will do." };
   if (o.dislike) return { lead: "others" };
   const since = addDays(o.today, -10);
   const changed = o.answers.filter((a) => a.date >= since && a.date < o.today && a.pick && !["run", "nudge"].includes(a.pick)).length;
-  if (changed >= 2) return { lead: "run", line: `That's the ${ORDINAL[Math.min(changed + 1, 7)]} change in ten days. Do 25 easy minutes and call it a win.` };
-  if (o.raceDays != null && o.raceDays >= 0 && o.raceDays <= 21) return { lead: "run", line: `Your race is in ${o.raceDays} day${o.raceDays === 1 ? "" : "s"}: this one counts. A shorter run still does.` };
+  if (changed >= 2) return { lead: "run", line: `That's the ${ORDINAL[Math.min(changed + 1, 7)]} change in ten days, so not this one. 25 easy minutes, then see.` };
+  if (o.raceDays != null && o.raceDays >= 0 && o.raceDays <= 21) return { lead: "run", line: `Your race is in ${o.raceDays} day${o.raceDays === 1 ? "" : "s"}, so this one counts. A shorter run still does.` };
   if (o.session.kind === "long") return { lead: "run", line: "It's the long run, the key one this week. Start easy and see how it goes." };
   if (["tempo", "intervals", "hills"].includes(o.session.kind)) {
     const mon = addDays(o.today, -((new Date(`${o.today}T12:00:00Z`).getUTCDay() + 6) % 7));

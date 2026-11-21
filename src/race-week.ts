@@ -26,7 +26,7 @@ const FOCUS: Array<[number, string, string]> = [
   [0, "Race day", "Breakfast you know, about three hours before. Warm up for 10 to 15 minutes with a few strides. Start at goal pace, not faster: the first kilometre always feels easy."],
   [1, "Rest, or a shake-out", "Rest, or 15 to 20 minutes very easy with four short strides. Lay out your kit, check the start time and how you'll get there, and eat carbohydrate at every meal."],
   [3, "Short and sharp", "Easy running only, with a few strides or race-pace minutes to stay sharp. Nothing new: shoes, food and kit you know."],
-  [7, "Taper", "Less volume, a little intensity kept. The work is done: the fitness is in the bank and the tiredness is leaving. Sleep is training this week."],
+  [7, "Taper", "Less volume, a little intensity kept. The work is done: the fitness stays, the tiredness goes. Sleep counts as training this week."],
 ];
 
 /** The race week, or null when the race is more than a week away or past. */

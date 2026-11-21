@@ -12,6 +12,7 @@
  */
 import { z } from "zod";
 import type { DataTool } from "./tools.ts";
+import { VOICE_LINE } from "./coach/prompt.ts";
 
 /** Small enough for a small model: no empty fields, rounded numbers, short lists and strings. */
 export function squeeze(v: unknown, depth = 0): unknown {
@@ -109,7 +110,8 @@ const SMALL_CONTEXT = 6000;
 const SMALL_TOOLS = ["get_readiness", "get_training_plan", "list_activities", "get_activity", "get_week", "get_goals", "get_athlete_profile", "edit_session", "change_plan"] as const;
 const SMALL_RESULT_CHARS = 1200;
 
-export const LOCAL_SYSTEM = `You are Tartan Coach, an experienced endurance coach for one athlete, running on their phone.
+export const LOCAL_SYSTEM = `You are the athlete's coach in Tartan, simply "Coach": an experienced endurance coach for one athlete, running on their phone.
+- ${VOICE_LINE}
 - Look before you speak: call the tools for what the question needs (get_readiness for today, get_training_plan for the plan, list_activities for recent workouts, and so on). A call or two is usually enough.
 - Answer only from what the tools return: quote dates, distances, paces and heart rates. If they can't answer it, say what's missing.
 - Lead with the answer, explain why in plain words, then one to three concrete next steps. At most about 150 words. No tables.

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.platform.testTag
@@ -238,7 +239,7 @@ class TartanShotsTest {
             override suspend fun get(path: String): String? = if (path == "/api/readiness") dayReadiness(swap) else shellApi.get(path)
             override suspend fun send(path: String, method: String, body: String?): Pair<Int, String> {
                 sent.add(path to body)
-                return if (path == "/api/today/nudge") 200 to """{"text":"You've run 3 times this week, 21 km. Today keeps it going. Just start: 10 minutes easy, then decide.","from":"rules"}"""
+                return if (path == "/api/today/nudge") 200 to """{"text":"You've run 3 times this week, 21 km. Today would make it 4. Just start: 10 minutes easy, then decide.","from":"rules"}"""
                 else 200 to dayReadiness(if (body?.contains("undo") == true || body?.contains("keep") == true) "null" else takenJson)
             }
         }
@@ -1972,4 +1973,56 @@ class TartanShotsTest {
         rule.mainClock.advanceTimeBy(2000)
         assert(done) { "hands over to the intro" }
     }
+
+    /** Tartan's T in Today's header, in every state: rest, a session, a new best (mid-shimmer), tired, race week. */
+    private fun markStates(name: String, dark: Boolean) {
+        val marks = listOf(Mark("rest", "Rest day"), Mark("session", "Tempo today"), Mark("best", "New best today: 5 km"), Mark("tired", "Go easy today"), Mark("race", "Race week: 4 days to go"))
+        rule.mainClock.autoAdvance = false
+        rule.setContent {
+            TartanTheme(wallpaper = false, dark = dark) {
+                androidx.compose.foundation.layout.Row(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).padding(top = 120.dp, start = 16.dp, end = 16.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween) {
+                    marks.forEach { m ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            TodayMark(m, size = 40.dp)
+                            androidx.compose.material3.Text(m.state, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
+                            // Four times the size, to see the drawing.
+                            TodayMark(m, Modifier.padding(top = 24.dp), size = 72.dp)
+                        }
+                    }
+                }
+            }
+        }
+        rule.mainClock.advanceTimeBy(1000)
+        save(name)
+        for (m in marks) rule.onAllNodesWithContentDescription(m.label).fetchSemanticsNodes().let { assertEquals(2, it.size) }
+    }
+    @Test fun todayMarkStates() = markStates("today-mark-states", dark = false)
+    @Test fun todayMarkStatesDark() = markStates("today-mark-states-dark", dark = true)
+
+    /** Today with its T: a rest day (calm), and a day with a new best (the spark as it opens). Tapping the T opens the coach. */
+    private fun markToday(name: String, dark: Boolean, mark: Mark, date: LocalDate, at: Long) {
+        val t = parseToday(fixture("today.json"), fixture("plan.json"), date).copy(mark = mark)
+        var chats = 0
+        val actions = object : TodayActions by none { override fun chat() { chats++ } }
+        rule.mainClock.autoAdvance = false
+        rule.setContent {
+            TartanTheme(wallpaper = false, dark = dark) {
+                Box(Modifier.fillMaxSize()) {
+                    TodayScreen(t, refreshing = false, actions = actions, date = date)
+                    Chrome(folded = false)
+                    FloatingBar("today", hidden = false, onSelect = {}, modifier = Modifier.align(Alignment.BottomCenter))
+                }
+            }
+        }
+        rule.mainClock.advanceTimeBy(at)
+        save(name)
+        rule.onNodeWithContentDescription(mark.label).performClick()
+        assertEquals(1, chats)
+    }
+    private val restMark = Mark("rest", "Rest day")
+    private val bestMark = Mark("best", "New best today: 5 km")
+    @Test fun todayMarkRest() = markToday("today-mark-rest", dark = false, restMark, LocalDate.of(2026, 10, 30), 2500)
+    @Test fun todayMarkRestDark() = markToday("today-mark-rest-dark", dark = true, restMark, LocalDate.of(2026, 10, 30), 2500)
+    @Test fun todayMarkBest() = markToday("today-mark-best", dark = false, bestMark, day, 1000)
+    @Test fun todayMarkBestDark() = markToday("today-mark-best-dark", dark = true, bestMark, day, 1000)
 }

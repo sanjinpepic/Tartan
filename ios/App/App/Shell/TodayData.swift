@@ -48,6 +48,14 @@ struct Today {
     var sample: Bool
     /** There is a plan, but its last day has gone: Today offers the next one. */
     var planEnded = false
+    /** Tartan's T in the header (src/today-mark.ts), when the engine sends it. */
+    var mark: DayMark? = nil
+}
+
+/** The T's state (rest, session, best, tired, race) and its line for VoiceOver. */
+struct DayMark: Equatable {
+    let state: String
+    let label: String
 }
 
 struct Readiness {
@@ -235,7 +243,7 @@ func parseToday(_ todayJson: String, _ planJson: String?, today: Date = Date(), 
         )
     }
     let takeaways = t["takeaways"].array.map { Takeaway(tone: $0["tone"].text, title: $0["title"].text, detail: $0["detail"].text, activity: $0["activity"].str, id: $0["id"].text, date: $0["date"].str) }
-    return Today(readiness: readiness, last: last, week: week, takeaways: takeaways, sessions: sessions, next: sessions.isEmpty ? next : nil, race: race, planOn: planOn, sample: t["sample"].bool, planEnded: plan["plan"].object != nil && !planOn)
+    return Today(readiness: readiness, last: last, week: week, takeaways: takeaways, sessions: sessions, next: sessions.isEmpty ? next : nil, race: race, planOn: planOn, sample: t["sample"].bool, planEnded: plan["plan"].object != nil && !planOn, mark: t["mark"]["state"].str.map { DayMark(state: $0, label: t["mark"]["label"].text) })
 }
 
 // MARK: - The morning check, vitals, race week, notes (Android's TodayMore.kt)

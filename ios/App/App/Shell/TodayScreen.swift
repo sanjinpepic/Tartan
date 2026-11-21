@@ -16,11 +16,18 @@ struct TodayScreen: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 4)
-                            .id("top")
+                        HStack(alignment: .center) {
+                            Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.secondary)
+                            Spacer(minLength: 8)
+                            // Tartan's T, taking on the day; it opens the coach.
+                            if let mark = today.data?.mark {
+                                TodayMarkView(mark: mark) { shell.goAction("chat") }
+                            }
+                        }
+                        .padding(.horizontal, 4)
+                        .id("top")
                         content
                     }
                     .padding(.horizontal, 16)
@@ -267,5 +274,116 @@ struct SyncChip: View {
     private func icon(_ l: Lane) -> String {
         if l.failed { return "exclamationmark.triangle.fill" }
         return l.id == "watch" ? "watch.analog" : "figure.run"
+    }
+}
+
+/**
+ * Tartan's T on Today, taking on the day (src/today-mark.ts; Android's TodayMark.kt): a rest day
+ * breathes, slow and calm; a session planned holds steady; a new best gets one shimmer and spark
+ * as Today opens; a go-easy morning dims it; race week draws a fine outline round it once. The
+ * coach's Blush tile (DESIGN.md). Reduced motion: still, every state. Tapping it opens the coach.
+ */
+struct TodayMarkView: View {
+    let mark: DayMark
+    var size: CGFloat = 40
+    let open: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduced
+    @State private var breathe = false
+    @State private var shine: CGFloat = 0
+    @State private var spark: CGFloat = 0
+    @State private var ring: CGFloat = 1
+
+    private var tired: Bool { mark.state == "tired" }
+    private var inner: CGFloat { size - 6 }
+
+    var body: some View {
+        Button(action: open) { face }
+            .buttonStyle(.plain)
+            .accessibilityLabel(mark.label)
+            .accessibilityHint("Opens your coach")
+            .task(id: mark.state) { await play() }
+    }
+
+    private var face: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Brand.container.opacity(tired ? 0.55 : 1))
+                .frame(width: inner, height: inner)
+            if mark.state == "race" {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .trim(from: 0, to: ring)
+                    .stroke(Brand.tint, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                    .frame(width: size - 1.5, height: size - 1.5)
+            }
+            letter
+            if mark.state == "best" {
+                Spark()
+                    .fill(Brand.tint)
+                    .frame(width: size * 0.24, height: size * 0.24)
+                    .scaleEffect(spark)
+                    .opacity(Double(spark))
+                    .offset(x: size * 0.34, y: -size * 0.34)
+            }
+        }
+        .frame(width: size, height: size)
+        .contentShape(Rectangle())
+    }
+
+    /** The T, 60% of the tile, and on a best day the band of light that crosses it. */
+    private var letter: some View {
+        let w = inner * 0.6
+        let h = w * 595 / 698
+        return MarkShape()
+            .fill(Brand.onContainer.opacity((tired ? 0.5 : 1) * (breathe ? 0.82 : 1)))
+            .overlay {
+                if mark.state == "best" {
+                    LinearGradient(colors: [.clear, .white.opacity(0.9), .clear], startPoint: .leading, endPoint: .trailing)
+                        .frame(width: w * 0.45)
+                        .rotationEffect(.degrees(20))
+                        .offset(x: (shine * 2 - 1) * w)
+                        .mask(MarkShape().frame(width: w, height: h))
+                }
+            }
+            .frame(width: w, height: h)
+            .scaleEffect(breathe ? 0.95 : 1)
+    }
+
+    private func play() async {
+        breathe = false
+        shine = 0
+        spark = 0
+        ring = mark.state == "race" && !reduced ? 0 : 1
+        guard !reduced else { return }
+        switch mark.state {
+        case "rest":
+            withAnimation(.easeInOut(duration: 4.5).repeatForever(autoreverses: true)) { breathe = true }
+        case "best":
+            try? await Task.sleep(for: .milliseconds(400))
+            withAnimation(.easeInOut(duration: 1.4)) { shine = 1 }
+            try? await Task.sleep(for: .milliseconds(450))
+            withAnimation(.easeOut(duration: 0.45)) { spark = 1 }
+            try? await Task.sleep(for: .milliseconds(550))
+            withAnimation(.easeIn(duration: 0.5)) { spark = 0 }
+        case "race":
+            try? await Task.sleep(for: .milliseconds(300))
+            withAnimation(.easeOut(duration: 1.0)) { ring = 1 }
+        default:
+            break
+        }
+    }
+}
+
+/** A small four-point star: the spark on a best day. */
+private struct Spark: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        let c = CGPoint(x: r.midX, y: r.midY)
+        p.move(to: CGPoint(x: c.x, y: r.minY))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: c.y), control: c)
+        p.addQuadCurve(to: CGPoint(x: c.x, y: r.maxY), control: c)
+        p.addQuadCurve(to: CGPoint(x: r.minX, y: c.y), control: c)
+        p.addQuadCurve(to: CGPoint(x: c.x, y: r.minY), control: c)
+        p.closeSubpath()
+        return p
     }
 }

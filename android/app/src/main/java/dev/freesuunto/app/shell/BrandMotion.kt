@@ -40,17 +40,17 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** The Tartan T (the launcher icon's): a crossbar, and two track lanes that bend down into the stem. */
-private val MARK = listOf(
+/** The Tartan T (the launcher icon's): a crossbar, and two track lanes that bend down into the stem. Today's header draws it too (TodayMark.kt). */
+internal val MARK = listOf(
     "M167,150H720A70,70 0 0 1 790,220V298A70,70 0 0 1 720,368H615A197.7,197.7 0 0 0 425,225H92A75,75 0 0 1 167,150Z",
     "M92,247H425A167,167 0 0 1 592,414V665A77,80 0 0 1 515,745V428A145,145 0 0 0 370,283H92Z",
     "M92,303H370A119,119 0 0 1 489,422V745H373V425A53,55 0 0 0 320,370H165A73,67 0 0 1 92,303Z",
 )
 /** The mark's box in its own units (the SVG's viewBox). */
-private const val MX = 92f
-private const val MY = 150f
-private const val MW = 698f
-private const val MH = 595f
+internal const val MX = 92f
+internal const val MY = 150f
+internal const val MW = 698f
+internal const val MH = 595f
 
 private val TARTAN = Color(0xFFA8321F)
 private val CREAM = Color(0xFFFDF3EE)

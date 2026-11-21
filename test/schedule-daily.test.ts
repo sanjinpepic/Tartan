@@ -18,7 +18,7 @@ test("the next three mornings: how you are and changes waiting on the first, wha
   expect(mornings).toHaveLength(3);
   expect(mornings[0]).toMatchObject({ title: "Today: Tempo", body: "Balanced. Tempo: 9 km, 4:50/km 2 changes to your plan to look at." });
   expect(mornings[0]!.at.getDate()).toBe(10);
-  expect(mornings[1]).toMatchObject({ title: "Good morning", body: "A rest day." });
+  expect(mornings[1]).toMatchObject({ title: "Rest day", body: "Nothing planned. A walk is fine; so is nothing at all." });
   const review = d.find((x) => x.key === "review")!;
   expect(review.at.getDay()).toBe(0);
   expect(review.at.getHours()).toBe(19);

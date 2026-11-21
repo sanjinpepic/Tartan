@@ -169,8 +169,12 @@ test("today: readiness in words, the last workout's effort, and this week; no lo
     last: { activity: { id: string }; effort: number; label: string; rank: string; zones: unknown[] | null };
     week: { days: unknown[]; km: number; usual_km: number };
     takeaways: Array<{ id: string; horizon: string }>;
+    mark: { state: string; label: string };
   };
   const t = await app.json<Today>("/api/today");
+  // Tartan's T in the header: no plan here, so nothing planned (or a best, a tired day).
+  expect(["rest", "best", "tired"]).toContain(t.mark.state);
+  expect(t.mark.label.length).toBeGreaterThan(3);
   expect(["new", "tired", "building", "steady", "fresh", "rested"]).toContain(t.readiness.state);
   expect(t.readiness.why).toMatch(/in the last 7 days/);
   expect(t.last.effort).toBeGreaterThan(0);

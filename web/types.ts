@@ -179,6 +179,8 @@ export interface TodayView {
   week: { days: Array<{ date: string; km: number; minutes: number; workouts: number; future: boolean }>; km: number; minutes: number; climb: number; workouts: number; usual_km: number; usual_workouts: number };
   takeaways: Takeaway[];
   targets: Targets;
+  /** Tartan's T in Today's header (src/today-mark.ts): its state and a line for screen readers. */
+  mark?: { state: "rest" | "session" | "best" | "tired" | "race"; label: string };
 }
 
 export interface LoadPoint {

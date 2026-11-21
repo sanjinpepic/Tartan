@@ -355,7 +355,7 @@ struct ReadinessCard: View {
     private func advice(_ c: Check?, _ easy: Bool) -> String {
         guard easy, let c else { return r.advice }
         if !c.why.isEmpty { return c.why }
-        return c.level == "rest" ? "Your morning check says your body needs it." : "Your morning check says to hold back."
+        return c.level == "rest" ? "Your morning check says rest, and it's usually right." : "Your morning check says hold back today."
     }
 }
 

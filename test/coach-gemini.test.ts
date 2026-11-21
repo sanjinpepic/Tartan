@@ -67,7 +67,7 @@ test("coach on Gemini: tool round trip, streamed text, signatures echoed, histor
   const calls = requests.filter((r) => r.path.endsWith(":streamGenerateContent"));
   expect(calls).toHaveLength(2);
   expect(calls[0]!.path).toContain("/models/gemini-3.8-flash:streamGenerateContent");
-  expect(calls[0]!.body.systemInstruction.parts[0].text).toContain("Tartan Coach");
+  expect(calls[0]!.body.systemInstruction.parts[0].text).toContain("simply \"Coach\"");
   expect(calls[0]!.body.tools[0].functionDeclarations.some((f: any) => f.name === "get_takeaways")).toBe(true);
   // The second request carries the model's turn as returned (signature included) and the tool result.
   const second = calls[1]!.body.contents;

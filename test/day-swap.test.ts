@@ -129,14 +129,14 @@ test("a clear habit suggests it too, saying why; icy days and heavy legs alike",
 test("on your side, not a pushover: a third change in ten days or a key run leads with the run; a niggle or ice leads with the others", () => {
   const answers = ["2026-11-12", "2026-11-15"].map((date) => ({ date, kind: "easy", tags: [] as Tag[], pick: "swim" as const }));
   const st = stanceFor({ today: T, session: easy, days: week(easy), answers });
-  expect(st).toEqual({ lead: "run", line: "That's the third change in ten days. Do 25 easy minutes and call it a win." });
+  expect(st).toEqual({ lead: "run", line: "That's the third change in ten days, so not this one. 25 easy minutes, then see." });
   expect(dayChoices({ session: easy, today: T, days: week(easy), choice: "swim", stance: st }).map((c) => c.to)).toEqual(["short", "nudge", "swim", "move"]);
   // One change before: no push.
   expect(stanceFor({ today: T, session: easy, days: week(easy), answers: answers.slice(1) }).lead).toBe("either");
   // The long run, the week's only hard session, a race close.
   expect(stanceFor({ today: T, session: { kind: "long", title: "Long run" }, days: week(easy), answers: [] }).lead).toBe("run");
   expect(stanceFor({ today: T, session: { kind: "tempo", title: "Tempo" }, days: week({ kind: "tempo", title: "Tempo" }), answers: [] }).line).toBe("It's the one hard session this week. Warm up for 10 minutes, then decide.");
-  expect(stanceFor({ today: T, session: easy, days: week(easy), answers: [], raceDays: 12 }).line).toBe("Your race is in 12 days: this one counts. A shorter run still does.");
+  expect(stanceFor({ today: T, session: easy, days: week(easy), answers: [], raceDays: 12 }).line).toBe("Your race is in 12 days, so this one counts. A shorter run still does.");
   // A genuine reason wins, even after changes.
   const ease = stanceFor({ today: T, session: easy, days: week(easy), answers, niggle: true });
   expect(ease.lead).toBe("others");
@@ -148,22 +148,22 @@ test("on your side, not a pushover: a third change in ten days or a key run lead
   const legs = tendencies([...seen([], 0, 10), ...seen(["heavy_legs"], 1, 3)]);
   const p = offer({ tendencies: legs, body: ["heavy_legs"], stance: st })!;
   expect(p.choices.slice(0, 2).map((c) => c.to)).toEqual(["short", "run"]);
-  expect(p.reason).toContain("That's the third change in ten days.");
+  expect(p.reason).toContain("That's the third change in ten days");
 });
 
 test("the nudge in Tartan's own words: from the week, the race, how easy runs feel; pushing back or easing off", () => {
   const base = { session: { title: "Easy run", kind: "easy", minutes: 45 }, week: { runs: 2, km: 14.2 } };
-  expect(nudgeLines(base).text).toBe("You've run 2 times this week, 14.2 km. Today keeps it going. Just start: 10 minutes easy, then decide. Coming home then is fine too.");
+  expect(nudgeLines(base).text).toBe("You've run 2 times this week, 14.2 km. Today would make it 3. Just start: 10 minutes easy, then decide. Coming home then is fine too.");
   expect(nudgeLines({ ...base, race: { name: "Helsinki Half", days: 30 }, easy_felt: { avg: 4.2, n: 6 } }).text).toBe(
-    "30 days to Helsinki Half. Today is one small part of getting there. Your easy runs nearly always feel good by the end, going by the watch. Just start: 10 minutes easy, then decide. Coming home then is fine too.",
+    "30 days to Helsinki Half. This is one of the runs that gets you there. Your easy runs nearly always feel good by the end, going by the watch. Just start: 10 minutes easy, then decide. Coming home then is fine too.",
   );
   expect(nudgeLines({ ...base, week: { runs: 0, km: 0 }, since_last: 5, session: { title: "6 × 800 m", kind: "intervals" } }).text).toBe(
     "It's been 5 days since your last run, so the first few minutes may feel stiff. They pass. Just start: warm up for 10 minutes, then decide if the reps are on.",
   );
-  const push = nudgeLines({ ...base, stance: { lead: "run", line: "That's the third change in ten days. Do 25 easy minutes and call it a win." } });
-  expect(push.text.startsWith("That's the third change in ten days.")).toBe(true);
+  const push = nudgeLines({ ...base, stance: { lead: "run", line: "That's the third change in ten days, so not this one. 25 easy minutes, then see." } });
+  expect(push.text.startsWith("That's the third change in ten days")).toBe(true);
   expect(push.text.split(". ").length).toBeLessThanOrEqual(6);
-  expect(nudgeLines({ ...base, stance: { lead: "others", line: "With that niggle, an easy change is the right call." } }).text).toBe("With that niggle, an easy change is the right call. Or go out for 10 easy minutes if you feel like it, and see.");
+  expect(nudgeLines({ ...base, stance: { lead: "others", line: "With that niggle, back off today. Any of these will do." } }).text).toBe("With that niggle, back off today. Any of these will do. Or go out for 10 easy minutes if you feel like it, and see.");
   for (const t of [push.text, nudgeLines(base).text]) expect(t).not.toContain("!");
 });
 

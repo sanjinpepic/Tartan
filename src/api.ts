@@ -15,7 +15,8 @@ import { limitFor, shoePicks, Shoes, shoeFor, shoeRuns, shoesNow, switchAdvice, 
 import { StravaRateLimitError, type StravaAthlete } from "./strava/client.ts";
 import { routineOf } from "./strength/exercises.ts";
 import { nigglePattern, recentFeelings, RunNotes } from "./run-notes.ts";
-import { CheckIns, todayReadiness } from "./readiness.ts";
+import { CheckIns, readiness, todayReadiness } from "./readiness.ts";
+import { freshBest, todayMark } from "./today-mark.ts";
 import { Memory } from "./memory.ts";
 import { bodySigns, Health, localDate } from "./health.ts";
 import { alreadyHere, hkFolder, hkWorkout, type HkSession } from "./apple-health.ts";
@@ -266,8 +267,17 @@ export function createApi(o: ApiOptions): Api {
         for (const s of wornOut(all)) t.takeaways.push({ id: `shoes-${s.id}`, tone: "watch", title: `${s.name}: ${Math.round(s.km)} km`, detail: switchAdvice(s, all) });
         // The same place niggling again (run notes and morning checks): a pattern worth acting on.
         for (const p of nigglePattern(await checkins.niggles(21).catch(() => []))) t.takeaways.push({ id: `niggle-${p.area}`, tone: "watch", title: `Your ${p.name}: ${p.times} niggles in three weeks`, detail: `Noted after runs and in your morning checks. Keep runs easy and flat until it's quiet, and see a physio if it keeps coming back.` });
+        // Tartan's T in Today's header (src/today-mark.ts): the day as the mark takes it on.
+        const mark = await (async () => {
+          const view = await plans.view();
+          const days = view.weeks.flatMap((w) => w.days);
+          const sessions = days.find((d) => d.date === view.today)?.sessions.filter((s) => s.kind !== "rest") ?? [];
+          const [checkin, signs, feelings, efforts] = await Promise.all([checkins.get(view.today), body().catch(() => null), recentFeelings(library).catch(() => []), library.runEfforts().catch(() => [])]);
+          const level = readiness(t.readiness.history_days >= 14 ? t.readiness.form : null, checkin, signs, { feelings }).level;
+          return todayMark({ sessions, plan: days.some((d) => d.date >= view.today), level, best: freshBest(efforts), raceDays: t.targets.race?.days_to_go ?? null });
+        })().catch(() => null);
         // The sample's storage (the demo): Today says so, with the way out.
-        return Response.json({ ...t, ...((await isSample(disk)) ? { sample: true } : {}) });
+        return Response.json({ ...t, ...(mark ? { mark } : {}), ...((await isSample(disk)) ? { sample: true } : {}) });
       },
     ],
     [

@@ -25,7 +25,12 @@ data class Today(
     val planEnded: Boolean = false,
     /** The demo's sample data (src/sample.ts): Today says so, with the way out. */
     val sample: Boolean = false,
+    /** Tartan's T in the header (src/today-mark.ts), when the engine sends it. */
+    val mark: Mark? = null,
 )
+
+/** The T's state (rest, session, best, tired, race) and its line for screen readers. */
+data class Mark(val state: String, val label: String)
 
 /**
  * Your race (targets.race: your target's, else the plan's next race): when, the target, and how the
@@ -164,5 +169,6 @@ fun parseToday(todayJson: String, planJson: String?, today: LocalDate = LocalDat
     }
     val takeaways = t.optJSONArray("takeaways").map { Takeaway(it.optString("tone"), it.optString("title"), it.optString("detail"), it.str("activity"), it.optString("id"), it.str("date")) }
     val planEnded = plan?.optJSONObject("plan") != null && !planOn
-    return Today(readiness, last, week, sessions.firstOrNull(), takeaways, sessions, if (sessions.isEmpty()) next else null, race, planOn, planEnded, t.optBoolean("sample"))
+    val mark = t.optJSONObject("mark")?.let { m -> m.str("state")?.let { Mark(it, m.optString("label")) } }
+    return Today(readiness, last, week, sessions.firstOrNull(), takeaways, sessions, if (sessions.isEmpty()) next else null, race, planOn, planEnded, t.optBoolean("sample"), mark)
 }

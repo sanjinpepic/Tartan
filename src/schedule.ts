@@ -242,9 +242,9 @@ export function dailies(
       const planned = v.slots.filter((s) => s.date === day(d));
       const first = made === 0;
       const ready = first && v.morning?.readiness ? `${v.morning.readiness}. ` : "";
-      const what = planned.length ? planned.map((s) => `${s.title}: ${s.summary}`).join(" · ") : v.morning?.plan ? "A rest day." : "Nothing planned: a plan is a tap away on the Coach tab.";
+      const what = planned.length ? planned.map((s) => `${s.title}: ${s.summary}`).join(" · ") : v.morning?.plan ? "Nothing planned. A walk is fine; so is nothing at all." : "Nothing planned. When you want a plan, it's on the Coach tab.";
       const waiting = first && v.morning?.proposed ? ` ${v.morning.proposed} change${v.morning.proposed > 1 ? "s" : ""} to your plan to look at.` : "";
-      out.push({ idKey: `morning:${day(d)}`, key: "morning", title: planned.length ? `Today: ${planned.map((s) => s.title).join(", ")}` : "Good morning", body: `${ready}${what}${waiting}`, at: new Date(when) });
+      out.push({ idKey: `morning:${day(d)}`, key: "morning", title: planned.length ? `Today: ${planned.map((s) => s.title).join(", ")}` : v.morning?.plan ? "Rest day" : "Today", body: `${ready}${what}${waiting}`, at: new Date(when) });
       made++;
     }
   }
@@ -253,7 +253,7 @@ export function dailies(
     d.setDate(d.getDate() + ((7 - d.getDay()) % 7));
     let when = local(`${day(d)}T19:00`);
     if (when <= now) when += 7 * 86_400_000;
-    out.push({ idKey: `review:${new Date(when).toLocaleDateString("sv")}`, key: "review", title: "Your week, looked back on", body: "Open Tartan: the coach goes over the week and sets up the next one.", at: new Date(when) });
+    out.push({ idKey: `review:${new Date(when).toLocaleDateString("sv")}`, key: "review", title: "Your week, looked back on", body: "When you have a minute: your coach looks back at the week and sets up the next one.", at: new Date(when) });
   }
   return out;
 }

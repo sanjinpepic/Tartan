@@ -40,10 +40,10 @@ export function nudgeLines(f: NudgeFacts): { text: string; facts: string[] } {
   // What you've done: the week, the race, or the break.
   if (f.race && f.race.days > 0 && f.race.days <= 84) {
     facts.push(`${f.race.days} days to ${f.race.name}.`);
-    lines.push(`${f.race.days} days to ${f.race.name}. Today is one small part of getting there.`);
+    lines.push(`${f.race.days} days to ${f.race.name}. This is one of the runs that gets you there.`);
   } else if (f.week.runs > 0) {
     facts.push(`This week so far: ${f.week.runs} run${f.week.runs === 1 ? "" : "s"}, ${one(f.week.km)} km.`);
-    lines.push(`You've run ${f.week.runs === 1 ? "once" : `${f.week.runs} times`} this week, ${one(f.week.km)} km. Today keeps it going.`);
+    lines.push(`You've run ${f.week.runs === 1 ? "once" : `${f.week.runs} times`} this week, ${one(f.week.km)} km. Today would make it ${f.week.runs + 1}.`);
   } else if (f.since_last != null && f.since_last >= 3) {
     facts.push(`${f.since_last} days since the last run.`);
     lines.push(`It's been ${f.since_last} days since your last run, so the first few minutes may feel stiff. They pass.`);

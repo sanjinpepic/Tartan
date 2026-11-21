@@ -31,6 +31,7 @@ import { changePlanTool, editSessionTool, planOnDevice, rulesReplan, saveTrainin
 import { chatClaude } from "./coach/turn-claude.ts";
 import { chatGemini } from "./coach/turn-gemini.ts";
 import { chatLocal, localSystem } from "./coach/turn-local.ts";
+import { VOICE_LINE } from "./coach/prompt.ts";
 
 // The coach's public surface: everything the app, the API and the tests import from here.
 export { COACH_MODELS, COACH_PROVIDERS, planModelFor, type CoachSettings, type Planner, type Provider } from "./coach/settings.ts";
@@ -322,8 +323,9 @@ export class Coach {
   async afterRunWords(draft: string, facts: string[], timeoutMs = 8000): Promise<string | null> {
     return this.quickWords(
       [
-        "You are a running coach. Write the notification the athlete gets just after this run: one or two short sentences, at most 200 characters.",
-        "Use only these facts; keep their numbers exact; plain words; no greeting, no emoji, no exclamation marks, no lists. Say how it went and what's next.",
+        `You are the athlete's running coach. ${VOICE_LINE}`,
+        "Write the notification the athlete gets just after this run: one or two short sentences, at most 200 characters.",
+        "Use only these facts; keep their numbers exact; plain words; no greeting, no emoji, no exclamation marks, no lists. Say how it went and what's next. A best gets one quiet line of credit, not praise.",
         `Facts:\n${facts.join("\n")}`,
         `A draft to improve on: ${draft}`,
         "Reply with the note only.",
@@ -340,7 +342,8 @@ export class Coach {
   async nudgeWords(draft: string, facts: string[], timeoutMs = 8000): Promise<string | null> {
     return this.quickWords(
       [
-        "You are a running coach on the athlete's side. They aren't feeling today's run and asked for a nudge. Write one to three short sentences, at most 240 characters.",
+        `You are the athlete's running coach. ${VOICE_LINE}`,
+        "They aren't feeling today's run and asked for a nudge. Write one to three short sentences, at most 240 characters.",
         "Use only these facts; keep their numbers exact; plain warm words; never preachy, no guilt, no greeting, no emoji, no exclamation marks, no lists. When the facts say to lead with the run, say so plainly; when they say to ease off, don't push. End with a small first step (e.g. 10 easy minutes, then decide).",
         `Facts:\n${facts.join("\n")}`,
         `A draft to improve on: ${draft}`,

@@ -1391,8 +1391,8 @@
     <string name="today_type_it_instead">Type it instead</string>
     <string name="today_rest_or_go_very_easy">Rest or go very easy</string>
     <string name="today_go_easy_today_2">Go easy today</string>
-    <string name="today_your_morning_check_says_your_body">Your morning check says your body needs it.</string>
-    <string name="today_your_morning_check_says_to_hold">Your morning check says to hold back.</string>
+    <string name="today_your_morning_check_says_your_body">Your morning check says rest, and it\'s usually right.</string>
+    <string name="today_your_morning_check_says_to_hold">Your morning check says hold back today.</string>
     <string name="today_until_then">Until then: %1$s</string>
     <string name="today_fatigue">Fatigue</string>
     <string name="today_form">Form</string>
