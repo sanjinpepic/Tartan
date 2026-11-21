@@ -8,10 +8,11 @@ import { today } from "../plan.ts";
 import { failTurn, shown, type ChatImage, type CoachEvent, type Conversation, type Reply } from "./conversation.ts";
 import { toolLabel } from "./labels.ts";
 import { SYSTEM } from "./prompt.ts";
+import type { Effort } from "./routing.ts";
 import { FALLBACK_MODELS, MAX_RESULT_CHARS, MAX_TOOL_ROUNDS, modelLabel } from "./settings.ts";
 
 /** A Claude conversation's turn. */
-export async function* chatClaude(c: Coach, conv: Conversation, text: string, instructions?: string, images: ChatImage[] = []): AsyncGenerator<CoachEvent> {
+export async function* chatClaude(c: Coach, conv: Conversation, text: string, instructions?: string, images: ChatImage[] = [], effort: Effort = "medium"): AsyncGenerator<CoachEvent> {
   if (!c.keyFor(await c.settings(), "anthropic").source) return yield { type: "error", message: "This conversation runs on Claude: add your Anthropic API key in Coach settings." };
 
   // The date changes daily, so it rides in the user turn, keeping the cached prefix stable; so do the notes.
@@ -53,7 +54,7 @@ export async function* chatClaude(c: Coach, conv: Conversation, text: string, in
         system: SYSTEM,
         tools: toolDefs,
         messages: conv.messages,
-        output_config: { effort: "medium" },
+        output_config: { effort: effort === "high" ? "high" : "medium" },
         cache_control: { type: "ephemeral" },
         ...(FALLBACK_MODELS.has(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
       });

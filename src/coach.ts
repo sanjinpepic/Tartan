@@ -24,7 +24,7 @@ import { dataTools, type DataTool } from "./tools.ts";
 import { Memory } from "./memory.ts";
 import { hubReady, prepareLocal, type HubState, type ModelHubClient } from "./coach-litert.ts";
 import { COACH_PROVIDERS, current, GONE_PHONE, hubLabel, MODEL_ID, modelLabel, ON_PHONE, planModelFor, TURN, wasOnPhone, type CoachSettings, type Planner, type Provider } from "./coach/settings.ts";
-import { routeOf } from "./coach/routing.ts";
+import { effortOf, routeOf, type Effort } from "./coach/routing.ts";
 import { localHistory, num1, okImage, shown, type ChatImage, type ChatOptions, type CoachEvent, type Conversation, type Reply } from "./coach/conversation.ts";
 import { makeRouteTool, routeFromRunTool, showRouteTool, type RouteCard } from "./coach/route-tools.ts";
 import { changePlanTool, editSessionTool, planOnDevice, rulesReplan, saveTrainingPlanTool } from "./coach/plan-tools.ts";
@@ -279,10 +279,21 @@ export class Coach {
     let text = "";
     if (st.provider === "google") {
       const g = await gemini();
+      const { MediaResolution, ThinkingLevel } = await import("@google/genai");
       const key = this.keyFor(await this.settings(), "google").key!;
       const res = await g
         .geminiClient(key, this.clientOptions.googleBaseUrl)
-        .models.generateContent({ model: st.model, contents: [{ role: "user", parts: [{ inlineData: { mimeType: mime, data } }, { text: ask }] }] })
+        .models.generateContent({
+          model: st.model,
+          contents: [{ role: "user", parts: [{ inlineData: { mimeType: mime, data } }, { text: ask }] }],
+          // A quick look at a shoe: a medium-sized image is plenty, little thinking, JSON for sure.
+          config: {
+            mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
+            responseMimeType: "application/json",
+            responseJsonSchema: { type: "object", properties: { name: { type: ["string", "null"] }, kind: { type: "string", enum: ["daily", "racing", "trail"] } }, required: ["name", "kind"] },
+            ...(g.thinksInLevels(st.model) ? { thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } } : {}),
+          },
+        })
         .catch((e: unknown) => {
           throw new Error(g.geminiError(e));
         });
@@ -328,11 +339,12 @@ export class Coach {
     const asked = (async (): Promise<string | null> => {
       if (pick.id === "google") {
         const g = await gemini();
+        const { ThinkingLevel } = await import("@google/genai");
         const res = await g.geminiClient(this.keyFor(s, "google").key!, this.clientOptions.googleBaseUrl).models.generateContent({
           model: pick.model,
           contents: [{ role: "user", parts: [{ text: ask }] }],
           // A few hundred tokens: a thinking model's short think counts toward it.
-          config: { maxOutputTokens: 600, abortSignal: abort.signal, ...(g.thinksInLevels(pick.model) ? { thinkingConfig: { thinkingLevel: (await import("@google/genai")).ThinkingLevel.LOW } } : {}) },
+          config: { maxOutputTokens: 600, abortSignal: abort.signal, ...(g.thinksInLevels(pick.model) ? { thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } } : {}) },
         });
         return res.text ?? null;
       }
@@ -443,7 +455,10 @@ export class Coach {
       const p = conv.provider ?? "anthropic";
       // On the phone, a message's words can send it where it's answered best (routeOf).
       const route = ON_PHONE.has(p) && !opts.instructions && !opts.provider ? routeOf(text) : null;
-      const turn = ON_PHONE.has(p) ? this.onPhone(conv, text, opts.instructions, images, route) : p === "google" ? this.chatGemini(conv, text, opts.instructions, images, toPlanner) : this.chatClaude(conv, text, opts.instructions, images);
+      // Thinking that fits the message: deep for a plan or a review, a quick answer for a question,
+      // in the plan's own chat too.
+      const effort = effortOf(text, !!opts.provider);
+      const turn = ON_PHONE.has(p) ? this.onPhone(conv, text, opts.instructions, images, route) : p === "google" ? this.chatGemini(conv, text, opts.instructions, images, effort) : this.chatClaude(conv, text, opts.instructions, images, effort);
       let told = false;
       for await (const ev of turn) {
         // The plan tab refreshes as soon as the turn ends; a saved plan stays saved even if
@@ -561,7 +576,7 @@ export class Coach {
     const outer = this.active;
     this.active = temp;
     try {
-      yield* cloud.id === "google" ? this.chatGemini(temp, text, instructions, images) : this.chatClaude(temp, text, instructions, images);
+      yield* cloud.id === "google" ? this.chatGemini(temp, text, instructions, images, effortOf(text)) : this.chatClaude(temp, text, instructions, images, effortOf(text));
     } finally {
       this.active = outer;
     }
@@ -676,11 +691,11 @@ export class Coach {
 
   // ------------------------------------------------------------ moved to src/coach/ (kept here as the class's own)
 
-  private chatGemini(conv: Conversation, text: string, instructions?: string, images: ChatImage[] = [], deep = false): AsyncGenerator<CoachEvent> {
-    return chatGemini(this, conv, text, instructions, images, deep);
+  private chatGemini(conv: Conversation, text: string, instructions?: string, images: ChatImage[] = [], effort: Effort = "low"): AsyncGenerator<CoachEvent> {
+    return chatGemini(this, conv, text, instructions, images, effort);
   }
-  private chatClaude(conv: Conversation, text: string, instructions?: string, images: ChatImage[] = []): AsyncGenerator<CoachEvent> {
-    return chatClaude(this, conv, text, instructions, images);
+  private chatClaude(conv: Conversation, text: string, instructions?: string, images: ChatImage[] = [], effort: Effort = "medium"): AsyncGenerator<CoachEvent> {
+    return chatClaude(this, conv, text, instructions, images, effort);
   }
   private chatLocal(conv: Conversation, text: string, instructions?: string, images: ChatImage[] = [], route: ReturnType<typeof routeOf> = null, cloud: CloudPick | null = null): AsyncGenerator<CoachEvent> {
     return chatLocal(this, conv, text, instructions, images, route, cloud);

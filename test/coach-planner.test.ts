@@ -242,7 +242,7 @@ test("kept on the phone, a change Gemma was asked for and didn't make: the plann
   expect(said.filter((e) => e.type === "text").map((e) => (e as { delta: string }).delta).join("")).toBe("Rest if you're tired.");
 });
 
-test("Gemini thinks briefly in the chat, fully for plans; a turn asks Model Hub how it is once", async () => {
+test("Gemini thinks briefly in the chat, deeply for plans; a turn asks Model Hub how it is once", async () => {
   const h = hub();
   const coach = new Coach(new Library(new MemoryDisk()), { modelHub: h.client, googleBaseUrl: gemini.url.toString().replace(/\/$/, "") });
   await coach.saveSettings({ provider: "modelhub", googleKey: "AIza-test" });
@@ -250,11 +250,19 @@ test("Gemini thinks briefly in the chat, fully for plans; a turn asks Model Hub 
   h.counted.state = 0;
   await collect(coach.chat(null, "Should I run today?"));
   expect(h.counted.state).toBeLessThanOrEqual(1);
-  expect(JSON.parse(bodies[0]!).generationConfig?.thinkingConfig).toEqual({ thinkingLevel: "LOW" });
+  expect(JSON.parse(bodies[0]!).generationConfig?.thinkingConfig).toEqual({ thinkingLevel: "LOW", includeThoughts: true });
   bodies.length = 0;
   await collect(coach.updatePlan());
-  expect(JSON.parse(bodies[0]!).generationConfig?.thinkingConfig).toBeUndefined();
+  expect(JSON.parse(bodies[0]!).generationConfig?.thinkingConfig).toEqual({ thinkingLevel: "HIGH", includeThoughts: true });
   // A model before Gemini 3 isn't sent a level.
   const { thinksInLevels } = await import("../src/coach-gemini.ts");
   expect([thinksInLevels("gemini-3.8-flash"), thinksInLevels("gemini-3.5-flash-lite"), thinksInLevels("gemini-2.5-flash"), thinksInLevels("gemini-10-pro")]).toEqual([true, true, false, true]);
+});
+
+test("thinking fits the message: a plan deep, a change some, a question quick", async () => {
+  const { effortOf } = await import("../src/coach/routing.ts");
+  expect(effortOf("Make me a plan for the Helsinki marathon")).toBe("high");
+  expect(effortOf("Move my long run to Sunday")).toBe("medium");
+  expect(effortOf("How many lengths should I aim for? One is 25 m")).toBe("low");
+  expect(effortOf("How many lengths should I aim for?", true)).toBe("high");
 });

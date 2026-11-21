@@ -1,7 +1,7 @@
 {
   "name": "tartan",
-  "version": "0.4.75",
-  "versionCode": 20,
+  "version": "0.4.76",
+  "versionCode": 21,
   "private": true,
   "description": "Tartan: a running coach for your watch. Plans around your life, on your watch, with built-in rules, an AI on your phone or your own key.",
   "type": "module",
@@ -42,7 +42,7 @@
     "@capacitor/local-notifications": "^8.3.1",
     "@capacitor/share": "^8.0.3",
     "@ebarooni/capacitor-calendar": "8.7.1",
-    "@google/genai": "^2.30.0",
+    "@google/genai": "^3.6.1",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "dbus-next": "^0.10.2",
     "jsqr": "1.4.0",

@@ -33,3 +33,18 @@ export function routeOf(text: string): { kind: "plan" | "edit"; told?: boolean }
   }
   return null;
 }
+
+/** How long a cloud model thinks before it answers. */
+export type Effort = "low" | "medium" | "high";
+
+/**
+ * The thinking a message needs, by its words: making or reviewing a plan (`planning`, or a
+ * message asking for a new one) deep, changing a session some, anything else a quick answer.
+ * Deep thinking on a plain question only makes it slow, and a long silence while the model
+ * thinks is what phone networks drop.
+ */
+export function effortOf(text: string, planning = false): Effort {
+  if (planning) return "high";
+  const r = routeOf(text);
+  return r?.kind === "plan" ? "high" : r?.kind === "edit" ? "medium" : "low";
+}
