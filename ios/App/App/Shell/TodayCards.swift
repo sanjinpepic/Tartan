@@ -1248,8 +1248,19 @@ struct FlowLayout: Layout {
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let rows = arrange(proposal.width ?? .infinity, subviews)
-        let width = rows.map { r in r.map(\.width).reduce(0, +) + spacing * CGFloat(max(0, r.count - 1)) }.max() ?? 0
-        let height = rows.map { r in r.map(\.height).max() ?? 0 }.reduce(0, +) + spacing * CGFloat(max(0, rows.count - 1))
+        var width: CGFloat = 0
+        var height: CGFloat = 0
+        for (n, r) in rows.enumerated() {
+            var w: CGFloat = 0
+            var h: CGFloat = 0
+            for size in r {
+                w += size.width
+                h = max(h, size.height)
+            }
+            w += spacing * CGFloat(max(0, r.count - 1))
+            width = max(width, w)
+            height += h + (n > 0 ? spacing : 0)
+        }
         return CGSize(width: min(width, proposal.width ?? width), height: height)
     }
 
