@@ -376,7 +376,7 @@ function sourcesCard(v: ActivityView, isRun: boolean): HTMLElement {
   return card;
 }
 
-const ORDER = ["watch", "strava", "phone", "suunto-cloud"];
+const ORDER = ["watch", "strava", "phone", "suunto-cloud", "logged"];
 
 /**
  * What this workout worked: the body small, its muscles shaded by their share of the load (the

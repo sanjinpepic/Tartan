@@ -1405,6 +1405,9 @@
     <string name="workout_shins">Shins</string>
     <string name="workout_phone">Phone</string>
     <string name="workout_cloud">Cloud</string>
+    <string name="workout_told">Told</string>
+    <string name="settings_log_a_workout_nothing_recorded">Log a workout nothing recorded, or take it back.</string>
+    <string name="workout_told_to_the_coach">Told to the coach</string>
     <string name="workout_suunto_cloud_export">Suunto cloud export</string>
     <string name="workout_couldn_t_open_this_workout">Couldn\'t open this workout.</string>
     <string name="workout_couldn_t_read_this_workout">Couldn\'t read this workout.</string>

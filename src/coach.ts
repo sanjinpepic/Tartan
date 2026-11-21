@@ -62,7 +62,7 @@ export class Coach {
     // Read-only data tools, plus one write: the coach's own plan file.
     this.tools = [
       // Plus ticking a session off ("I did it, the watch stayed home") and the time you have.
-      ...dataTools(lib, { allowSync: false }).filter((t) => t.readOnly || ["mark_plan_session", "set_training_availability", "set_training_times", "remember", "update_memory", "forget_memory"].includes(t.name)),
+      ...dataTools(lib, { allowSync: false }).filter((t) => t.readOnly || ["mark_plan_session", "log_workout", "remove_logged_workout", "set_training_availability", "set_training_times", "remember", "update_memory", "forget_memory"].includes(t.name)),
       saveTrainingPlanTool(this),
       makeRouteTool(this),
       routeFromRunTool(this),

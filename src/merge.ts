@@ -11,7 +11,8 @@
  *  - canonical ids are persisted, so an activity keeps its id when a second copy appears.
  */
 
-export type Source = "strava" | "watch" | "suunto-cloud" | "phone";
+/** "logged": a workout the athlete told the coach about, with no recording (src/logged.ts). */
+export type Source = "strava" | "watch" | "suunto-cloud" | "phone" | "logged";
 
 /** One copy of a workout as one source reports it (units: m, s, bpm, m/s). */
 export interface Candidate {
@@ -37,6 +38,8 @@ export interface Candidate {
   has_streams?: boolean;
   /** "How did it feel?" from the watch, 1 poor … 5 excellent. */
   feeling?: number;
+  /** How hard it was, 1 very easy … 10 all out, as the athlete said (a logged workout). */
+  effort?: number;
 }
 
 export interface MergedActivity {
@@ -74,10 +77,11 @@ type Field = Exclude<keyof Candidate, "key" | "source" | "has_streams">;
  * fills gaps.
  */
 const PRIORITY: Record<string, Source[]> = {
-  name: ["strava", "suunto-cloud", "phone", "watch"],
-  sport: ["strava", "watch", "phone", "suunto-cloud"],
+  name: ["strava", "suunto-cloud", "phone", "watch", "logged"],
+  sport: ["strava", "watch", "phone", "suunto-cloud", "logged"],
   // A run recorded on the phone and uploaded comes back from Strava with the same data, tidied.
-  default: ["watch", "strava", "phone", "suunto-cloud"],
+  // A recording always beats what was only said.
+  default: ["watch", "strava", "phone", "suunto-cloud", "logged"],
 };
 const FIELDS: Field[] = [
   "start", "sport", "name", "elapsed_s", "moving_s", "distance_m", "elevation_m", "avg_hr", "max_hr",

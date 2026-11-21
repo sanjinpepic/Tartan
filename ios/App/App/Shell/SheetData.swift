@@ -238,9 +238,9 @@ enum Words {
     static let rule = ["faster": "Faster", "easier": "Easier", "hold": "Same again", "on target": "Right on", "slow down": "Slow down"]
     static let rank = ["", "Best", "2nd best", "3rd best"]
     static let distance = ["400m": "400 m", "1k": "1 km", "1 mile": "Mile", "5k": "5 km", "10k": "10 km", "15k": "15 km", "Half-Marathon": "half marathon", "30k": "30 km", "Marathon": "Marathon"]
-    static let source = ["watch": "Watch", "strava": "Strava", "phone": "Phone", "suunto-cloud": "Cloud"]
-    static let sourceLong = ["watch": "Watch", "strava": "Strava", "phone": "Recorded on this phone", "suunto-cloud": "Suunto cloud export"]
-    static let order = ["watch", "strava", "phone", "suunto-cloud"]
+    static let source = ["watch": "Watch", "strava": "Strava", "phone": "Phone", "suunto-cloud": "Cloud", "logged": "Told"]
+    static let sourceLong = ["watch": "Watch", "strava": "Strava", "phone": "Recorded on this phone", "suunto-cloud": "Suunto cloud export", "logged": "Told to the coach"]
+    static let order = ["watch", "strava", "phone", "suunto-cloud", "logged"]
     static let verdict = ["on target": "On target", "fast": "Fast", "slow": "Slow", "high": "High", "low": "Low", "no data": "No data", "not done": "Not done", "done": "Done"]
 }
 

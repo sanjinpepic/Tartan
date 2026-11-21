@@ -120,7 +120,7 @@ describe("library + MCP", () => {
     expect(names).toEqual([
       "backup_watch", "export_training_plan_csv", "export_training_plan_ics", "forget_memory", "get_activity", "get_activity_streams", "get_athlete_profile", "get_best_efforts", "get_body", "get_durability", "get_efficiency_trend", "get_goals",
       "get_health", "get_hr_zones", "get_lifts", "get_memory", "get_overview", "get_readiness", "get_route", "get_run_notes", "get_shoes", "get_takeaways", "get_training_load", "get_training_plan", "get_training_summary", "get_training_times", "get_weather", "get_week", "list_activities",
-      "list_routes", "list_watch_faces", "list_watch_files", "mark_plan_session", "read_watch_file", "remember", "reset_training_plan", "review_session", "save_route", "save_training_plan", "save_watch_face", "set_training_availability", "set_training_times", "sync_strava", "update_memory",
+      "list_routes", "list_watch_faces", "list_watch_files", "log_workout", "mark_plan_session", "read_watch_file", "remember", "remove_logged_workout", "reset_training_plan", "review_session", "save_route", "save_training_plan", "save_watch_face", "set_training_availability", "set_training_times", "sync_strava", "update_memory",
     ]);
     const call = async (name: string, args: Record<string, unknown> = {}) => {
       const r = (await client.callTool({ name, arguments: args })) as { content: Array<{ text: string }>; isError?: boolean };

@@ -12,6 +12,7 @@ import { isFit, parseFit, type FitActivity } from "./fit.ts";
 import { mergeActivities, sportFamily, type Candidate, type LinkTable, type MergedActivity, type Source } from "./merge.ts";
 import { sniff } from "./protocol/sync.ts";
 import { decodeStreams, decodeWorkout, feelingOf, parseDescriptors, sbemSummary, type Feeling, type SbemWorkoutFull } from "./sbem.ts";
+import { loggedStart, LoggedWorkouts } from "./logged.ts";
 import { RecordingStore, streams as recordingStreams, summarize } from "./recording.ts";
 import { effortsFrom, type Effort } from "./run-finish.ts";
 import { LocalStore } from "./store.ts";
@@ -47,6 +48,8 @@ export interface ActivityRow {
   streams_from?: Source;
   /** "How did it feel?", answered on the watch: 1 poor … 5 excellent. */
   feeling?: Feeling;
+  /** How hard it was, 1 … 10, as the athlete told the coach (a logged workout). */
+  effort?: number;
 }
 
 export interface ActivityFilter {
@@ -102,6 +105,8 @@ export class Library {
   readonly local: LocalStore;
   readonly strava: StravaStore;
   readonly recordings: RecordingStore;
+  /** Workouts told to the coach, with no recording. */
+  readonly logged: LoggedWorkouts;
   private fitCache = new Map<string, { sig: string; fit: FitActivity | null }>();
   private sbemCache = new Map<string, { sig: string; sum: { workout: SbemWorkoutFull; streams: Record<string, unknown[]> | null } | null }>();
   private memo: { sig: string; merged: MergedActivity[] } | null = null;
@@ -120,6 +125,7 @@ export class Library {
     this.local = new LocalStore(disk);
     this.strava = new StravaStore(disk, opts.fetch);
     this.recordings = new RecordingStore(disk);
+    this.logged = new LoggedWorkouts(disk);
   }
 
   // ------------------------------------------------------------ overview
@@ -177,9 +183,11 @@ export class Library {
     const detail = stravaKey ? await this.strava.read<StravaActivityDetail>("activities", `${stravaKey.slice(7)}.json`) : null;
     const fit = watchKey ? await this.watchFit(watchKey.slice(6)) : null;
     const laps = detail?.laps?.length ? { laps: detail.laps, laps_from: "strava" } : fit?.laps.length ? { laps: fit.laps, laps_from: "watch" } : {};
+    const loggedKey = m.members.find((x) => x.source === "logged")?.key.slice(7);
+    const said = loggedKey ? (await this.logged.all()).find((w) => w.id === loggedKey) : undefined;
     return compact({
       ...toRow(m),
-      description: detail?.description ?? undefined,
+      description: detail?.description ?? said?.note ?? undefined,
       ...laps,
       splits_metric: detail?.splits_metric,
       best_efforts: detail?.best_efforts?.map((b) => ({ name: b.name, time_s: b.elapsed_time, start: b.start_date, pr_rank: b.pr_rank })),
@@ -422,7 +430,7 @@ export class Library {
 
   private async computeMerged(): Promise<MergedActivity[]> {
     const candidates = await this.candidates();
-    const sig = `${candidates.length}|${candidates.map((c) => `${c.key}@${c.start}`).join(",").length}|${candidates.reduce((n, c) => n + c.start / 1e6 + (c.has_streams ? 1 : 0) + (c.feeling ?? 0) / 7, 0)}`;
+    const sig = `${candidates.filter((c) => c.source === "logged").map((c) => c.key).join(",")}|${candidates.length}|${candidates.map((c) => `${c.key}@${c.start}`).join(",").length}|${candidates.reduce((n, c) => n + c.start / 1e6 + (c.has_streams ? 1 : 0) + (c.feeling ?? 0) / 7, 0)}`;
     if (this.memo?.sig === sig) return this.memo.merged;
     const file = "activity-links.json";
     const links = (await readJson<LinkTable>(this.disk, file)) ?? {};
@@ -473,6 +481,7 @@ export class Library {
       const c = cloudCandidate(w);
       if (c) out.push(c);
     }
+    const said = await this.logged.all();
     for (const w of await this.local.watches()) {
       for (const f of await this.local.files(w.id)) {
         // The Run 2's logbook workouts (SBEM): start, duration and sport so far.
@@ -511,6 +520,27 @@ export class Library {
           if (c) out.push(c);
         }
       }
+    }
+    // Logged by word: until a recording of the same sport turns up that day (then it's that one).
+    const dayOf = (ms: number) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+    const recorded = new Set(out.map((c) => `${dayOf(c.start)}|${sportFamily(c.sport)}`));
+    for (const w of said) {
+      if (recorded.has(`${w.date}|${sportFamily(w.sport)}`)) continue;
+      out.push(
+        compact({
+          key: `logged:${w.id}`,
+          source: "logged" as const,
+          start: loggedStart(w),
+          elapsed_s: w.minutes ? w.minutes * 60 : undefined,
+          moving_s: w.minutes ? w.minutes * 60 : undefined,
+          distance_m: w.distance_m,
+          sport: w.sport,
+          name: w.name,
+          avg_speed: w.distance_m && w.minutes ? w.distance_m / (w.minutes * 60) : undefined,
+          device: "Told to the coach",
+          effort: w.effort,
+        }),
+      );
     }
     return out;
   }
@@ -679,6 +709,7 @@ function toRow(m: MergedActivity): ActivityRow {
     sources: [...new Set(m.members.map((x) => x.source))],
     streams_from: m.streams_from?.split(":")[0] as Source | undefined,
     feeling: m.members.find((x) => x.feeling)?.feeling as Feeling | undefined,
+    effort: m.members.find((x) => x.effort)?.effort,
   });
 }
 

@@ -6,6 +6,7 @@ export const SOURCES: Record<string, { name: string; short: string; icon: string
   strava: { name: "Strava", short: "Strava", icon: "strava" },
   phone: { name: "Recorded on this phone", short: "Phone", icon: "phone" },
   "suunto-cloud": { name: "Suunto cloud export", short: "Cloud", icon: "folder" },
+  logged: { name: "Told to the coach", short: "Told", icon: "coach" },
 };
 
 export const sourceName = (s: string) => SOURCES[s]?.name ?? s;

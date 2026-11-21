@@ -12,7 +12,9 @@ import { Analytics } from "./analytics.ts";
 import { durability } from "./durability.ts";
 import { upcomingWeather, Weather } from "./weather.ts";
 import type { Library } from "./library.ts";
-import { planInput, Plans, SESSION_KINDS, type PlanInput } from "./plan.ts";
+import { planInput, Plans, SESSION_KINDS, today, type PlanInput } from "./plan.ts";
+import { LOGGED_SPORTS } from "./logged.ts";
+import { sportFamily } from "./merge.ts";
 import { DAY_KEYS, readPrefs, savePrefs, slots, toIcs } from "./schedule.ts";
 import { Routes, toGpx, type LngLat } from "./routes.ts";
 import { Faces } from "./faces.ts";
@@ -34,7 +36,9 @@ export interface DataTool {
 
 import { kindOf, shoePicks, shoesNow, switchAdvice, wornOut } from "./shoes.ts";
 
-const SOURCES = ["all", "strava", "watch", "suunto-cloud", "phone"] as const;
+/** A logged workout's title when none was said. */
+const LOGGED_NAMES: Record<(typeof LOGGED_SPORTS)[number], string> = { Run: "Run", Swim: "Swim", Ride: "Ride", Walk: "Walk", Hike: "Hike", WeightTraining: "Gym session", Yoga: "Yoga", Rowing: "Row", NordicSki: "Ski", Workout: "Workout" };
+const SOURCES = ["all", "strava", "watch", "suunto-cloud", "phone", "logged"] as const;
 
 function tool<S extends z.ZodRawShape>(
   name: string,
@@ -102,7 +106,7 @@ export function dataTools(lib: Library, opts: DataToolOptions = {}): DataTool[] 
 
     tool(
       "list_activities",
-      "List workouts newest first; each workout once, with `sources` naming every copy (strava, watch, suunto-cloud). Rows: id, start (UTC), start_local, sport, name, distance_km, moving_min, elevation_m, avg/max HR, pace.",
+      "List workouts newest first; each workout once, with `sources` naming every copy (strava, watch, suunto-cloud, phone; logged for one the athlete told you about, with no recording). Rows: id, start (UTC), start_local, sport, name, distance_km, moving_min, elevation_m, avg/max HR, pace.",
       {
         since: z.string().optional().describe("ISO date or datetime, inclusive, e.g. 2026-09-01"),
         until: z.string().optional().describe("ISO date or datetime, inclusive for whole dates"),
@@ -276,6 +280,54 @@ export function dataTools(lib: Library, opts: DataToolOptions = {}): DataTool[] 
         async (a) => {
           await plans.mark(a.date, a.kind, a.done !== false);
           return { ok: true };
+        },
+        false,
+      ),
+      local: true,
+    },
+    {
+      ...tool(
+        "log_workout",
+        "Log a workout the athlete tells you about that nothing recorded (\"I swam 25x25m today\", \"did 40 min on the bike\", \"ran 5 k, left the watch at home\"). It's saved as a workout of its own: it shows in their activities, fills that day's planned session of its kind (a swim or ride fills cross training, a gym session strength, a run a run) and counts in their load. Work out what you can from their words (25 lengths of 25 m is 625 m) and log it at once, without questions: with no time or distance it still ticks the day off (it just can't count in the load; a passing word that the time would help is enough, never a question). Not for a workout already recorded that day (it says so). Say in a few words what you logged.",
+        {
+          sport: z.enum(LOGGED_SPORTS).describe("WeightTraining for the gym, Workout for anything else"),
+          date: z.string().optional().describe("YYYY-MM-DD, default today; not in the future"),
+          time: z.string().regex(/^\d{2}:\d{2}$/).optional().describe("local start HH:MM, when they said"),
+          minutes: z.number().min(1).max(1440).optional(),
+          distance_m: z.number().min(1).max(500_000).optional().describe("metres (a 5 k run is 5000)"),
+          effort: z.number().int().min(1).max(10).optional().describe("how hard it felt, 1 very easy … 10 all out, when they said"),
+          name: z.string().max(60).optional().describe("a short title, e.g. Pool swim; default from the sport"),
+          note: z.string().max(300).optional().describe("anything else worth keeping, e.g. 25 × 25 m"),
+        },
+        async (a) => {
+          const day = a.date ?? today();
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day > today()) return { error: "The date must be YYYY-MM-DD, today or earlier." };
+          const family = sportFamily(a.sport);
+          const already = (await lib.activities({ since: new Date(`${day}T00:00:00`).toISOString(), until: new Date(`${day}T23:59:59.999`).toISOString() })).find((r) => sportFamily(r.sport) === family && !(r.sources.length === 1 && r.sources[0] === "logged"));
+          if (already) return { already_recorded: { id: already.id, name: already.name, distance_km: already.distance_km, moving_min: already.moving_min }, note: "That day already has this workout from a recording; nothing logged." };
+          const saved = await lib.logged.add({ date: day, ...(a.time ? { time: a.time } : {}), sport: a.sport, name: a.name?.trim() || LOGGED_NAMES[a.sport], ...(a.minutes ? { minutes: a.minutes } : {}), ...(a.distance_m ? { distance_m: a.distance_m } : {}), ...(a.effort ? { effort: a.effort } : {}), ...(a.note ? { note: a.note } : {}) });
+          lib.invalidate();
+          const row = await lib.find(`logged:${saved.id}`).catch(() => null);
+          const v = await plans.view().catch(() => null);
+          const filled = v?.weeks.flatMap((w) => w.days).find((d) => d.date === day)?.sessions.find((x) => row && x.activity?.id === row.id);
+          return { logged: { id: saved.id, date: day, sport: saved.sport, name: saved.name, minutes: saved.minutes, distance_m: saved.distance_m, effort: saved.effort }, ...(filled ? { fills: `${filled.kind}: ${filled.title}` } : {}) };
+        },
+        false,
+      ),
+      local: true,
+    },
+    {
+      ...tool(
+        "remove_logged_workout",
+        "Take back a workout logged with log_workout (a mistake, or logged twice). Its id is the one log_workout gave, or list_activities with source \"logged\" (ids there look like logged:abc123; either form works). Recorded workouts can't be removed this way.",
+        { id: z.string() },
+        async (a) => {
+          lib.invalidate();
+          const id = a.id.replace(/^logged:/, "");
+          const own = (await lib.logged.all()).find((w) => w.id === id) ?? (await lib.find(a.id).then((m) => m.members.find((x) => x.source === "logged")?.key.slice(7)).then((k) => (k ? { id: k } : null)).catch(() => null));
+          const done = own ? await lib.logged.remove(own.id) : false;
+          lib.invalidate();
+          return done ? { removed: true } : { error: "No logged workout with that id." };
         },
         false,
       ),

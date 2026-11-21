@@ -170,7 +170,8 @@ export class Analytics {
   trimp(r: ActivityRow, prof: { max_hr: number; rest_hr: number; sex?: string }): { load: number; estimated: boolean } {
     const minutes = r.moving_min ?? r.elapsed_min ?? 0;
     if (!minutes) return { load: 0, estimated: true };
-    if (!r.avg_hr) return { load: round(minutes * 0.9, 1)!, estimated: true };
+    // No heart rate: minutes at a middling effort, or at the effort the athlete said (1 … 10).
+    if (!r.avg_hr) return { load: round(minutes * (r.effort ? 0.3 + 0.12 * r.effort : 0.9), 1)!, estimated: true };
     const hrr = Math.min(1, Math.max(0, (r.avg_hr - prof.rest_hr) / (prof.max_hr - prof.rest_hr)));
     const k = prof.sex === "F" ? [0.86, 1.67] : [0.64, 1.92];
     return { load: round(minutes * hrr * k[0]! * Math.exp(k[1]! * hrr), 1)!, estimated: false };

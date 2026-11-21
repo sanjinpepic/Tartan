@@ -29,6 +29,8 @@ export const TOOL_LABELS: Record<string, string> = {
   get_week: "Looking at the week",
   save_training_plan: "Writing your plan",
   mark_plan_session: "Ticking off a session",
+  log_workout: "Logging your workout",
+  remove_logged_workout: "Taking back a logged workout",
   set_training_availability: "Noting your time",
   get_training_times: "Checking your training times",
   set_training_times: "Setting your training times",

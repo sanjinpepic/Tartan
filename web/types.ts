@@ -15,7 +15,7 @@ export interface Activity {
   avg_speed_kmh?: number;
   calories?: number;
   device?: string;
-  sources: Array<"strava" | "watch" | "suunto-cloud" | "phone">;
+  sources: Array<"strava" | "watch" | "suunto-cloud" | "phone" | "logged">;
   streams_from?: string;
   /** "How did it feel?", answered on the watch: 1 poor … 5 excellent. */
   feeling?: 1 | 2 | 3 | 4 | 5;

@@ -129,9 +129,9 @@ object Words {
         "hip_flexors" to str(R.string.workout_hip_flexors), "glutes" to str(R.string.workout_glutes), "glute_med" to str(R.string.workout_side_glutes), "adductors" to str(R.string.workout_inner_thighs), "quads" to str(R.string.workout_quads),
         "hamstrings" to str(R.string.workout_hamstrings), "calves" to str(R.string.workout_calves), "tibialis" to str(R.string.workout_shins),
     )
-    val SOURCE get() = mapOf("watch" to str(R.string.common_watch), "strava" to "Strava", "phone" to str(R.string.workout_phone), "suunto-cloud" to str(R.string.workout_cloud))
-    val SOURCE_LONG get() = mapOf("watch" to str(R.string.common_watch), "strava" to "Strava", "phone" to str(R.string.common_recorded_on_this_phone), "suunto-cloud" to str(R.string.workout_suunto_cloud_export))
-    val ORDER = listOf("watch", "strava", "phone", "suunto-cloud")
+    val SOURCE get() = mapOf("watch" to str(R.string.common_watch), "strava" to "Strava", "phone" to str(R.string.workout_phone), "suunto-cloud" to str(R.string.workout_cloud), "logged" to str(R.string.workout_told))
+    val SOURCE_LONG get() = mapOf("watch" to str(R.string.common_watch), "strava" to "Strava", "phone" to str(R.string.common_recorded_on_this_phone), "suunto-cloud" to str(R.string.workout_suunto_cloud_export), "logged" to str(R.string.workout_told_to_the_coach))
+    val ORDER = listOf("watch", "strava", "phone", "suunto-cloud", "logged")
 
     /** "Mostly calves, quads and glutes; some shins." */
     fun worked(muscles: List<Worked>): String {
