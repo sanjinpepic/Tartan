@@ -257,6 +257,16 @@ private fun <T> AutoSave(card: String, value: T?, m: SettingsModel, save: (T) ->
 private val RACES get() = listOf(str(R.string.settings_race_no_race) to null, "5 km" to 5.0, "10 km" to 10.0, str(R.string.settings_race_half) to 21.0975, str(R.string.settings_race_marathon) to 42.195, str(R.string.common_other) to -1.0)
 private val PRESETS get() = listOf(str(R.string.common_preset_before_work) to "06:30", str(R.string.common_preset_lunch) to "12:00", str(R.string.common_preset_after_work) to "18:00", str(R.string.common_preset_evening) to "20:00")
 private val DAYS get() = listOf("mon" to str(R.string.settings_monday), "tue" to str(R.string.settings_tuesday), "wed" to str(R.string.settings_wednesday), "thu" to str(R.string.settings_thursday), "fri" to str(R.string.settings_friday), "sat" to str(R.string.settings_saturday), "sun" to str(R.string.settings_sunday))
+/** On a bad-weather day: what you'd rather, and what's said when it's chosen. */
+private val BAD_WEATHER get() = listOf(
+    Triple("run", str(R.string.settings_run_anyway), str(R.string.settings_bad_weather_run)),
+    Triple("swim", str(R.string.settings_swim), str(R.string.settings_bad_weather_swim)),
+    Triple("ride", str(R.string.settings_bike), str(R.string.settings_bad_weather_ride)),
+    Triple("treadmill", str(R.string.settings_treadmill), str(R.string.settings_bad_weather_treadmill)),
+)
+/** What puts you off, as the engine names it (src/schedule.ts AVOID). */
+private val AVOID get() = listOf("ice" to str(R.string.settings_avoid_ice), "rain" to str(R.string.settings_avoid_rain), "wind" to str(R.string.settings_avoid_wind), "cold" to str(R.string.settings_avoid_cold), "heat" to str(R.string.settings_avoid_heat), "dark" to str(R.string.settings_avoid_dark))
+private val COLD = listOf(-10, -5, 0, 5)
 private val LEADS get() = listOf(15 to str(R.string.settings_15_min), 30 to str(R.string.settings_30_min), 60 to str(R.string.settings_1_hour), 120 to str(R.string.settings_2_hours))
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -463,6 +473,31 @@ private fun TrainingGroup(m: SettingsModel, actions: SettingsActions) {
                     }) { Text(stringResource(R.string.settings_same_as_usual)) } else TextButton(onClick = { editing = null }) { Text(stringResource(R.string.common_cancel)) }
                 },
             )
+        }
+    }
+    // On a bad-weather day: run anyway (nothing offered), or a swim, a ride, the treadmill.
+    m.times?.let { t ->
+        SetCard(stringResource(R.string.settings_bad_weather), "drop", stringResource(R.string.settings_bad_weather_sub), Modifier.reveal(i++)) {
+            val opts = BAD_WEATHER
+            Segmented(opts.map { it.second }, opts.indexOfFirst { it.first == t.badWeather }.coerceAtLeast(0), { k ->
+                if (opts[k].first != t.badWeather) m.saveTimes(JSONObject().put("bad_weather", opts[k].first), opts[k].third)
+            })
+            // What puts you off: ticked, Today suggests a change on such days.
+            Text(stringResource(R.string.settings_what_puts_you_off), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                AVOID.forEach { (k, label) ->
+                    val on = k in t.avoid
+                    Text(label, style = MaterialTheme.typography.labelLarge, color = if (on) cs.onPrimary else cs.onSurface, modifier = Modifier.press(label = label, role = androidx.compose.ui.semantics.Role.Checkbox, onClick = {
+                        val next = if (on) t.avoid - k else AVOID.map { it.first }.filter { it in t.avoid || it == k }
+                        m.saveTimes(JSONObject().put("avoid", org.json.JSONArray(next)), if (next.isEmpty()) str(R.string.settings_avoid_none) else str(R.string.settings_avoid_saved))
+                    }).clip(CircleShape).background(if (on) cs.primary else cs.surfaceContainerHigh).padding(horizontal = 14.dp, vertical = 8.dp))
+                }
+            }
+            if ("cold" in t.avoid) {
+                Text(stringResource(R.string.settings_cold_is_below), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+                Segmented(COLD.map { "$it °C" }, COLD.indexOf(t.coldBelow).coerceAtLeast(0), { k -> m.saveTimes(JSONObject().put("cold_below", COLD[k]), null) })
+            }
+            Text(stringResource(R.string.settings_avoid_sub), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
         }
     }
     // Exercise demos.

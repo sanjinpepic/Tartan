@@ -43,6 +43,11 @@ data class Times(
     val review: Boolean = true,
     /** A note from the coach after each new run (src/after-run.ts). */
     val runNote: Boolean = true,
+    /** On a bad-weather day you'd rather: run (anyway), swim, ride or treadmill (src/bad-weather.ts). */
+    val badWeather: String = "run",
+    /** What puts you off (ice, rain, wind, cold, heat, dark), and cold is below this, °C. */
+    val avoid: List<String> = emptyList(),
+    val coldBelow: Int = 0,
 )
 
 data class Note(val id: String, val text: String, val kind: String)
@@ -231,6 +236,9 @@ class SettingsModel(private val scope: CoroutineScope, private val api: Settings
                 next, (v.optJSONArray("slots")?.length() ?: 0) > 0,
                 p.optJSONObject("notify")?.optBoolean("morning", true) ?: true, p.optJSONObject("notify")?.text("morning_at") ?: "07:30", p.optJSONObject("notify")?.optBoolean("review", true) ?: true,
                 p.optJSONObject("notify")?.optBoolean("run", true) ?: true,
+                p.text("bad_weather") ?: "run",
+                p.optJSONArray("avoid")?.let { a -> (0 until a.length()).map { a.optString(it) } } ?: emptyList(),
+                p.optInt("cold_below", 0),
             )
         }
     }

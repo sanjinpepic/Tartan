@@ -10,6 +10,20 @@ import type { PlanSession, PlanWeekView } from "./plan.ts";
 export const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 export type DayKey = (typeof DAY_KEYS)[number];
 
+/**
+ * What you'd rather do than run in bad weather (heavy rain, strong wind, ice or snow, dangerous
+ * heat or cold): swim, ride, the treadmill, or run anyway (nothing is offered).
+ */
+export const BAD_WEATHER = ["run", "swim", "ride", "treadmill"] as const;
+export type BadWeather = (typeof BAD_WEATHER)[number];
+/**
+ * What puts you off running (Settings, Training, or told to the coach): ice, snow or slippery
+ * ground; heavy rain; strong wind; cold (below `cold_below` °C); heat; the dark. Read from the
+ * forecast at the session's time (src/habits.ts conditionsAt).
+ */
+export const AVOID = ["ice", "rain", "wind", "cold", "heat", "dark"] as const;
+export type Avoid = (typeof AVOID)[number];
+
 export interface SchedulePrefs {
   /** "HH:MM" on Monday to Friday. */
   weekday: string;
@@ -30,15 +44,25 @@ export interface SchedulePrefs {
    * note from the coach when a new run comes in (src/after-run.ts).
    */
   notify: { morning: boolean; morning_at: string; review: boolean; run: boolean };
+  /** On a bad-weather day: what Today offers instead of the run (src/day-swap.ts). */
+  bad_weather: BadWeather;
+  /** What puts you off; none by default. */
+  avoid: Avoid[];
+  /** "Cold" is below this, °C. */
+  cold_below: number;
 }
 
-export const DEFAULT_PREFS: SchedulePrefs = { weekday: "18:00", weekend: "09:00", remind: { on: false, before_min: 30, after: true }, calendar: { on: false }, notify: { morning: true, morning_at: "07:30", review: true, run: true } };
+export const DEFAULT_PREFS: SchedulePrefs = { weekday: "18:00", weekend: "09:00", remind: { on: false, before_min: 30, after: true }, calendar: { on: false }, notify: { morning: true, morning_at: "07:30", review: true, run: true }, bad_weather: "run", avoid: [], cold_below: 0 };
 const FILE = "settings/schedule.json";
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+/** The conditions in a list, each once, in order; undefined when it isn't a list. */
+const avoidList = (v: unknown): Avoid[] | undefined => (Array.isArray(v) ? AVOID.filter((a) => v.includes(a)) : undefined);
+const coldBelow = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) && v >= -30 && v <= 15 ? Math.round(v) : undefined);
+
 export async function readPrefs(disk: Disk): Promise<SchedulePrefs> {
   const p = await readJson<Partial<SchedulePrefs>>(disk, FILE);
-  return { ...DEFAULT_PREFS, ...p, remind: { ...DEFAULT_PREFS.remind, ...p?.remind }, calendar: { ...DEFAULT_PREFS.calendar, ...p?.calendar }, notify: { ...DEFAULT_PREFS.notify, ...p?.notify } };
+  return { ...DEFAULT_PREFS, ...p, bad_weather: BAD_WEATHER.includes(p?.bad_weather as BadWeather) ? p!.bad_weather! : "run", avoid: avoidList(p?.avoid) ?? [], cold_below: coldBelow(p?.cold_below) ?? 0, remind: { ...DEFAULT_PREFS.remind, ...p?.remind }, calendar: { ...DEFAULT_PREFS.calendar, ...p?.calendar }, notify: { ...DEFAULT_PREFS.notify, ...p?.notify } };
 }
 
 export async function savePrefs(disk: Disk, next: Partial<SchedulePrefs>): Promise<SchedulePrefs> {
@@ -66,6 +90,9 @@ export async function savePrefs(disk: Disk, next: Partial<SchedulePrefs>): Promi
       review: next.notify?.review ?? cur.notify.review,
       run: next.notify?.run ?? cur.notify.run,
     },
+    bad_weather: BAD_WEATHER.includes(next.bad_weather as BadWeather) ? next.bad_weather! : cur.bad_weather,
+    avoid: avoidList(next.avoid) ?? cur.avoid,
+    cold_below: coldBelow(next.cold_below) ?? cur.cold_below,
   };
   await disk.write(FILE, JSON.stringify(p));
   return p;
@@ -93,7 +120,7 @@ export interface Slot {
 }
 
 const KIND: Record<string, string> = {
-  easy: "Easy", long: "Long run", tempo: "Tempo", intervals: "Intervals", hills: "Hills", recovery: "Recovery", race: "Race", strength: "Strength", cross: "Cross-training",
+  easy: "Easy", long: "Long run", tempo: "Tempo", intervals: "Intervals", hills: "Hills", recovery: "Recovery", race: "Race", strength: "Strength", cross: "Cross-training", swim: "Swim", ride: "Ride",
 };
 
 /** How long a session takes: its duration, else its distance at an easy 6 min/km, else 45 minutes. */

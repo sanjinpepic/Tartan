@@ -13,10 +13,34 @@ import { reviewWorkout, type SessionReview } from "./workout/review.ts";
 import { shiftPaceText } from "./run-finish.ts";
 import { reshape, type LifeEvent } from "./life.ts";
 
-export const SESSION_KINDS = ["easy", "long", "tempo", "intervals", "hills", "recovery", "race", "strength", "cross", "rest"] as const;
+export const SESSION_KINDS = ["easy", "long", "tempo", "intervals", "hills", "recovery", "race", "strength", "cross", "swim", "ride", "rest"] as const;
 export type SessionKind = (typeof SESSION_KINDS)[number];
-/** Kinds that a run fulfils; the rest (strength, cross) take any other workout. */
-const RUN_KINDS = new Set<SessionKind>(["easy", "long", "tempo", "intervals", "hills", "recovery", "race"]);
+/** Kinds that a run fulfils; a swim takes a swim, a ride a ride, and the rest (strength, cross) any other workout. */
+export const RUN_KINDS = new Set<string>(["easy", "long", "tempo", "intervals", "hills", "recovery", "race"]);
+/** The sport (src/merge.ts sportFamily) that fills a session of this kind; null: any workout but a run. */
+const familyFor = (k: string): string | null => (RUN_KINDS.has(k) ? "run" : k === "swim" || k === "ride" ? k : null);
+/** Runs that can become a swim or a ride for about the same time: the easy ones. */
+export const EASY_RUNS = new Set<string>(["easy", "long", "recovery"]);
+/**
+ * How a session is swapped: an easy run (a bad day), a swim or ride, the same run on the
+ * treadmill, a short easy run (not feeling it), another day, or kept as it is.
+ */
+export type SwapTo = "easy" | "swim" | "ride" | "treadmill" | "short" | "move" | "keep";
+
+/** A short easy version of a run, for a day you're not feeling it: 20 minutes, or 25 from a longer one. Null: it's short already. */
+export function shortMinutes(s: Pick<PlanSession, "duration_min" | "distance_km">): number | null {
+  const base = s.duration_min ?? (s.distance_km ? s.distance_km * 6 : 45);
+  return base <= 25 ? null : base <= 40 ? 20 : 25;
+}
+
+/**
+ * A run as a swim or a ride (the weather): about the same time, so about the same aerobic work.
+ * A swim stops at an hour (a long run's time is a lot of swimming), a ride at two and a half.
+ */
+export function crossMinutes(s: Pick<PlanSession, "duration_min" | "distance_km">, to: "swim" | "ride"): number {
+  const base = s.duration_min ?? (s.distance_km ? s.distance_km * 6 : 45);
+  return Math.max(20, Math.round(Math.min(base, to === "swim" ? 60 : 150) / 5) * 5);
+}
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** One part of a session as the watch runs it (src/workout/guide.ts). */
@@ -111,12 +135,25 @@ export interface TrainingPlan extends PlanInput {
   model?: string;
 }
 
+/**
+ * A session swapped on the day (Plans.swap): what it was (title, kind), as what, why; a moved
+ * one says the day it came from; kept, as planned when the weather swap was offered.
+ */
+export interface SwapNote {
+  swapped_from?: string;
+  swap_kind?: string;
+  swap_to?: SwapTo;
+  swap_reason?: string;
+  moved_from?: string;
+  weather_kept?: boolean;
+}
+
 export type SessionStatus = "done" | "missed" | "today" | "planned" | "rest";
 
 export interface PlanDay {
   date: string;
   /** `manual`: you marked it done yourself (no workout recorded it, e.g. the watch stayed home). */
-  sessions: Array<PlanSession & { status: SessionStatus; manual?: boolean; activity?: Pick<ActivityRow, "id" | "name" | "sport" | "distance_km" | "moving_min"> }>;
+  sessions: Array<PlanSession & { status: SessionStatus; manual?: boolean; activity?: Pick<ActivityRow, "id" | "name" | "sport" | "distance_km" | "moving_min"> } & SwapNote>;
   /** Workouts that day that no session asked for. */
   extra: Array<Pick<ActivityRow, "id" | "name" | "sport" | "distance_km" | "moving_min">>;
 }
@@ -146,6 +183,7 @@ export const PLANNING_RULES = `- You write plans with save_training_plan. They a
 - Every session gets a date, a duration or distance, and a target pace or heart-rate range. Give runs a heart-rate range in bpm in the target ("135-148 bpm"): the watch guides the run by it.
 - Heart-rate ranges come from get_athlete_profile's zones (zone_limits), the same ones the app shows: easy, recovery and long runs stay in zones 1-2, so their range ends at the top of zone 2 (its readiness advice says "below <that> bpm"). Don't invent other zone numbers, and write targets in words with bpm ("easy, 130-145 bpm"), not zone codes like "Z2".
 - Structured sessions in any sport (intervals, tempo, hills, circuits) also get steps, so the athlete can do them guided on the watch: warm-up, the work as a repeat block, cool-down, each step with its duration or distance and, when it has one, one target: heart rate, pace, speed or power. Run-walk (e.g. repeat 8 of [run 4 min, walk 1 min as recover]) and strides (repeat 6 of [run 20 s, recover 60 s]) are steps too. Long steady sessions don't need drink or fuel steps: the app adds those reminders itself.
+- Running is the core of every plan. Swim and ride sessions (kinds swim and ride) go in only when the athlete asks for them, or as a bad-weather swap for a run on the day; never by default, and cross-training never fills a plan unasked.
 - Strength sessions (kind strength) list their exercises from the app's library, two or three times a week at most, lighter in race week and never the day before a hard session: ${EXERCISES.map((e) => `${e.id} (${e.name}${e.equipment ? `; ${e.equipment.toLowerCase()}` : ""})`).join(", ")}. Use the ones that need equipment only when the athlete has it (a gym, a bar, dumbbells…): check their notes and your memory, or ask; otherwise the bodyweight ones. Prescribe sets with reps, or seconds for holds; each_side for single-leg work. 4-8 exercises for 20-40 minutes.
 - Length: as many weeks as the request says. Asked in the chat without a length: to race week when a race is set, else 8 weeks. Never more than 26.
 - Missing something critical (no runs in the last month, an injury mentioned without detail)? In the chat, ask up to three short questions before saving. When the request says it comes from the Plan tab, don't ask: assume sensibly, save the plan, and name your assumptions so they can correct you in the chat.
@@ -161,11 +199,18 @@ const MARKS = "coach/plan-marks.json";
 type Marks = Record<string, { at: string }>;
 const markKey = (date: string, kind: string) => `${date}:${kind}`;
 /**
- * Hard sessions swapped for an easy run on a bad day (readiness), by "date:kind" of the planned
- * one. Kept apart from the plan, like the marks, so they survive the coach rewriting it.
+ * Sessions swapped on the day, by "date:kind" of the planned one: a hard session for an easy run
+ * on a bad day (readiness); a run for a swim or a ride, the treadmill, or another day (the
+ * weather); or `kept` as planned when the weather swap was offered (it isn't offered again).
+ * Kept apart from the plan, like the marks, so they survive the coach rewriting it.
  */
 const SWAPS = "coach/plan-swaps.json";
-type Swap = { at: string; reason: string; to: { title: string; duration_min?: number; distance_km?: number; target?: string } };
+type Swap = {
+  at: string;
+  reason: string;
+  kept?: true;
+  to?: { kind?: "easy" | "recovery" | "swim" | "ride"; title?: string; duration_min?: number; distance_km?: number; target?: string; treadmill?: true; short?: true; date?: string };
+};
 type Swaps = Record<string, Swap>;
 /**
  * Pace changes you applied from a finished run's next-time rule (src/run-finish.ts), by
@@ -176,7 +221,7 @@ const ADJUST = "coach/plan-adjust.json";
 /** The coach's proposed plan, waiting for the athlete; and the last change they accepted (to undo). */
 const PROPOSAL = "coach/plan-proposal.json";
 const LAST_CHANGE = "coach/plan-last-change.json";
-export type ProposalSource = "chat" | "update" | "weekly" | "agent" | "life";
+export type ProposalSource = "chat" | "update" | "weekly" | "agent" | "life" | "weather";
 export interface PlanChange {
   type: "added" | "removed" | "moved" | "changed" | "zones" | "length";
   date?: string;
@@ -225,7 +270,7 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
 
 /** Local calendar date of a workout. */
 const localDay = (r: ActivityRow) => (r.start_local ?? r.start).slice(0, 10);
-const KIND_NAME: Record<string, string> = { easy: "easy run", long: "long run", tempo: "tempo", intervals: "intervals", hills: "hills", recovery: "recovery run", race: "race", strength: "strength", cross: "cross-training", rest: "rest" };
+const KIND_NAME: Record<string, string> = { easy: "easy run", long: "long run", tempo: "tempo", intervals: "intervals", hills: "hills", recovery: "recovery run", race: "race", strength: "strength", cross: "cross-training", swim: "swim", ride: "ride", rest: "rest" };
 const minText = (m?: number) => (m === undefined ? "" : m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60}` : ""}` : `${m} min`);
 
 /**
@@ -540,24 +585,50 @@ export class Plans {
   }
 
   /**
-   * Swap a session for an easy run (or take the swap back, `undo`). The easy run lasts as long
-   * as the session (at most 45 min) at the plan's easy zone.
+   * Swap a session on the day (or take the swap back, `undo`). `to` easy (the default): an easy
+   * run as long as the session (at most 45 min) at the plan's easy zone. swim or ride: an easy,
+   * long or recovery run as an easy swim or ride of about the same time (crossMinutes). treadmill:
+   * the same run, on the treadmill. short: a run as a short easy run (shortMinutes), for a day
+   * you're not feeling it. move: to `day`, a free day later in the plan. keep: as
+   * planned, and the weather swap isn't offered again for it.
    */
-  async swap(date: string, kind: string, reason: string, undo = false): Promise<void> {
+  async swap(date: string, kind: string, reason: string, undo = false, to: SwapTo = "easy", day?: string): Promise<void> {
     if (!DATE.test(date)) throw new Error("date must be YYYY-MM-DD");
     const swaps = (await readJson<Swaps>(this.lib.disk, SWAPS)) ?? {};
     if (undo) delete swaps[markKey(date, kind)];
     else {
       const plan = await this.current();
-      const s = plan?.weeks.flatMap((w) => w.sessions).find((x) => x.date === date && x.kind === kind);
+      const all = plan?.weeks.flatMap((w) => w.sessions) ?? [];
+      const s = all.find((x) => x.date === date && x.kind === kind);
       if (!s) throw new Error("no such session in the plan");
+      const at = new Date().toISOString();
+      const why = reason.slice(0, 120);
       const easy = plan!.zones?.find((z) => /easy|aerobic|z2/i.test(z.name));
-      const minutes = Math.min(45, s.duration_min ?? 40);
-      swaps[markKey(date, kind)] = {
-        at: new Date().toISOString(),
-        reason: reason.slice(0, 120),
-        to: { title: "Easy run", duration_min: minutes, target: easy?.heart_rate ?? easy?.pace ?? "easy, conversational" },
-      };
+      if (to === "keep") swaps[markKey(date, kind)] = { at, reason: why, kept: true };
+      else if (to === "swim" || to === "ride") {
+        if (!EASY_RUNS.has(kind)) throw new Error("Only an easy, long or recovery run becomes a swim or a ride. A hard session can move to a better day instead.");
+        const words = to === "swim" ? "easy, smooth and steady, breathing easily" : "easy, you could talk all the way";
+        swaps[markKey(date, kind)] = { at, reason: why, to: { kind: to, title: to === "swim" ? "Easy swim" : "Easy ride", duration_min: crossMinutes(s, to), target: words } };
+      } else if (to === "short") {
+        const minutes = RUN_KINDS.has(kind) && kind !== "race" ? shortMinutes(s) : null;
+        if (!minutes) throw new Error("Only a run longer than 25 minutes has a shorter version (not a race).");
+        swaps[markKey(date, kind)] = { at, reason: why, to: { kind: kind === "recovery" ? "recovery" : "easy", title: "Short easy run", duration_min: minutes, target: easy?.heart_rate ? `easy, ${easy.heart_rate}` : "easy, conversational", short: true } };
+      } else if (to === "treadmill") {
+        if (!RUN_KINDS.has(kind) || kind === "race") throw new Error("Only a run goes on the treadmill (not a race).");
+        swaps[markKey(date, kind)] = { at, reason: why, to: { treadmill: true } };
+      } else if (to === "move") {
+        if (!day || !DATE.test(day) || day <= date) throw new Error("move needs a later day, YYYY-MM-DD");
+        if (kind === "race") throw new Error("A race stays on its day.");
+        const end = addDays([...plan!.weeks].sort((a, b) => a.start.localeCompare(b.start)).at(-1)!.start, 6);
+        if (day > end) throw new Error("That day is after the plan ends.");
+        // Free: nothing but rest that day, counting sessions already moved there.
+        const there = all.filter((x) => x.kind !== "rest" && (swaps[markKey(x.date, x.kind)]?.to?.date ?? x.date) === day);
+        if (there.length) throw new Error("That day already has a session.");
+        swaps[markKey(date, kind)] = { at, reason: why, to: { date: day } };
+      } else {
+        const minutes = Math.min(45, s.duration_min ?? 40);
+        swaps[markKey(date, kind)] = { at, reason: why, to: { title: "Easy run", duration_min: minutes, target: easy?.heart_rate ?? easy?.pace ?? "easy, conversational" } };
+      }
     }
     await this.lib.disk.write(SWAPS, JSON.stringify(swaps));
   }
@@ -593,20 +664,24 @@ export class Plans {
     const t = today(now);
     const brief = (r: ActivityRow) => ({ id: r.id, name: r.name, sport: r.sport, distance_km: r.distance_km, moving_min: r.moving_min });
 
+    // A session moved to another day (the weather) is on that day.
+    const all = plan.weeks.flatMap((w) => w.sessions);
+    const dayOf = (s: PlanSession) => swaps[markKey(s.date, s.kind)]?.to?.date ?? s.date;
+
     const weeks: PlanWeekView[] = plan.weeks.map((w) => {
       const days: PlanDay[] = Array.from({ length: 7 }, (_, i) => {
         const date = addDays(w.start, i);
         const left = [...(byDay.get(date) ?? [])].sort((a, b) => a.start.localeCompare(b.start));
-        const take = (k: SessionKind) => {
-          const run = RUN_KINDS.has(k);
-          const at = left.findIndex((r) => (sportFamily(r.sport) === "run") === run);
+        const take = (k: string) => {
+          const fam = familyFor(k);
+          const at = left.findIndex((r) => (fam ? sportFamily(r.sport) === fam : sportFamily(r.sport) !== "run"));
           return at >= 0 ? left.splice(at, 1)[0] : undefined;
         };
-        const sessions = w.sessions
-          .filter((s) => s.date === date)
+        const planned = all
+          .filter((s) => dayOf(s) === date)
           // An applied pace change: the target's paces and the steps' moved, saying why.
           .map((s): PlanSession & { adjusted?: { shift_s: number; reason: string } } => {
-            const a = adjusts[markKey(date, s.kind)];
+            const a = adjusts[markKey(s.date, s.kind)];
             if (!a) return s;
             return {
               ...s,
@@ -615,20 +690,37 @@ export class Plans {
               adjusted: { shift_s: a.shift_s, reason: a.reason },
             };
           })
-          // A swapped session is an easy run now, saying what it replaced.
-          .map((s): PlanSession & { swapped_from?: string; swap_kind?: string } => {
-            const sw = swaps[markKey(date, s.kind)];
+          // A swapped session says what it replaced and why: an easy run, a swim or a ride; the
+          // same run on the treadmill; or the run moved here from its day. Kept: as planned.
+          .map((s): PlanSession & SwapNote => {
+            const sw = swaps[markKey(s.date, s.kind)];
             if (!sw) return s;
-            const { steps: _steps, distance_km: _d, ...rest } = s;
-            return { ...rest, kind: "easy", title: sw.to.title, duration_min: sw.to.duration_min, target: sw.to.target, notes: `Swapped from ${s.title}: ${sw.reason}.`, swapped_from: s.title, swap_kind: s.kind };
-          })
-          .map((s) => {
-            if (s.kind === "rest") return { ...s, status: "rest" as const };
-            const a = date <= t ? take(s.kind) : undefined;
-            const manual = !a && date <= t && !!marks[markKey(date, s.kind)];
-            const status: SessionStatus = a || manual ? "done" : date < t ? "missed" : date === t ? "today" : "planned";
-            return { ...s, status, ...(a ? { activity: brief(a) } : {}), ...(manual ? { manual } : {}) };
+            if (sw.kept) return { ...s, weather_kept: true };
+            const was = { swapped_from: s.title, swap_kind: s.kind, swap_reason: sw.reason };
+            const notes = (head: string) => [head, s.notes].filter(Boolean).join(" ").slice(0, 300);
+            if (sw.to?.date) return { ...s, date: sw.to.date, notes: notes(`Moved from ${weekday(s.date)}: ${sw.reason}.`), ...was, swap_to: "move", moved_from: s.date };
+            if (sw.to?.treadmill) return { ...s, notes: notes(`On the treadmill: ${sw.reason}.`), ...was, swap_to: "treadmill" };
+            const { steps: _steps, distance_km: _d, exercises: _e, ...rest } = s;
+            const kind = sw.to?.kind ?? "easy";
+            const stop = sw.to?.short ? " You can stop after 10 minutes, and that still counts." : "";
+            return { ...rest, kind, title: sw.to?.title ?? "Easy run", duration_min: sw.to?.duration_min, target: sw.to?.target, notes: `Swapped from ${s.title}: ${sw.reason}.${stop}`, ...was, swap_to: sw.to?.short ? "short" : kind === "recovery" ? "easy" : kind };
           });
+        // Each workout fills one session: runs, swims and rides first, then the sessions any
+        // other workout fills (strength, cross), so a swim goes to the planned swim.
+        const got = new Map<number, ActivityRow>();
+        if (date <= t)
+          for (const n of planned.map((_, k) => k).sort((a, b) => Number(!familyFor(planned[a]!.kind)) - Number(!familyFor(planned[b]!.kind)))) {
+            if (planned[n]!.kind === "rest") continue;
+            const a = take(planned[n]!.kind);
+            if (a) got.set(n, a);
+          }
+        const sessions = planned.map((s, n) => {
+          if (s.kind === "rest") return { ...s, status: "rest" as const };
+          const a = got.get(n);
+          const manual = !a && date <= t && !!marks[markKey(date, s.kind)];
+          const status: SessionStatus = a || manual ? "done" : date < t ? "missed" : date === t ? "today" : "planned";
+          return { ...s, status, ...(a ? { activity: brief(a) } : {}), ...(manual ? { manual } : {}) };
+        });
         return { date, sessions, extra: left.map(brief) };
       });
       const work = w.sessions.filter((s) => s.kind !== "rest");

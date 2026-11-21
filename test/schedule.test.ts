@@ -57,8 +57,16 @@ test("prefs: saved, merged and checked", async () => {
   await savePrefs(disk, { weekday: "18:15", remind: { on: true, before_min: 60 } });
   // Bad values keep what was there.
   const p = await savePrefs(disk, { weekend: "25:00", days: { tue: "07:00", wed: "noon" } as never, calendar: { on: true, calendar_id: "3", calendar_name: "Personal" } });
-  expect(p).toEqual({ weekday: "18:15", weekend: "09:00", days: { tue: "07:00" }, remind: { on: true, before_min: 60, after: true }, calendar: { on: true, calendar_id: "3", calendar_name: "Personal" }, notify: { morning: true, morning_at: "07:30", review: true, run: true } });
+  expect(p).toEqual({ weekday: "18:15", weekend: "09:00", days: { tue: "07:00" }, remind: { on: true, before_min: 60, after: true }, calendar: { on: true, calendar_id: "3", calendar_name: "Personal" }, notify: { morning: true, morning_at: "07:30", review: true, run: true }, bad_weather: "run", avoid: [], cold_below: 0 });
   expect(await readPrefs(disk)).toEqual(p);
+  // On a bad-weather day: one of the choices, else what was there.
+  expect((await savePrefs(disk, { bad_weather: "swim" })).bad_weather).toBe("swim");
+  expect((await savePrefs(disk, { bad_weather: "rowing" as never })).bad_weather).toBe("swim");
+  expect((await readPrefs(disk)).bad_weather).toBe("swim");
+  // What puts you off: known ones only, each once, in order; cold below a sensible number.
+  expect((await savePrefs(disk, { avoid: ["dark", "ice", "mud", "ice"] as never, cold_below: -5 })).avoid).toEqual(["ice", "dark"]);
+  expect((await savePrefs(disk, { cold_below: 99 })).cold_below).toBe(-5);
+  expect((await savePrefs(disk, { avoid: [] })).avoid).toEqual([]);
   // The morning's time: a bad one keeps the last.
   expect((await savePrefs(disk, { notify: { morning: false, morning_at: "6am", review: true, run: false } })).notify).toEqual({ morning: false, morning_at: "07:30", review: true, run: false });
   // Clearing a day goes back to the weekday time.

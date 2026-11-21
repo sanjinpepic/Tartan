@@ -114,6 +114,8 @@ fun TodayScreen(today: Today?, refreshing: Boolean, actions: TodayActions, date:
         }
     }
     var raceSheet by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    // Different plan today? (from today's session).
+    var choicesOpen by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     // "More today": folded unless you opened it (kept while the app runs).
     var moreOpen by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     Box(Modifier.fillMaxSize().background(cs.surface)) {
@@ -145,11 +147,12 @@ fun TodayScreen(today: Today?, refreshing: Boolean, actions: TodayActions, date:
                             TodaySession(
                                 s, Modifier.reveal(i++), { actions.openSession(s.date, s.kind) }, actions::openActivity,
                                 if (s.activityId == null && !s.manual && s.kind != "strength" && s.status != "done" && more != null) ({ more.mark(s.date, s.kind) }) else null,
+                                more, { choicesOpen = true },
                             )
                         }
                         // A rest day says what's next; no plan yet, one is a few taps away by Tartan's own rules (no key needed).
                         if (today.sessions.isEmpty() && today.planOn) RestDay(today.next, Modifier.reveal(i++), { actions.openSession(it.date, it.kind) }) { actions.go("coach") }
-                        else if (!today.planOn) NoPlanCard(Modifier.reveal(i++)) { actions.go("coach") }
+                        else if (!today.planOn) NoPlanCard(Modifier.reveal(i++), ended = today.planEnded) { actions.go("coach") }
                     }
                     val week: @Composable () -> Unit = { if (race != null && rw != null) RaceWeekCard(race, rw, Modifier.reveal(i++)) { raceSheet = true } }
                     val ready: @Composable () -> Unit = { ReadinessCard(today.readiness, Modifier.reveal(i++), more, actions, numbers = false) }
@@ -209,6 +212,7 @@ fun TodayScreen(today: Today?, refreshing: Boolean, actions: TodayActions, date:
             val race = today?.race
             val rw = m.raceWeek
             if (raceSheet && race != null && rw != null) RaceWeekSheet(race, rw, m) { raceSheet = false }
+            m.check?.choices?.takeIf { choicesOpen }?.let { c -> DayChoicesSheet(c, m) { choicesOpen = false; m.nudge = null } }
         }
     }
 }
@@ -239,7 +243,7 @@ private fun SessionCard(s: Session, modifier: Modifier, onClick: () -> Unit) {
     Card(modifier, onClick) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(if (done) LocalData.current.goodContainer else cs.primaryContainer), contentAlignment = Alignment.Center) {
-                Icon(if (done) Glyphs["check"] else Glyphs[if (s.kind == "strength") "bolt" else "run"], null, tint = if (done) LocalData.current.good else cs.onPrimaryContainer)
+                Icon(if (done) Glyphs["check"] else Glyphs[kindGlyph(s.kind)], null, tint = if (done) LocalData.current.good else cs.onPrimaryContainer)
             }
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {

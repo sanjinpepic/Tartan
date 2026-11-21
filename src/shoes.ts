@@ -314,7 +314,7 @@ export async function shoesNow(lib: Library): Promise<ShoesView> {
 
 /** The pair to wear for each run session from `from` on, keyed `date:kind` (only when there's a choice). */
 export async function shoePicks(lib: Library, sessions: Array<{ date: string; kind: string; title?: string }>, from: string): Promise<Record<string, ShoePick>> {
-  const ahead = sessions.filter((x) => x.date >= from && !["rest", "strength", "cross"].includes(x.kind));
+  const ahead = sessions.filter((x) => x.date >= from && !["rest", "strength", "cross", "swim", "ride"].includes(x.kind));
   if (!ahead.length) return {};
   // Nothing to choose between: skip counting.
   if ((await new Shoes(lib.disk).read()).shoes.filter((x) => !x.retired).length < 2) return {};

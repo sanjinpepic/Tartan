@@ -27,7 +27,7 @@ type UpcomingWeather = Awaited<ReturnType<typeof upcomingWeather>>;
 
 const KIND_LABEL: Record<SessionKind, string> = {
   easy: "Easy", long: "Long", tempo: "Tempo", intervals: "Intervals", hills: "Hills",
-  recovery: "Recovery", race: "Race", strength: "Strength", cross: "Cross-training", rest: "Rest",
+  recovery: "Recovery", race: "Race", strength: "Strength", cross: "Cross-training", swim: "Swim", ride: "Ride", rest: "Rest",
 };
 const STATUS: Record<PlanSession["status"], { label: string; icon?: string }> = {
   done: { label: "Done", icon: "check" },

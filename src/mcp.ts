@@ -25,7 +25,7 @@ export const INSTRUCTIONS =
   "one source, so nothing is double counted. Start with get_overview or get_takeaways, then list_activities " +
   "and drill into get_activity / get_activity_streams. The athlete's training plan (the same one the app's Coach tab " +
   "shows) is readable with get_training_plan and get_week and can be written with save_training_plan, " +
-  "mark_plan_session, set_training_availability and set_training_times (when they usually train); a workout nothing recorded is logged with log_workout (remove_logged_workout takes it back); see the training_plan prompt for how to plan. " +
+  "mark_plan_session, swap_plan_session (a run as a swim, a ride, on the treadmill, shorter or on another day, when the athlete picks it; get_habits has the choices and what suits them), set_training_availability and set_training_times (when they usually train); a workout nothing recorded is logged with log_workout (remove_logged_workout takes it back); see the training_plan prompt for how to plan. " +
   "Routes the athlete drew in the app are in list_routes / get_route (GPX for the watch), and save_route keeps a line as a route. " +
   "Units: km, minutes, min/km, bpm. Dates are ISO 8601 UTC.";
 

@@ -203,6 +203,124 @@ class TartanShotsTest {
     @Test fun todayNoPlan() = todayNoPlanShot("today-noplan", dark = false)
     @Test fun todayNoPlanDark() = todayNoPlanShot("today-noplan-dark", dark = true)
 
+    /** A plan whose last day has gone: Today says so and offers the next one. */
+    @Test fun todayPlanEnded() {
+        val ended = org.json.JSONObject(fixture("plan.json")).apply {
+            val weeks = getJSONArray("weeks")
+            for (k in 0 until weeks.length()) weeks.getJSONObject(k).put("when", "past")
+            put("today", "2027-03-01")
+        }
+        val t = parseToday(fixture("today.json"), ended.toString(), LocalDate.of(2027, 3, 1))
+        assertEquals(false, t.planOn)
+        assertEquals(true, t.planEnded)
+        rule.mainClock.autoAdvance = false
+        rule.setContent { TartanTheme(wallpaper = false, dark = false) { Box(Modifier.fillMaxSize()) { TodayScreen(t, refreshing = false, actions = none, date = LocalDate.of(2027, 3, 1)) } } }
+        rule.mainClock.advanceTimeBy(2500)
+        save("today-plan-ended")
+        rule.onNodeWithText("Your plan has ended").assertExists()
+        rule.onNodeWithText("Make the next one").assertExists()
+        // And Coach asks for the next one, as for the first.
+        assertEquals(true, parseCoach(ended.toString(), null, null).let { it.ended && it.intake != null })
+    }
+
+    /**
+     * Today's session (an easy run on 29 Oct): on a day with a reason (heavy rain you said puts
+     * you off), its card suggests the swim inside it; taken, a line with Undo; on a normal day only
+     * a quiet "Different plan today?", which opens the choices.
+     */
+    private val dayChoicesJson = """{"date":"2026-10-29","kind":"easy","title":"Easy run","choices":[{"to":"nudge"},{"to":"swim","minutes":45},{"to":"short","minutes":20},{"to":"move","day":"2026-10-30"}],"reason":"When you change a run, you usually pick a swim.","stance":{"lead":"either"}}"""
+    private fun dayReadiness(swap: String) = """{"date":"2026-10-29","checkin":{"sleep":2,"legs":2},"sleep_measured":null,"niggles":[],"readiness":{"level":"ready","reasons":[],"form":-4},"session":{"title":"Easy run","kind":"easy","hard":false,"done":false},"suggest_swap":false,"bad_weather":"swim","avoid":["rain"],"day_swap":$swap,"day_choices":$dayChoicesJson}"""
+    private val offerJson = """{"state":"offer","date":"2026-10-29","kind":"easy","title":"Easy run","why":"Heavy rain, wind 40 km/h at 17:00","reason":"You said heavy rain puts you off.","choices":[{"to":"swim","minutes":45},{"to":"move","day":"2026-10-30"},{"to":"short","minutes":20},{"to":"run"}]}"""
+    private val takenJson = """{"state":"taken","date":"2026-10-29","kind":"easy","title":"Easy run","choices":[{"to":"swim","minutes":45}]}"""
+
+    private fun dayModel(swap: String, sent: MutableList<Pair<String, String?>>): TodayModel {
+        val api = object : SettingsApi by shellApi {
+            override suspend fun get(path: String): String? = if (path == "/api/readiness") dayReadiness(swap) else shellApi.get(path)
+            override suspend fun send(path: String, method: String, body: String?): Pair<Int, String> {
+                sent.add(path to body)
+                return if (path == "/api/today/nudge") 200 to """{"text":"You've run 3 times this week, 21 km. Today keeps it going. Just start: 10 minutes easy, then decide.","from":"rules"}"""
+                else 200 to dayReadiness(if (body?.contains("undo") == true || body?.contains("keep") == true) "null" else takenJson)
+            }
+        }
+        return TodayModel(kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined), api, keys).also {
+            it.load(null, null, object : WorkoutApi {
+                override suspend fun get(path: String) = null
+                override suspend fun send(path: String, method: String, body: String?) = 200 to "{}"
+            })
+        }
+    }
+
+    private fun todayDayShot(name: String, dark: Boolean, swap: String, sent: MutableList<Pair<String, String?>> = mutableListOf()): TodayModel {
+        val more = dayModel(swap, sent)
+        rule.mainClock.autoAdvance = false
+        rule.setContent {
+            TartanTheme(wallpaper = false, dark = dark) {
+                Box(Modifier.fillMaxSize()) {
+                    TodayScreen(today, refreshing = false, actions = none, date = day, more = more)
+                    Chrome(folded = false)
+                    FloatingBar("today", hidden = false, onSelect = {}, modifier = Modifier.align(Alignment.BottomCenter))
+                }
+            }
+        }
+        rule.mainClock.advanceTimeBy(2500)
+        save(name)
+        return more
+    }
+
+    @Test fun todaySuggested() {
+        val sent = mutableListOf<Pair<String, String?>>()
+        val more = todayDayShot("today-suggested", dark = false, swap = offerJson, sent = sent)
+        rule.onNodeWithText("Swim instead").performClick()
+        rule.mainClock.advanceTimeBy(500)
+        org.json.JSONObject(sent.last().second!!).let { b -> assertEquals("swim", b.getString("to")); assertEquals("easy", b.getString("kind")); assertEquals("heavy rain, wind 40 km/h at 17:00", b.getString("reason")) }
+        assertEquals(true, more.check?.swap?.taken)
+        rule.onNodeWithText("Undo").performClick()
+        assertEquals(true, org.json.JSONObject(sent.last().second!!).getBoolean("undo"))
+    }
+    @Test fun todaySuggestedDark() { todayDayShot("today-suggested-dark", dark = true, swap = offerJson) }
+    @Test fun todayTaken() { todayDayShot("today-taken", dark = false, swap = takenJson) }
+
+    /** Run anyway: the suggestion goes for the day, and the run stays as planned. */
+    @Test fun runAnyway() {
+        val sent = mutableListOf<Pair<String, String?>>()
+        val more = todayDayShot("today-suggested-run", dark = false, swap = offerJson, sent = sent)
+        rule.onNodeWithText("Run anyway").performClick()
+        rule.mainClock.advanceTimeBy(500)
+        assertEquals("keep", org.json.JSONObject(sent.single().second!!).getString("to"))
+        assertEquals(null, more.check?.swap)
+        assertEquals(0, rule.onAllNodesWithText("Run anyway").fetchSemanticsNodes().size)
+    }
+
+    /** A normal day: no button in the card, only the quiet way in, which opens the choices. */
+    @Test fun todayNormal() {
+        todayDayShot("today-normal", dark = false, swap = "null")
+        assertEquals(0, rule.onAllNodesWithText("Swim instead").fetchSemanticsNodes().size)
+        assertEquals(0, rule.onAllNodesWithText("Run anyway").fetchSemanticsNodes().size)
+        rule.onNodeWithText("Different plan today?").performClick()
+        rule.mainClock.advanceTimeBy(1500)
+        rule.onNodeWithText("No guilt either way. A few ways to go:").assertExists()
+    }
+
+    /** Different plan today?: the choices in your order, and a nudge from your own data. */
+    private fun choicesShot(name: String, dark: Boolean) {
+        val sent = mutableListOf<Pair<String, String?>>()
+        val more = dayModel("null", sent)
+        val c = more.check!!.choices!!
+        rule.mainClock.autoAdvance = false
+        rule.setContent { TartanTheme(wallpaper = false, dark = dark) { Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerLow).padding(top = 48.dp)) { DayChoicesBody(c, more) {} } } }
+        rule.mainClock.advanceTimeBy(1000)
+        save(name)
+        rule.onNodeWithText("Give me a nudge").performClick()
+        rule.mainClock.advanceTimeBy(800)
+        assertEquals("/api/today/nudge", sent.last().first)
+        rule.onNodeWithText("You've run 3 times this week", substring = true).assertExists()
+        save("$name-nudge")
+        rule.onNodeWithText("A shorter version").performClick()
+        org.json.JSONObject(sent.last().second!!).let { b -> assertEquals("short", b.getString("to")); assertEquals("not feeling it", b.getString("reason")) }
+    }
+    @Test fun todayChoices() = choicesShot("today-choices", dark = false)
+    @Test fun todayChoicesDark() = choicesShot("today-choices-dark", dark = true)
+
     /** A new best stays at the top of Today for a few days; ✕ puts it back under what's worth knowing. */
     @Test fun newBestCelebrated() {
         androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().getSharedPreferences("tartan-today", 0).edit().clear().commit()
@@ -840,6 +958,34 @@ class TartanShotsTest {
     @Test fun settingsTraining() = settingsShot("settings-training", "training")
 
     @Test fun settingsTimes() = settingsShot("settings-times", "training", scroll = 1900)
+
+    /** On a bad-weather day: Run anyway, Swim, Bike or Treadmill, saved with the training times. */
+    private fun badWeatherShot(name: String, dark: Boolean) {
+        val m = settingsModel()
+        m.ensure()
+        rule.mainClock.autoAdvance = false
+        rule.setContent {
+            TartanTheme(wallpaper = false, dark = dark) {
+                Box(Modifier.fillMaxSize()) {
+                    SettingsScreen(m, "training", settingsActions)
+                    Chrome(folded = true)
+                }
+            }
+        }
+        rule.mainClock.advanceTimeBy(2500)
+        rule.onNodeWithText("The dark").performScrollTo()
+        rule.mainClock.advanceTimeBy(1500)
+        save(name)
+        rule.onNodeWithText("Swim").performClick()
+        rule.mainClock.advanceTimeBy(500)
+        assertEquals("swim", org.json.JSONObject(sent.last { it.first == "/api/schedule" }.third!!).getString("bad_weather"))
+        rule.onNodeWithText("Ice and snow").performClick()
+        rule.mainClock.advanceTimeBy(500)
+        assertEquals("[\"ice\"]", org.json.JSONObject(sent.last { it.first == "/api/schedule" }.third!!).getJSONArray("avoid").toString())
+    }
+
+    @Test fun settingsBadWeather() = badWeatherShot("settings-bad-weather", dark = false)
+    @Test fun settingsBadWeatherDark() = badWeatherShot("settings-bad-weather-dark", dark = true)
 
     @Test fun settingsCoach() = settingsShot("settings-coach", "coach")
 

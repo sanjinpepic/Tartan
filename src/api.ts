@@ -26,7 +26,10 @@ import { makeBasicPlan, readTargetDay } from "./basic-plan.ts";
 import { importFile, importWorkout } from "./import.ts";
 import { Intervals } from "./intervals.ts";
 import { isSample, seedSample } from "./sample.ts";
-import { upcomingWeather, Weather } from "./weather.ts";
+import { forecastSoon, pastSoon, upcomingWeather, Weather } from "./weather.ts";
+import { bodyTags, Habits } from "./habits.ts";
+import { proposeAhead } from "./day-swap.ts";
+import { nudgeFacts, nudgeLines } from "./nudge.ts";
 import type { Availability } from "./analytics.ts";
 import type { ChatImage, Coach, CoachSettings } from "./coach.ts";
 import { mondayOf, Plans, today } from "./plan.ts";
@@ -114,7 +117,17 @@ export function createApi(o: ApiOptions): Api {
   const health = new Health(disk);
   const memory = new Memory(disk);
   const body = async () => bodySigns(await health.view());
-  const ready = () => todayReadiness({ plans, load: () => analytics.load(60), checkins, body, feelings: () => recentFeelings(library) });
+  const weather = new Weather(library);
+  const habits = new Habits(disk);
+  /** Days to your race (your target's), when it's ahead. */
+  const raceDays = async () => {
+    const d = (await analytics.goals()).race?.date;
+    const n = d ? Math.round((Date.parse(`${d}T12:00:00Z`) - Date.parse(`${today()}T12:00:00Z`)) / 86400_000) : -1;
+    return n >= 0 ? n : null;
+  };
+  const ready = () =>
+    todayReadiness({ plans, load: () => analytics.load(60), checkins, body, feelings: () => recentFeelings(library), prefs: () => readPrefs(disk), habits, forecast: () => forecastSoon(weather), past: () => pastSoon(weather), raceDays });
+  const ahead = () => proposeAhead({ disk, plans, habits, checkins, prefs: () => readPrefs(disk), forecast: () => forecastSoon(weather), past: () => pastSoon(weather) });
   const lifts = new Lifts(disk);
   const bodyNow = (without?: string) => loadBody({ lib: library, plans, profile: () => analytics.profile(), checkins, lifts, without });
   /** A day's strength session to lift: the plan's (else the basic routine), your log so far, and each exercise's next step. */
@@ -267,6 +280,40 @@ export function createApi(o: ApiOptions): Api {
         const workouts = await seedSample(store, disk);
         library.invalidate();
         return Response.json({ workouts });
+      },
+    ],
+    [
+      // The demo only (screenshots): a wet, windy week, a swim on bad days with rain and wind
+      // ticked as what puts you off, and an easy run today, so Today's session suggests the swim.
+      // {off: true} takes the weather and the choices back.
+      "POST",
+      "/api/sample/rain",
+      async (req) => {
+        if (!(await isSample(disk))) return Response.json({ error: "Only in the demo." }, { status: 409 });
+        const b = (await req.json().catch(() => ({}))) as { off?: boolean };
+        if (b.off) {
+          await weather.pin(null);
+          await savePrefs(disk, { bad_weather: "run", avoid: [] });
+          // A change the rainy week suggested ahead goes with it.
+          if ((await plans.proposal())?.source === "weather") await plans.decline();
+          return Response.json(await ready());
+        }
+        const now = new Date();
+        const start = Date.parse(`${today(now)}T00:00:00Z`);
+        await weather.pin(Array.from({ length: 24 * 8 }, (_, h) => ({ time: new Date(start + h * 3600_000).toISOString().slice(0, 16), temp_c: 9, dew_c: 7, rain_pct: 90, rain_mm: 2.5, wind_kmh: 40, gust_kmh: 62, code: 63 })));
+        await savePrefs(disk, { bad_weather: "swim", avoid: ["rain", "wind"] });
+        const plan = await plans.current();
+        const t = today(now);
+        if (plan) {
+          const s = plan.weeks.flatMap((w) => w.sessions).find((x) => x.date === t && x.kind !== "rest");
+          if (s) await plans.swap(t, s.kind, "", true);
+          if (!s || !["easy", "long", "recovery"].includes(s.kind)) {
+            const { created: _c, updated: _u, ...input } = plan;
+            const easy = plan.zones?.find((z) => /easy/i.test(z.name));
+            await plans.save({ ...input, weeks: plan.weeks.map((w) => ({ ...w, sessions: [...w.sessions.filter((x) => x.date !== t), ...(w.start === mondayOf(t) ? [{ date: t, kind: "easy" as const, title: "Easy run", duration_min: 45, target: easy?.heart_rate ? `easy, ${easy.heart_rate}` : "easy, conversational" }] : [])] })) });
+          }
+        }
+        return Response.json(await ready());
       },
     ],
     // ---------------------------------------------------------------- run notes (src/run-notes.ts)
@@ -560,7 +607,31 @@ export function createApi(o: ApiOptions): Api {
         });
       },
     ],
-    ["GET", "/api/readiness", async () => Response.json(await ready())],
+    [
+      "GET",
+      "/api/readiness",
+      async () => {
+        // Weather you avoid a few days ahead: a change waits on the Coach tab (once a week at most).
+        await ahead().catch(() => {});
+        return Response.json(await ready());
+      },
+    ],
+    [
+      // "Give me a nudge" (Today's Different plan today?): a few words from your own data; the
+      // cloud coach words them when it can, Tartan's rules otherwise.
+      "POST",
+      "/api/today/nudge",
+      async () => {
+        const r = await ready();
+        const c = r.day_choices;
+        if (!c) return Response.json({ error: "No session to nudge you for today." }, { status: 400 });
+        const [view, answers, goals] = await Promise.all([plans.view(), habits.answers(), analytics.goals()]);
+        const rules = nudgeLines(await nudgeFacts({ lib: library, view, session: c, answers, race: goals.race, stance: c.stance }));
+        const worded = await coach.nudgeWords(rules.text, rules.facts).catch(() => null);
+        await habits.answer(c.date, c.kind, bodyTags(r.checkin, r.readiness.level), "nudge");
+        return Response.json({ text: worded ?? rules.text, from: worded ? "coach" : "rules" });
+      },
+    ],
     ["GET", "/api/health", async () => Response.json(await health.view())],
     ["GET", "/api/body", async () => Response.json(await bodyNow())],
     // ---------------------------------------------------------------- encrypted backup (src/backup.ts)
@@ -903,11 +974,22 @@ export function createApi(o: ApiOptions): Api {
       "POST",
       "/api/plan/swap",
       async (req) => {
-        const b = (await req.json()) as { date?: string; kind?: string; reason?: string; undo?: boolean };
+        // `to`: easy (a bad day, the default), or swim, ride, treadmill, short, move (to `day`) or
+        // keep (Run anyway). What you pick is kept for what Tartan learns (src/habits.ts).
+        const b = (await req.json()) as { date?: string; kind?: string; reason?: string; undo?: boolean; to?: string; day?: string };
+        const to = (["easy", "swim", "ride", "treadmill", "short", "move", "keep"] as const).find((x) => x === b.to) ?? "easy";
+        const date = String(b.date ?? "");
+        const kind = String(b.kind ?? "");
+        const before = !b.undo && to !== "easy" ? await ready().catch(() => null) : null;
         try {
-          await plans.swap(String(b.date ?? ""), String(b.kind ?? ""), String(b.reason ?? "a hard day"), b.undo === true);
+          await plans.swap(date, kind, String(b.reason ?? (to === "easy" ? "a hard day" : "not feeling it")), b.undo === true, to, b.day);
         } catch (e) {
           return Response.json({ error: (e as Error).message }, { status: 400 });
+        }
+        if (b.undo) await habits.undo(date, kind);
+        else if (to !== "easy") {
+          const tags = before?.day_swap?.state === "offer" ? (before.day_swap.tags ?? []) : bodyTags(before?.checkin ?? null, before?.readiness.level ?? null);
+          await habits.answer(date, kind, tags, to === "keep" ? "run" : to);
         }
         return Response.json(await ready());
       },

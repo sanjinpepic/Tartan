@@ -59,14 +59,14 @@ private fun TCard(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, 
 /** A day's planned session on Today: what, the shoes for it, the weather-free details, and Mark done. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun TodaySession(s: Session, modifier: Modifier, open: () -> Unit, openWorkout: (String) -> Unit, mark: (() -> Unit)?) {
+fun TodaySession(s: Session, modifier: Modifier, open: () -> Unit, openWorkout: (String) -> Unit, mark: (() -> Unit)?, more: TodayModel? = null, openChoices: (() -> Unit)? = null) {
     val cs = MaterialTheme.colorScheme
     val data = LocalData.current
     val done = s.status == "done"
     TCard(modifier, open) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(52.dp).clip(RoundedCornerShape(18.dp)).background(if (done) data.goodContainer else cs.primaryContainer), contentAlignment = Alignment.Center) {
-                Icon(if (done) Glyphs["check"] else Glyphs[if (s.kind == "strength") "bolt" else "run"], null, tint = if (done) data.good else cs.onPrimaryContainer)
+                Icon(if (done) Glyphs["check"] else Glyphs[kindGlyph(s.kind)], null, tint = if (done) data.good else cs.onPrimaryContainer)
             }
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
@@ -98,6 +98,123 @@ fun TodaySession(s: Session, modifier: Modifier, open: () -> Unit, openWorkout: 
             }
             mark != null -> FilledTonalButton(onClick = mark, shapes = ButtonDefaults.shapes()) { Icon(Glyphs["check"], null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.common_mark_done)) }
         }
+        // Today's change: suggested here when there's a reason, or taken (with Undo); on a normal
+        // day only a quiet way in.
+        val w = more?.check?.swap?.takeIf { it.date == s.date || it.taken }
+        when {
+            w?.taken == true && !done -> Taken(w, more)
+            w != null && !w.taken && !done && w.kind == s.kind -> Suggested(w, more)
+            !done && openChoices != null && more?.check?.choices?.let { it.date == s.date && it.kind == s.kind } == true ->
+                TextButton(onClick = openChoices, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) { Text(stringResource(R.string.today_different_plan), style = MaterialTheme.typography.labelLarge) }
+        }
+    }
+}
+
+/** A choice as a few words: Swim instead, Shorter, 25 min, Move to Thursday, Run anyway. */
+@Composable
+private fun choiceLabel(c: DayChoice): String = when (c.to) {
+    "swim" -> stringResource(R.string.today_swim_instead)
+    "ride" -> stringResource(R.string.today_ride_instead)
+    "treadmill" -> stringResource(R.string.today_treadmill_instead)
+    "short" -> stringResource(R.string.today_shorter_min, c.minutes ?: 20)
+    "move" -> stringResource(R.string.today_move_to, fullDay(c.day ?: ""))
+    "nudge" -> stringResource(R.string.today_give_me_a_nudge)
+    else -> stringResource(R.string.today_run_anyway)
+}
+
+private fun fullDay(iso: String) = runCatching { java.time.LocalDate.parse(iso).dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) }.getOrDefault(iso)
+
+/**
+ * The session card's own suggestion, warm and short: what the day is like then and why it
+ * matters to you ("Heavy rain at 17:00. You said heavy rain puts you off."), then small choices
+ * in your order, the first a little stronger, Run anyway always there.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun Suggested(w: DaySwap, m: TodayModel) {
+    val cs = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(cs.secondaryContainer).padding(horizontal = 14.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            buildAnnotatedString {
+                w.why?.let { withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append("$it. ") } }
+                w.reason?.let { append(it) }
+            },
+            style = MaterialTheme.typography.bodyMedium, color = cs.onSecondaryContainer,
+        )
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            w.choices.forEachIndexed { i, c ->
+                if (i == 0) FilledTonalButton(onClick = { m.change(c, fromCard = true) }, enabled = !m.busy) { ButtonText(choiceLabel(c)) }
+                else TextButton(onClick = { m.change(c, fromCard = true) }, enabled = !m.busy) { ButtonText(choiceLabel(c)) }
+            }
+        }
+    }
+}
+
+/** A change taken today, in a line, with Undo. */
+@Composable
+private fun Taken(w: DaySwap, m: TodayModel) {
+    val c = w.choices.firstOrNull() ?: return
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            when (c.to) {
+                "swim" -> stringResource(R.string.today_took_swim, c.minutes ?: 0, w.title)
+                "ride" -> stringResource(R.string.today_took_ride, c.minutes ?: 0, w.title)
+                "treadmill" -> stringResource(R.string.today_took_treadmill, w.title)
+                "short" -> stringResource(R.string.today_took_short, w.title, c.minutes ?: 0)
+                else -> stringResource(R.string.today_took_move, w.title, fullDay(c.day ?: ""))
+            },
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = { m.undoChange() }, enabled = !m.busy) { Text(stringResource(R.string.common_undo)) }
+    }
+}
+
+/**
+ * Different plan today? (asked from the session): no guilt, a few ways to go in your order, the
+ * stance's line when it leads with the run or eases off, what's learned in a line. A nudge shows
+ * its words here; a change closes the sheet and shows in the session with Undo.
+ */
+@Composable
+fun DayChoicesSheet(c: DayChoices, m: TodayModel, onClose: () -> Unit) {
+    Sheet(onClose) { close -> DayChoicesBody(c, m, close) }
+}
+
+/** The sheet's content (drawn on its own for the screenshots). */
+@Composable
+fun DayChoicesBody(c: DayChoices, m: TodayModel, close: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    run {
+        Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.today_different_plan), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
+                    Text(c.line ?: stringResource(R.string.today_no_guilt), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+                }
+                FilledTonalIconButton(onClick = close) { Icon(Glyphs["close"], stringResource(R.string.common_close)) }
+            }
+            c.reason?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant) }
+            c.choices.forEach { ch ->
+                val (title, sub) = when (ch.to) {
+                    "nudge" -> stringResource(R.string.today_give_me_a_nudge) to stringResource(R.string.today_nudge_sub)
+                    "swim" -> stringResource(R.string.today_swim_instead) to stringResource(R.string.today_instead_sub, ch.minutes ?: 0)
+                    "ride" -> stringResource(R.string.today_ride_instead) to stringResource(R.string.today_instead_sub, ch.minutes ?: 0)
+                    "treadmill" -> stringResource(R.string.today_treadmill_instead) to stringResource(R.string.today_treadmill_sub)
+                    "short" -> stringResource(R.string.today_a_shorter_version) to stringResource(R.string.today_shorter_sub, ch.minutes ?: 20)
+                    else -> stringResource(R.string.today_move_it) to stringResource(R.string.today_move_sub, fullDay(ch.day ?: ""))
+                }
+                val icon = when (ch.to) { "nudge" -> "spark"; "swim" -> "swim"; "ride" -> "ride"; "move" -> "plan"; else -> "run" }
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(cs.surfaceContainer).press(scale = 0.98f, label = title, onClick = {
+                    if (ch.to == "nudge") m.askNudge() else { m.change(ch, fromCard = false); close() }
+                }).padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Glyphs[icon], null, Modifier.size(20.dp), tint = cs.primary)
+                        Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 12.dp))
+                    }
+                    val words = m.nudge.takeIf { ch.to == "nudge" }
+                    Text(words ?: if (ch.to == "nudge" && m.nudging) "…" else sub, style = MaterialTheme.typography.bodyMedium, color = if (words != null) cs.onSurface else cs.onSurfaceVariant, modifier = Modifier.padding(start = 32.dp).animateContentSize())
+                }
+            }
+        }
     }
 }
 
@@ -114,16 +231,17 @@ fun RestDay(next: Session?, modifier: Modifier, open: (Session) -> Unit, toPlan:
 
 /**
  * No plan yet: Tartan's own rules make one from the workouts it has, no key needed. Make my plan
- * opens Coach's few questions (each with Not sure), then the plan is there.
+ * opens Coach's few questions (each with Not sure), then the plan is there. `ended`: there was a
+ * plan and its last day has gone: Make the next one.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun NoPlanCard(modifier: Modifier, make: () -> Unit) {
+fun NoPlanCard(modifier: Modifier, ended: Boolean = false, make: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     TCard(modifier, make) {
-        Text(stringResource(R.string.coach_no_plan_yet), style = MaterialTheme.typography.titleLarge)
-        Text(stringResource(R.string.today_tartan_makes_one_from_your_workouts), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
-        Button(onClick = make, shapes = ButtonDefaults.shapes()) { Icon(Glyphs["spark"], null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.coach_make_my_plan)) }
+        Text(stringResource(if (ended) R.string.today_your_plan_has_ended else R.string.coach_no_plan_yet), style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(if (ended) R.string.today_tartan_makes_the_next_one else R.string.today_tartan_makes_one_from_your_workouts), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+        Button(onClick = make, shapes = ButtonDefaults.shapes()) { Icon(Glyphs["spark"], null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text(stringResource(if (ended) R.string.today_make_the_next_one else R.string.coach_make_my_plan)) }
     }
 }
 

@@ -259,6 +259,10 @@ final class ShellModel {
             await sampleRoutes()
             changed()
         }
+        // Today's suggestion in the session (TartanRain), or the weather as it is for every other shot.
+        _ = await engine.send("/api/sample/rain", method: "POST", body: Launch.rain ? [:] : ["off": true])
+        today.stale = true
+        if shown == "today" { today.freshen() }
         Launch.ready("plan")
     }
 

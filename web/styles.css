@@ -1269,7 +1269,7 @@ html.kb-open .view-inner:has(.coach) { padding-bottom: 8px; }
 .k-long { --k: var(--s1); }
 .k-tempo, .k-hills { --k: var(--z3); }
 .k-intervals, .k-race { --k: var(--z5); }
-.k-strength, .k-cross { --k: var(--s-context); }
+.k-strength, .k-cross, .k-swim, .k-ride { --k: var(--s-context); }
 .k-rest { --k: var(--outline); }
 .kind-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--k, var(--outline)); flex: none; margin-top: 7px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--k, var(--outline)) 18%, transparent); }
 

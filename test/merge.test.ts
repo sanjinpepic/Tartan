@@ -65,3 +65,12 @@ test("a run of a few seconds still matches its copy when the clocks disagree a l
   // Same start, different sport: still apart.
   expect(sameActivity(phone, strava({ start: t0 + 5000, elapsed_s: 3, sport: "Ride" }))).toBe(false);
 });
+
+test("two different workouts starting the same second get ids of their own, and keep them", () => {
+  const swim: Candidate = { key: "logged:s1", source: "logged", start: t0, sport: "Swim", moving_s: 2400 };
+  const ride: Candidate = { key: "logged:r1", source: "logged", start: t0, sport: "Ride", moving_s: 3600 };
+  const links: LinkTable = {};
+  const ids = mergeActivities([swim, ride], links).map((m) => m.id);
+  expect(new Set(ids).size).toBe(2);
+  expect(mergeActivities([ride, swim], { ...links }).map((m) => m.id).sort()).toEqual([...ids].sort());
+});

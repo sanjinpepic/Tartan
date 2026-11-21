@@ -21,6 +21,8 @@ data class Today(
     val race: RaceGoal? = null,
     /** The plan covers today or days ahead (else no session or rest card). */
     val planOn: Boolean = false,
+    /** There is a plan, but its last day has gone: Today offers the next one. */
+    val planEnded: Boolean = false,
     /** The demo's sample data (src/sample.ts): Today says so, with the way out. */
     val sample: Boolean = false,
 )
@@ -161,5 +163,6 @@ fun parseToday(todayJson: String, planJson: String?, today: LocalDate = LocalDat
         RaceGoal(r.str("name") ?: str(R.string.common_km_race, one(r.optDouble("distance_km"))), r.optDouble("distance_km"), r.str("date"), r.num("target_s")?.toInt(), r.num("days_to_go")?.toInt(), r.num("predicted_s")?.toInt(), if (r.has("on_track") && !r.isNull("on_track")) r.optBoolean("on_track") else null, r.toString(), c)
     }
     val takeaways = t.optJSONArray("takeaways").map { Takeaway(it.optString("tone"), it.optString("title"), it.optString("detail"), it.str("activity"), it.optString("id"), it.str("date")) }
-    return Today(readiness, last, week, sessions.firstOrNull(), takeaways, sessions, if (sessions.isEmpty()) next else null, race, planOn, t.optBoolean("sample"))
+    val planEnded = plan?.optJSONObject("plan") != null && !planOn
+    return Today(readiness, last, week, sessions.firstOrNull(), takeaways, sessions, if (sessions.isEmpty()) next else null, race, planOn, planEnded, t.optBoolean("sample"))
 }

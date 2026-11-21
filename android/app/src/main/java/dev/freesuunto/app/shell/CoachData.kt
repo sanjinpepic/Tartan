@@ -27,6 +27,8 @@ data class Coach(
     val intake: Intake? = null,
     /** Said you're ill (since this date): Better now leads the life changes. */
     val ill: String? = null,
+    /** The plan's last day has gone: Coach asks for the next one, as for the first. */
+    val ended: Boolean = false,
 )
 
 /** The first plan's questions (web/views/plan.ts intakeCard): the answers so far, the last four weeks, the race. */
@@ -77,7 +79,8 @@ private fun JSONArray?.strings(): List<String> = if (this == null) emptyList() e
 
 val KIND_LABEL get() = mapOf(
     "easy" to str(R.string.coach_easy), "long" to str(R.string.coach_long), "tempo" to str(R.string.coach_tempo), "intervals" to str(R.string.coach_intervals), "hills" to str(R.string.coach_hills),
-    "recovery" to str(R.string.coach_recovery), "race" to str(R.string.common_race), "strength" to str(R.string.common_strength), "cross" to str(R.string.coach_cross_training), "rest" to str(R.string.common_rest),
+    "recovery" to str(R.string.coach_recovery), "race" to str(R.string.common_race), "strength" to str(R.string.common_strength), "cross" to str(R.string.coach_cross_training),
+    "swim" to str(R.string.coach_swim), "ride" to str(R.string.coach_ride), "rest" to str(R.string.common_rest),
 )
 
 /**
@@ -122,7 +125,7 @@ fun ago(iso: String, now: Instant = Instant.now()): String {
 }
 
 private val CHANGE_WORD get() = mapOf("added" to str(R.string.common_new), "removed" to str(R.string.coach_out), "moved" to str(R.string.coach_moved), "changed" to str(R.string.coach_changed), "zones" to str(R.string.coach_zones), "length" to str(R.string.coach_length))
-val FROM get() = mapOf("chat" to str(R.string.coach_from_your_conversation), "update" to str(R.string.coach_your_new_plan), "weekly" to str(R.string.coach_from_the_weekly_review), "agent" to str(R.string.coach_from_an_outside_agent), "life" to str(R.string.coach_from_what_you_told_tartan))
+val FROM get() = mapOf("chat" to str(R.string.coach_from_your_conversation), "update" to str(R.string.coach_your_new_plan), "weekly" to str(R.string.coach_from_the_weekly_review), "agent" to str(R.string.coach_from_an_outside_agent), "life" to str(R.string.coach_from_what_you_told_tartan), "weather" to str(R.string.coach_for_the_weather_ahead))
 
 private fun change(c: JSONObject): Change {
     val type = c.optString("type")
@@ -183,7 +186,8 @@ fun parseCoach(planJson: String, statusJson: String?, weeklyJson: String?): Coac
         Weekly(it.optString("week"), it.optString("at"), it.optString("text"), it.optBoolean("changed"), it.optInt("proposed"), it.str("conversation"))
     }?.takeIf { it.text.isNotBlank() }
     val ready = statusJson?.let { runCatching { JSONObject(it).optBoolean("ready", true) }.getOrNull() } ?: true
-    val intake = if (plan != null) null else {
+    val ended = plan != null && weeks.none { it.time == "current" || it.time == "future" }
+    val intake = if (plan != null && !ended) null else {
         val a = v.optJSONObject("availability") ?: JSONObject()
         val rc = v.optJSONObject("recent") ?: JSONObject()
         val today = v.optString("today")
@@ -196,5 +200,5 @@ fun parseCoach(planJson: String, statusJson: String?, weeklyJson: String?): Coac
         )
     }
     val ill = v.optJSONObject("life")?.optJSONObject("ill")?.str("from")
-    return Coach(plan, weeks, v.optString("today"), goal, proposal, last, weekly, ready, intake, ill)
+    return Coach(plan, weeks, v.optString("today"), goal, proposal, last, weekly, ready, intake, ill, ended)
 }

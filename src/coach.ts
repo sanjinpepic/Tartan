@@ -61,8 +61,8 @@ export class Coach {
     this.memory = new Memory(lib.disk);
     // Read-only data tools, plus one write: the coach's own plan file.
     this.tools = [
-      // Plus ticking a session off ("I did it, the watch stayed home") and the time you have.
-      ...dataTools(lib, { allowSync: false }).filter((t) => t.readOnly || ["mark_plan_session", "log_workout", "remove_logged_workout", "set_training_availability", "set_training_times", "remember", "update_memory", "forget_memory"].includes(t.name)),
+      // Plus ticking a session off ("I did it, the watch stayed home"), swapping one on the day, and the time you have.
+      ...dataTools(lib, { allowSync: false }).filter((t) => t.readOnly || ["mark_plan_session", "swap_plan_session", "log_workout", "remove_logged_workout", "set_training_availability", "set_training_times", "remember", "update_memory", "forget_memory"].includes(t.name)),
       saveTrainingPlanTool(this),
       makeRouteTool(this),
       routeFromRunTool(this),
@@ -320,19 +320,45 @@ export class Coach {
    * without a cloud key, offline, on any error, or when it takes longer than `timeoutMs`.
    */
   async afterRunWords(draft: string, facts: string[], timeoutMs = 8000): Promise<string | null> {
+    return this.quickWords(
+      [
+        "You are a running coach. Write the notification the athlete gets just after this run: one or two short sentences, at most 200 characters.",
+        "Use only these facts; keep their numbers exact; plain words; no greeting, no emoji, no exclamation marks, no lists. Say how it went and what's next.",
+        `Facts:\n${facts.join("\n")}`,
+        `A draft to improve on: ${draft}`,
+        "Reply with the note only.",
+      ].join("\n\n"),
+      timeoutMs,
+    );
+  }
+
+  /**
+   * A nudge when the athlete isn't feeling it (src/nudge.ts), in the coach's words: the same
+   * facts, one to three sentences, warm and plain, pushing back when the facts say to. Null: no
+   * cloud coach, offline, too slow, or an answer that reads worse than the rules' own.
+   */
+  async nudgeWords(draft: string, facts: string[], timeoutMs = 8000): Promise<string | null> {
+    return this.quickWords(
+      [
+        "You are a running coach on the athlete's side. They aren't feeling today's run and asked for a nudge. Write one to three short sentences, at most 240 characters.",
+        "Use only these facts; keep their numbers exact; plain warm words; never preachy, no guilt, no greeting, no emoji, no exclamation marks, no lists. When the facts say to lead with the run, say so plainly; when they say to ease off, don't push. End with a small first step (e.g. 10 easy minutes, then decide).",
+        `Facts:\n${facts.join("\n")}`,
+        `A draft to improve on: ${draft}`,
+        "Reply with the nudge only.",
+      ].join("\n\n"),
+      timeoutMs,
+      280,
+    );
+  }
+
+  /** A short text from the cloud coach, tightly bounded (a few hundred tokens, low thinking, a timeout), or null. */
+  private async quickWords(ask: string, timeoutMs: number, maxChars = 260): Promise<string | null> {
     if (typeof navigator !== "undefined" && navigator.onLine === false) return null;
     const s = await this.settings();
     const status = await this.status(TURN);
     // The chat's own provider when it's a cloud one, else the cloud key a phone chat hands to.
     const pick = !ON_PHONE.has(status.provider) && status.ready ? { id: status.provider, model: status.model } : this.cloudPick(s, status.provider, status.providers);
     if (!pick) return null;
-    const ask = [
-      "You are a running coach. Write the notification the athlete gets just after this run: one or two short sentences, at most 200 characters.",
-      "Use only these facts; keep their numbers exact; plain words; no greeting, no emoji, no exclamation marks, no lists. Say how it went and what's next.",
-      `Facts:\n${facts.join("\n")}`,
-      `A draft to improve on: ${draft}`,
-      "Reply with the note only.",
-    ].join("\n\n");
     const abort = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
     const late = new Promise<null>((done) => (timer = setTimeout(() => (abort.abort(), done(null)), timeoutMs)));
@@ -354,7 +380,7 @@ export class Coach {
     const said = await Promise.race([asked, late]).finally(() => clearTimeout(timer));
     const text = said?.replace(/\s+/g, " ").replace(/^["'“]+|["'”]+$/g, "").trim();
     // Anything empty, cut off or long reads worse than the rules' own words.
-    return text && text.length >= 20 && text.length <= 260 && /[.!?]$/.test(text) ? text : null;
+    return text && text.length >= 20 && text.length <= maxChars && /[.!?]$/.test(text) && !text.includes("!") ? text : null;
   }
 
   async client(): Promise<Anthropic> {

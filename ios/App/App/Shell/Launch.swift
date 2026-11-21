@@ -10,7 +10,7 @@ enum Launch {
     static var tab: String? { UserDefaults.standard.string(forKey: "TartanTab").flatMap { $0.isEmpty ? nil : $0 } }
     /** Today with More today open, scrolled to it. */
     static var more: Bool { UserDefaults.standard.bool(forKey: "TartanMore") }
-    /** Open a sheet from Today once it has its data: "session" (today's or the next) or "workout" (the last). */
+    /** Open a sheet from Today once it has its data: "session" (today's or the next), "workout" (the last) or "choices" (Different plan today?). */
     static var open: String? { UserDefaults.standard.string(forKey: "TartanOpen").flatMap { $0.isEmpty ? nil : $0 } }
     /** The chat with a made-up conversation (no coach asked, nothing sent). */
     static var chatSample: Bool { UserDefaults.standard.bool(forKey: "TartanChatSample") }
@@ -20,6 +20,8 @@ enum Launch {
     static var noPlan: Bool { UserDefaults.standard.bool(forKey: "TartanNoPlan") }
     /** As noPlan, then a plan made by Tartan's rules, as Make my plan does. */
     static var makePlan: Bool { UserDefaults.standard.bool(forKey: "TartanMakePlan") }
+    /** The demo's rainy week, a swim preferred and rain ticked as what puts you off: Today's session suggests the swim. */
+    static var rain: Bool { UserDefaults.standard.bool(forKey: "TartanRain") }
     /** Dark, whatever the phone is set to. */
     static var dark: Bool { UserDefaults.standard.bool(forKey: "TartanDark") }
 

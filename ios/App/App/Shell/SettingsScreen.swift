@@ -69,6 +69,8 @@ private struct TrainingGroup: View {
     private let presets = [("Before work", "06:30"), ("Lunch", "12:00"), ("After work", "18:00"), ("Evening", "20:00")]
     private let days = [("mon", "Monday"), ("tue", "Tuesday"), ("wed", "Wednesday"), ("thu", "Thursday"), ("fri", "Friday"), ("sat", "Saturday"), ("sun", "Sunday")]
     private let leads = [(15, "15 min"), (30, "30 min"), (60, "1 hour"), (120, "2 hours")]
+    private let avoidKinds = [("ice", "Ice and snow"), ("rain", "Heavy rain"), ("wind", "Strong wind"), ("cold", "Cold"), ("heat", "Heat"), ("dark", "The dark")]
+    private let badWeatherSaid = ["run": "Running in any weather.", "swim": "A swim on bad-weather days.", "ride": "A ride on bad-weather days.", "treadmill": "The treadmill on bad-weather days."]
 
     var body: some View {
         Section {
@@ -155,6 +157,29 @@ private struct TrainingGroup: View {
                 toggle("Sunday evening review", "At 19:00 on Sundays, a nudge to open Tartan: the coach looks back at the week and sets up the next one.", t.review, ok: (on: "A nudge on Sunday evenings.", off: "No Sunday nudge.")) { on in ["notify": ["morning": t.morning, "morning_at": t.morningAt, "review": on]] }
                 toggle("After a run", "A line or two from the coach when a new run comes in: how it went and what's next.", t.runNote, ok: (on: "A note after each run.", off: "No note after runs.")) { on in ["notify": ["run": on]] }
             } header: { Text("Reminders") }
+            Section {
+                Picker("I'd rather", selection: Binding(get: { t.badWeather }, set: { v in Task { await m.saveTimes(["bad_weather": v], ok: badWeatherSaid[v]) } })) {
+                    Text("Run anyway").tag("run")
+                    Text("Swim").tag("swim")
+                    Text("Bike").tag("ride")
+                    Text("Treadmill").tag("treadmill")
+                }
+                .pickerStyle(.segmented)
+                ForEach(avoidKinds.indices, id: \.self) { i in
+                    let k = avoidKinds[i]
+                    Toggle(k.1, isOn: Binding(get: { t.avoid.contains(k.0) }, set: { on in
+                        let next = avoidKinds.map { $0.0 }.filter { $0 == k.0 ? on : t.avoid.contains($0) }
+                        Task { await m.saveTimes(["avoid": next], ok: next.isEmpty ? "Nothing puts you off: Today suggests only when you ask." : "Today will suggest a change on those days.") }
+                    }))
+                }
+                if t.avoid.contains("cold") {
+                    Picker("Cold is below", selection: Binding(get: { t.coldBelow }, set: { v in Task { await m.saveTimes(["cold_below": v], ok: nil) } })) {
+                        ForEach([-10, -5, 0, 5], id: \.self) { Text("\($0) °C").tag($0) }
+                    }
+                }
+            } header: { Text("On a bad-weather day") } footer: {
+                Text("I'd rather… and what puts you off. On those days Today suggests a change inside the session; nothing ticked, only when you ask or your own habits clearly say so. A hard session is never swapped for a swim or a ride: it moves to a better day.")
+            }
             Section {
                 Toggle(isOn: Binding(get: { t.calendar }, set: { on in Task { await calendar(on, t) } })) {
                     VStack(alignment: .leading, spacing: 2) {

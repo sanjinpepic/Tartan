@@ -170,6 +170,8 @@ private val TOOLS get() = listOf(
     "get_training_plan" to str(R.string.settings_the_plan_each_session_done_missed),
     "save_training_plan" to str(R.string.settings_write_or_change_the_plan_the),
     "mark_plan_session" to str(R.string.settings_tick_a_session_off_by_hand),
+    "swap_plan_session" to str(R.string.settings_swap_a_session_on_the_day),
+    "get_habits" to str(R.string.settings_what_puts_you_off_and_your_habits),
     "log_workout / remove_logged_workout" to str(R.string.settings_log_a_workout_nothing_recorded),
     "set_training_availability" to str(R.string.settings_days_hours_and_long_run_day),
     "get_training_times / set_training_times" to str(R.string.settings_when_you_usually_train_reminders_and),

@@ -87,7 +87,12 @@ final class TodayModel {
         async let h = engine.get("/api/health")
         async let sh = engine.get("/api/shoes")
         async let pr = engine.rpc("prefs")
-        if let json = await r, let c = parseCheck(json) { check = c }
+        if let json = await r, let c = parseCheck(json) {
+            check = c
+            // Screenshots: the session's suggestion (TartanRain), or the choices to open (TartanOpen choices).
+            if Launch.rain && c.swap != nil { Launch.ready("rain") }
+            if Launch.open == "choices" && c.choices != nil { Launch.ready("choices") }
+        }
         if let json = await h { vitals = parseVitals(json) }
         if let race = view.race, let d = race.daysToGo, (0...7).contains(d) {
             let key = jsonText(race.json)
@@ -187,6 +192,51 @@ final class TodayModel {
         let p = clearPain ? nil : (pain ?? c.pain)
         if let p { b["pain"] = ["area": p.area, "level": p.level] as [String: Any] } else { b["pain"] = NSNull() }
         send("/api/readiness", method: "PUT", body: b)
+    }
+
+    /** The nudge asked for on Today's session (nil until it comes), and whether it's coming. */
+    var nudge: String?
+    var nudging = false
+
+    /**
+     * Change today's session: a choice from the card (what it suggested, with its reason) or from
+     * Different plan today? (a swim, a ride, the treadmill, a shorter run, another day), or Run
+     * anyway. Every change undoes with one tap (undoChange).
+     */
+    func change(_ c: DayChoice, fromCard: Bool) {
+        guard let ch = check else { return }
+        let target: (String, String)? = fromCard ? ch.swap.map { ($0.date, $0.kind) } : ch.choices.map { ($0.date, $0.kind) }
+        guard let t = target else { return }
+        let (date, kind) = t
+        var b: [String: Any] = ["date": date, "kind": kind]
+        if c.to == "run" {
+            b["to"] = "keep"; b["reason"] = "ran anyway"
+        } else {
+            b["to"] = c.to
+            if let d = c.day { b["day"] = d }
+            let why = ch.swap?.why.map { $0.prefix(1).lowercased() + $0.dropFirst() } ?? "the weather"
+            b["reason"] = fromCard ? why : "not feeling it"
+        }
+        send("/api/plan/swap", method: "POST", body: b)
+    }
+
+    /** Take today's change back. */
+    func undoChange() {
+        guard let s = check?.swap, s.taken else { return }
+        send("/api/plan/swap", method: "POST", body: ["date": s.date, "kind": s.kind, "undo": true])
+    }
+
+    /** A few words from your own data (the coach's, with a cloud key; Tartan's otherwise). */
+    func askNudge() {
+        guard !nudging else { return }
+        nudging = true
+        Task {
+            switch await engine.send("/api/today/nudge", method: "POST", body: [:]) {
+            case .success(let text): nudge = J(json: text)["text"].str
+            case .failure(let e): say("Couldn't get it: \(e.message)")
+            }
+            nudging = false
+        }
     }
 
     /** Swap today's hard session for an easy run, or undo it. */

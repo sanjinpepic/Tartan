@@ -265,6 +265,8 @@ func kindColour(_ kind: String) -> Color {
     case "tempo", "hills": return Brand.adaptive(0xD8653B, 0xD8653B)
     case "intervals", "race": return Brand.adaptive(0x5E1D10, 0xF7BC95)
     case "strength": return Brand.tint
+    // Swims and rides support the running: quiet, like cross-training.
+    case "swim", "ride", "cross": return Brand.adaptive(0x9A8B88, 0x8F8280)
     default: return Brand.adaptive(0x9A8B88, 0x8F8280)
     }
 }

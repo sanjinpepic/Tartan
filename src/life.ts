@@ -125,7 +125,7 @@ export function reshape(plan: PlanInput, e: LifeEvent, today: string, before?: P
       const why = `Back after ${days} day${days > 1 ? "s" : ""} ill`;
       const out = mapDays(base, today, end, (s) => {
         const p = phases.find((x) => daysBetween(today, s.date) < x.until)!;
-        if (s.kind === "rest" || s.kind === "cross") return s;
+        if (s.kind === "rest" || s.kind === "cross" || s.kind === "swim" || s.kind === "ride") return s;
         if (s.kind === "strength") return p.strength ? s : rest(s, "Rest", why);
         const easy = QUALITY.has(s.kind) ? asEasy(s, base, why) : s;
         const cut = shorter(easy, p.f, s.kind === "long" ? p.longCap : undefined);

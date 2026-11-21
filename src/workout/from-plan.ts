@@ -27,7 +27,7 @@ export interface ZoneLike {
   pace?: string;
 }
 
-const TITLE: Record<string, string> = { strength: "Strength", cross: "Workout" };
+const TITLE: Record<string, string> = { strength: "Strength", cross: "Workout", swim: "Swim", ride: "Ride" };
 const ZONE_FOR: Record<string, RegExp> = {
   easy: /easy|aerobic|z2/i,
   long: /long|easy|aerobic/i,
@@ -162,7 +162,7 @@ export function workoutFor(s: SessionLike, zones: ZoneLike[] = [], fuel: FuelPla
     if (!len) return { reason: "it has no duration or distance" };
     const step: WorkoutStep = { kind: "run", ...len, ...target, title: TITLE[s.kind] ?? "Run" };
     // Long steady runs and rides get fuel and drink reminders.
-    blocks = fuel && s.kind !== "strength" ? withFuel(step, minutesOf(s, target.pace ?? null), fuel) : [step];
+    blocks = fuel && s.kind !== "strength" && s.kind !== "swim" ? withFuel(step, minutesOf(s, target.pace ?? null), fuel) : [step];
   }
   const workout = { name, blocks };
   try {

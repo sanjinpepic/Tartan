@@ -6,6 +6,10 @@
  * what then shows in the plan and goes to the watch.
  */
 import { readJson, type Disk } from "./disk.ts";
+import { dayChoices, dayOffer, stanceFor, swapTaken, todaysSession, type Choice, type DaySession, type DaySwap, type Stance } from "./day-swap.ts";
+import { bodyTags, conditionsAt, habitLines, learned, WEATHER_TAGS, type Habits, type Tendency } from "./habits.ts";
+import { timeFor, type SchedulePrefs } from "./schedule.ts";
+import { localNow, type Hour } from "./weather.ts";
 
 export interface CheckIn {
   date: string;
@@ -140,6 +144,11 @@ export class CheckIns {
     return [...Object.values(all).filter((c) => c.pain && c.date >= since).map((c) => ({ date: c.date, ...c.pain! })), ...notes.map((n) => ({ date: n.date, area: n.area!, level: 1 as const }))].sort((a, b) => b.date.localeCompare(a.date));
   }
 
+  /** Every check-in kept (the last 120 days), by date. */
+  async all(): Promise<Record<string, CheckIn>> {
+    return (await readJson<Record<string, CheckIn>>(this.disk, FILE)) ?? {};
+  }
+
   async save(c: CheckIn): Promise<CheckIn> {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(c.date) || (c.sleep !== undefined && ![1, 2, 3].includes(c.sleep)) || (c.legs !== undefined && ![1, 2, 3].includes(c.legs)) || (c.sleep === undefined && c.legs === undefined && !c.pain)) throw new Error("check-in: date, and legs 1-3 or sleep 1-3 or pain");
     const all = (await readJson<Record<string, CheckIn>>(this.disk, FILE)) ?? {};
@@ -152,9 +161,29 @@ export class CheckIns {
   }
 }
 
-/** Today's readiness with today's session, for the Today tab and the coach. */
+/**
+ * Today's readiness with today's session, for the Today tab and the coach. With your settings
+ * and what Tartan has learned (`prefs`, `habits`): the ways to change today's session when you
+ * ask (`day_choices`), and the one change Today suggests inside the session card when it has a
+ * reason, or the one you took (`day_swap`, src/day-swap.ts). The forecast is read only when what
+ * puts you off, or a clear habit, is about the weather.
+ */
 export async function todayReadiness(
-  deps: { feelings?: () => Promise<number[]>; body?: () => Promise<BodySigns | null>; plans: { view(): Promise<{ plan: unknown; weeks: Array<{ days: Array<{ date: string; sessions: Array<{ kind: string; title: string; status: string; swapped_from?: string; swap_kind?: string }> }> }>; today: string }> }; load(): Promise<{ today: { form: number } }>; checkins: CheckIns },
+  deps: {
+    feelings?: () => Promise<number[]>;
+    body?: () => Promise<BodySigns | null>;
+    plans: { view(): Promise<{ plan: unknown; weeks: Array<{ days: Array<{ date: string; sessions: Array<DaySession & { status: string }> }> }>; today: string }> };
+    load(): Promise<{ today: { form: number } }>;
+    checkins: CheckIns;
+    prefs?: () => Promise<SchedulePrefs>;
+    habits?: Habits;
+    forecast?: () => Promise<{ hours: Hour[] } | null>;
+    /** The past weeks' weather (cached), for what the plan's past runs met. */
+    past?: () => Promise<Hour[] | null>;
+    /** Days to your race, when there's one ahead. */
+    raceDays?: () => Promise<number | null>;
+    now?: () => Date;
+  },
 ): Promise<{
   date: string;
   checkin: CheckIn | null;
@@ -165,8 +194,15 @@ export async function todayReadiness(
   readiness: Readiness;
   session: { title: string; kind: string; hard: boolean; done: boolean; swapped_from?: string; swap_kind?: string } | null;
   suggest_swap: boolean;
+  /** What you'd rather do on a bad-weather day, and what puts you off (Settings, Training). */
+  bad_weather: SchedulePrefs["bad_weather"];
+  avoid: SchedulePrefs["avoid"];
+  day_swap: DaySwap | null;
+  day_choices: { date: string; kind: string; title: string; choices: Choice[]; reason?: string; stance: Stance } | null;
+  /** What's learned (src/habits.ts): each tendency, and the strong ones in words. */
+  habits: { tendencies: Tendency[]; lines: string[] } | null;
 }> {
-  const [v, load, body] = await Promise.all([deps.plans.view(), deps.load().catch(() => null), deps.body?.().catch(() => null) ?? null]);
+  const [v, load, body, prefs] = await Promise.all([deps.plans.view(), deps.load().catch(() => null), deps.body?.().catch(() => null) ?? null, deps.prefs?.().catch(() => null) ?? null]);
   const date = v.today;
   const checkin = await deps.checkins.get(date);
   const [niggles, feelings] = await Promise.all([deps.checkins.niggles(), deps.feelings?.().catch(() => []) ?? []]);
@@ -174,7 +210,37 @@ export async function todayReadiness(
   const twoDays = new Date(Date.parse(`${date}T12:00:00`) - 2 * 86400_000).toISOString().slice(0, 10);
   const fresh = niggles.find((n) => n.date >= twoDays && n.date !== date) ?? niggles.find((n) => n.date === date && !checkin?.pain) ?? null;
   const r = readiness(load ? load.today.form : null, checkin, body, { feelings, niggle: fresh });
-  const s = v.weeks.flatMap((w) => w.days).find((d) => d.date === date)?.sessions.find((x) => x.kind !== "rest");
-  const session = s ? { title: s.title, kind: s.kind, hard: HARD.has(s.kind), done: s.status === "done", ...(s.swapped_from ? { swapped_from: s.swapped_from, swap_kind: s.swap_kind } : {}) } : null;
-  return { date, checkin, sleep_measured: body?.sleep_min ?? null, niggles, readiness: r, session, suggest_swap: !!session && session.hard && !session.done && r.level !== "ready" };
+  const days = v.weeks.flatMap((w) => w.days);
+  const s = days.find((d) => d.date === date)?.sessions.find((x) => x.kind !== "rest");
+  // A swap for an easy run (a bad day) says so here; the others show in the session card.
+  const easySwap = !!s?.swapped_from && (s.swap_to ?? "easy") === "easy";
+  const session = s ? { title: s.title, kind: s.kind, hard: HARD.has(s.kind), done: s.status === "done", ...(easySwap ? { swapped_from: s.swapped_from, swap_kind: s.swap_kind } : {}) } : null;
+  const suggest_swap = !!session && session.hard && !session.done && r.level !== "ready" && !s?.swapped_from;
+  let day_swap = swapTaken(date, days);
+  let day_choices: Awaited<ReturnType<typeof todayReadiness>>["day_choices"] = null;
+  let habits: Awaited<ReturnType<typeof todayReadiness>>["habits"] = null;
+  const today = todaysSession(days, date);
+  if (prefs && deps.habits) {
+    const [answers, checks, past] = await Promise.all([deps.habits.answers(), deps.checkins.all(), deps.past?.().catch(() => null) ?? null]);
+    const at = (d: string) => timeFor(prefs, d);
+    const l = learned({ today: date, answers, days, past, timeFor: at, coldBelow: prefs.cold_below, legs: Object.fromEntries(Object.entries(checks).map(([k, c]) => [k, c.legs])) });
+    const lines = habitLines(l.tendencies, l.usual);
+    habits = { tendencies: l.tendencies, lines };
+    if (today) {
+      // The forecast, only when the weather matters to you.
+      const sky = prefs.avoid.length > 0 || l.tendencies.some((t) => t.strong && WEATHER_TAGS.includes(t.tag));
+      const hours = (sky ? await deps.forecast?.().catch(() => null) : null)?.hours ?? [];
+      const now = localNow(deps.now?.() ?? new Date());
+      const planned = `${date}T${at(date)}`;
+      const dislike = conditionsAt(hours, planned > now ? planned : `${now.slice(0, 13)}:00`, prefs.cold_below).tags.some((t) => (prefs.avoid as string[]).includes(t));
+      const stance = stanceFor({ today: date, session: today, days, answers, raceDays: await deps.raceDays?.().catch(() => null), niggle: !!checkin?.pain || !!fresh, tired: r.level !== "ready", dislike });
+      day_choices = { date, kind: today.kind, title: today.title, choices: dayChoices({ session: today, today: date, days, choice: prefs.bad_weather, usual: l.usual, stance }), stance, ...(lines.length ? { reason: lines.at(-1)! } : {}) };
+      // One suggestion a day: not with the readiness swap on the card already, nor after a change.
+      if (!day_swap && !suggest_swap) {
+        day_swap = dayOffer({ today: date, now, days, timeFor: at, hours, choice: prefs.bad_weather, avoid: prefs.avoid, coldBelow: prefs.cold_below, body: bodyTags(checkin, r.level), tendencies: l.tendencies, usual: l.usual, stance });
+        if (day_swap) await deps.habits.offered(date, day_swap.kind, day_swap.tags ?? []);
+      }
+    }
+  }
+  return { date, checkin, sleep_measured: body?.sleep_min ?? null, niggles, readiness: r, session, suggest_swap, bad_weather: prefs?.bad_weather ?? "run", avoid: prefs?.avoid ?? [], day_swap, day_choices, habits };
 }

@@ -18,8 +18,9 @@ import { fitCrc } from "../fit-write.ts";
 import { isRepeat, plain, type Workout, type WorkoutStep } from "./guide.ts";
 
 /** What sport the watch should start a session in, by the plan's kind. */
-export type WatchSport = "running" | "strength" | "other";
-export const sportOf = (kind: string): WatchSport => (kind === "strength" ? "strength" : kind === "cross" ? "other" : "running");
+export type WatchSport = "running" | "strength" | "cycling" | "swimming" | "other";
+export const sportOf = (kind: string): WatchSport =>
+  kind === "strength" ? "strength" : kind === "swim" ? "swimming" : kind === "ride" ? "cycling" : kind === "cross" ? "other" : "running";
 
 const STEP_TITLE: Record<WorkoutStep["kind"], string> = { warmup: "Warm up", run: "Run", recover: "Recover", cooldown: "Cool down" };
 
@@ -84,7 +85,7 @@ export function icuText(w: Workout, o: { maxHr?: number; notes?: string } = {}):
 }
 
 /** intervals.icu's activity type for a session. */
-export const icuType = (kind: string) => ({ running: "Run", strength: "WeightTraining", other: "Workout" })[sportOf(kind)];
+export const icuType = (kind: string) => ({ running: "Run", strength: "WeightTraining", cycling: "Ride", swimming: "Swim", other: "Workout" })[sportOf(kind)];
 
 // ---------------------------------------------------------------- FIT workout file
 
@@ -99,8 +100,9 @@ const FIT_EPOCH_MS = 631065600_000;
 
 /** FIT's names for what's used here. */
 export const FIT = {
-  sport: { running: 1, strength: 10, other: 0 } as Record<WatchSport, number>,
-  subSport: { running: 0, strength: 20, other: 0 } as Record<WatchSport, number>,
+  // Swimming in a pool (lap swimming, 17); cycling of any kind (generic, 0).
+  sport: { running: 1, strength: 10, cycling: 2, swimming: 5, other: 0 } as Record<WatchSport, number>,
+  subSport: { running: 0, strength: 20, cycling: 0, swimming: 17, other: 0 } as Record<WatchSport, number>,
   duration: { time: 0, distance: 1, open: 5, repeat: 6 },
   target: { speed: 0, heartRate: 1, open: 2, power: 4 },
   intensity: { active: 0, rest: 1, warmup: 2, cooldown: 3, recovery: 4 },
@@ -208,7 +210,7 @@ export interface HcPlanned {
   end: number;
   title: string;
   notes?: string;
-  exercise: "running" | "strength_training" | "other";
+  exercise: "running" | "strength_training" | "biking" | "swimming_pool" | "other";
   blocks: Array<{
     repetitions: number;
     description?: string;
@@ -261,7 +263,7 @@ export function hcPlanned(p: { date: string; kind: string; title: string; notes?
     end: start + Math.max(60, workoutSeconds(p.workout)) * 1000,
     title: plain(p.workout.name),
     ...(p.notes ? { notes: p.notes.slice(0, 1000) } : {}),
-    exercise: sport === "running" ? "running" : sport === "strength" ? "strength_training" : "other",
+    exercise: ({ running: "running", strength: "strength_training", cycling: "biking", swimming: "swimming_pool", other: "other" } as const)[sport],
     blocks,
   };
 }

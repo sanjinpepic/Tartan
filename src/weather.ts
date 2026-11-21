@@ -9,11 +9,13 @@
 import { readJson } from "./disk.ts";
 import type { Library } from "./library.ts";
 import { Plans } from "./plan.ts";
-import { readPrefs, slots, type Slot } from "./schedule.ts";
+import { readPrefs, slots, type BadWeather, type Slot } from "./schedule.ts";
 
 const FORECAST = "https://api.open-meteo.com/v1/forecast";
 const PAST = "https://historical-forecast-api.open-meteo.com/v1/forecast";
 const CACHE = "cache/weather.json";
+/** What's asked for each hour (forecast and the past days alike). */
+const HOURLY = "temperature_2m,dew_point_2m,precipitation_probability,precipitation,snowfall,weather_code,wind_speed_10m,wind_gusts_10m,is_day";
 const HOUR = 3_600_000;
 
 export interface Hour {
@@ -23,6 +25,16 @@ export interface Hour {
   dew_c: number;
   rain_pct?: number;
   wind_kmh?: number;
+  /** Rain (or snow as water) in that hour, mm. */
+  rain_mm?: number;
+  /** Gusts, km/h. */
+  gust_kmh?: number;
+  /** The WMO weather code (61 rain, 65 heavy rain, 66 freezing rain, 75 heavy snow, 95 thunderstorm…). */
+  code?: number;
+  /** Snow that hour, cm. */
+  snow_cm?: number;
+  /** Daylight (false: dark). */
+  day?: boolean;
 }
 
 export interface Heat {
@@ -73,7 +85,18 @@ async function startOf(lib: Library, id: string): Promise<{ lat: number; lon: nu
 }
 
 interface OpenMeteo {
-  hourly?: { time?: string[]; temperature_2m?: Array<number | null>; dew_point_2m?: Array<number | null>; precipitation_probability?: Array<number | null>; wind_speed_10m?: Array<number | null> };
+  hourly?: {
+    time?: string[];
+    temperature_2m?: Array<number | null>;
+    dew_point_2m?: Array<number | null>;
+    precipitation_probability?: Array<number | null>;
+    wind_speed_10m?: Array<number | null>;
+    precipitation?: Array<number | null>;
+    wind_gusts_10m?: Array<number | null>;
+    weather_code?: Array<number | null>;
+    snowfall?: Array<number | null>;
+    is_day?: Array<number | null>;
+  };
 }
 
 function hours(j: OpenMeteo): Hour[] {
@@ -86,7 +109,12 @@ function hours(j: OpenMeteo): Hour[] {
     if (t == null || d == null) return;
     const rain = h.precipitation_probability?.[i];
     const wind = h.wind_speed_10m?.[i];
-    out.push({ time, temp_c: t, dew_c: d, ...(rain != null ? { rain_pct: rain } : {}), ...(wind != null ? { wind_kmh: wind } : {}) });
+    const mm = h.precipitation?.[i];
+    const gust = h.wind_gusts_10m?.[i];
+    const code = h.weather_code?.[i];
+    const snow = h.snowfall?.[i];
+    const light = h.is_day?.[i];
+    out.push({ ...(snow != null ? { snow_cm: snow } : {}), ...(light != null ? { day: light === 1 } : {}), time, temp_c: t, dew_c: d, ...(rain != null ? { rain_pct: rain } : {}), ...(wind != null ? { wind_kmh: wind } : {}), ...(mm != null ? { rain_mm: mm } : {}), ...(gust != null ? { gust_kmh: gust } : {}), ...(code != null ? { code } : {}) });
   });
   return out;
 }
@@ -109,7 +137,8 @@ const hourOf = (list: Hour[], local: string) => list.find((h) => h.time.slice(0,
 export function forSessions(list: Hour[], sessions: Slot[], nowLocal: string): SessionWeather[] {
   const out: SessionWeather[] = [];
   for (const s of sessions) {
-    if (s.kind === "strength" || s.kind === "rest") continue;
+    // Strength and swims are indoors.
+    if (s.kind === "strength" || s.kind === "swim" || s.kind === "rest") continue;
     const h = hourOf(list, s.start);
     if (!h) continue;
     const hx = heat(h.temp_c, h.dew_c);
@@ -144,9 +173,12 @@ type Fetch = (url: string) => Promise<Response>;
 
 interface Cache {
   at?: { lat: number; lon: number };
-  forecast?: { fetched: number; lat: number; lon: number; hours: Hour[] };
+  /** `pinned`: the demo's rainy week (src/api.ts /api/sample/rain), kept until it's taken off. */
+  forecast?: { fetched: number; lat: number; lon: number; hours: Hour[]; pinned?: boolean };
   /** Past runs by activity id: the hour the run was in the middle of. */
   runs?: Record<string, Hour | null>;
+  /** The last weeks' weather by the hour where you run (local times), fetched at most once a day. */
+  past?: { fetched: number; from: string; to: string; hours: Hour[] };
 }
 
 /** The forecast and past weather, kept for an hour (forecast) or for good (past runs). */
@@ -167,14 +199,47 @@ export class Weather {
   async forecast(now = Date.now()): Promise<{ where: { lat: number; lon: number }; hours: Hour[] } | null> {
     const c = await this.cache();
     const f = c.forecast;
-    if (f && now - f.fetched < HOUR) return { where: { lat: f.lat, lon: f.lon }, hours: f.hours };
+    if (f && (f.pinned || now - f.fetched < HOUR)) return { where: { lat: f.lat, lon: f.lon }, hours: f.hours };
     const where = (await whereYouRun(this.lib)) ?? c.at ?? null;
     if (!where) return null;
-    const res = await this.fetch(`${FORECAST}?latitude=${where.lat}&longitude=${where.lon}&hourly=temperature_2m,dew_point_2m,precipitation_probability,wind_speed_10m&forecast_days=8&timezone=auto`);
+    const res = await this.fetch(`${FORECAST}?latitude=${where.lat}&longitude=${where.lon}&hourly=${HOURLY}&forecast_days=8&timezone=auto`);
     if (!res.ok) throw new Error(`the weather service answered ${res.status}`);
     const list = hours((await res.json()) as OpenMeteo);
     await this.save({ ...c, at: where, forecast: { fetched: now, ...where, hours: list } });
     return { where, hours: list };
+  }
+
+  /**
+   * The demo's rainy week (screenshots of Today's weather swap): this forecast stays until it's
+   * taken off (null), whatever the hour.
+   */
+  async pin(hours: Hour[] | null): Promise<void> {
+    const c = await this.cache();
+    if (!hours) {
+      if (c.forecast?.pinned) delete c.forecast;
+      return this.save(c);
+    }
+    const where = c.at ?? (await whereYouRun(this.lib)) ?? { lat: 60.18, lon: 24.93 };
+    await this.save({ ...c, at: where, forecast: { fetched: Date.now(), ...where, hours, pinned: true } });
+  }
+
+  /**
+   * The weather of the last `days` days where you run, by the hour in local time: one request a
+   * day at most (src/habits.ts reads what your planned runs met). Null: nowhere to look.
+   */
+  async pastDays(days = 84, now = Date.now()): Promise<Hour[] | null> {
+    const c = await this.cache();
+    if (c.past && now - c.past.fetched < 20 * HOUR) return c.past.hours;
+    const where = c.at ?? (await whereYouRun(this.lib));
+    if (!where) return null;
+    const to = new Date(now - 86400_000).toISOString().slice(0, 10);
+    const from = new Date(now - days * 86400_000).toISOString().slice(0, 10);
+    const res = await this.fetch(`${PAST}?latitude=${where.lat}&longitude=${where.lon}&start_date=${from}&end_date=${to}&hourly=${HOURLY}&timezone=auto`);
+    if (!res.ok) throw new Error(`the weather service answered ${res.status}`);
+    const list = hours((await res.json()) as OpenMeteo);
+    const fresh = await this.cache();
+    await this.save({ ...fresh, past: { fetched: now, from, to, hours: list } });
+    return list;
   }
 
   /** What one past run was run in (the hour in its middle), or null when it had no GPS. */
@@ -199,12 +264,34 @@ export class Weather {
 }
 
 /** This device's wall clock as "YYYY-MM-DDTHH:MM". */
-const localNow = (now: Date) => new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+export const localNow = (now: Date) => new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 
 /** The forecast for every planned session in the next week or so, at your training times. */
-export async function upcomingWeather(lib: Library, weather = new Weather(lib), now = new Date()): Promise<{ where: { lat: number; lon: number } | null; sessions: SessionWeather[]; note?: string }> {
+export async function upcomingWeather(lib: Library, weather = new Weather(lib), now = new Date()): Promise<{ where: { lat: number; lon: number } | null; sessions: SessionWeather[]; note?: string; bad_weather: BadWeather }> {
   const [prefs, v] = await Promise.all([readPrefs(lib.disk), new Plans(lib).view()]);
   const f = await weather.forecast(now.getTime());
-  if (!f) return { where: null, sessions: [], note: "No workout with GPS yet: the forecast needs to know where you run." };
-  return { where: f.where, sessions: forSessions(f.hours, slots(v.weeks, prefs, v.today), localNow(now)) };
+  if (!f) return { where: null, sessions: [], note: "No workout with GPS yet: the forecast needs to know where you run.", bad_weather: prefs.bad_weather };
+  return { where: f.where, sessions: forSessions(f.hours, slots(v.weeks, prefs, v.today), localNow(now)), bad_weather: prefs.bad_weather };
+}
+
+/** The past weeks' weather for what Tartan learns (src/habits.ts), or null when it can't be had within a few seconds. */
+export async function pastSoon(weather: Weather, ms = 4000): Promise<Hour[] | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<null>((r) => (timer = setTimeout(() => r(null), ms)));
+  try {
+    return await Promise.race([weather.pastDays().catch(() => null), late]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** The forecast for Today's weather swap, or null when it can't be had within a few seconds (offline, slow). */
+export async function forecastSoon(weather: Weather, ms = 4000): Promise<{ hours: Hour[] } | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<null>((r) => (timer = setTimeout(() => r(null), ms)));
+  try {
+    return await Promise.race([weather.forecast().catch(() => null), late]);
+  } finally {
+    clearTimeout(timer);
+  }
 }

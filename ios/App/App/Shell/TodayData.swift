@@ -46,6 +46,8 @@ struct Today {
     var planOn: Bool
     /** The demo's sample data: Today says so, with the way out. */
     var sample: Bool
+    /** There is a plan, but its last day has gone: Today offers the next one. */
+    var planEnded = false
 }
 
 struct Readiness {
@@ -233,7 +235,7 @@ func parseToday(_ todayJson: String, _ planJson: String?, today: Date = Date(), 
         )
     }
     let takeaways = t["takeaways"].array.map { Takeaway(tone: $0["tone"].text, title: $0["title"].text, detail: $0["detail"].text, activity: $0["activity"].str, id: $0["id"].text, date: $0["date"].str) }
-    return Today(readiness: readiness, last: last, week: week, takeaways: takeaways, sessions: sessions, next: sessions.isEmpty ? next : nil, race: race, planOn: planOn, sample: t["sample"].bool)
+    return Today(readiness: readiness, last: last, week: week, takeaways: takeaways, sessions: sessions, next: sessions.isEmpty ? next : nil, race: race, planOn: planOn, sample: t["sample"].bool, planEnded: plan["plan"].object != nil && !planOn)
 }
 
 // MARK: - The morning check, vitals, race week, notes (Android's TodayMore.kt)
@@ -255,6 +257,10 @@ struct Check {
     let swappedFrom: String?
     let swapKind: String?
     let suggestSwap: Bool
+    /** Today's change (src/day-swap.ts): suggested in the session card with its reason, or taken (with Undo). */
+    var swap: DaySwap? = nil
+    /** The ways to change today's session when you ask (Different plan today?). */
+    var choices: DayChoices? = nil
 
     var verdict: String {
         switch level {
@@ -285,9 +291,48 @@ func parseCheck(_ json: String) -> Check? {
         date: r["date"].text, sleep: c["sleep"].int, legs: c["legs"].int, pain: pain, answered: c.object != nil,
         measured: !r["sleep_measured"].isNull, level: v["level"].str ?? "ready", reasons: v["reasons"].strings,
         sessionTitle: s["title"].str.flatMap { $0.isEmpty ? nil : $0 }, sessionKind: s["kind"].str.flatMap { $0.isEmpty ? nil : $0 }, sessionDone: s["done"].bool,
-        swappedFrom: s["swapped_from"].str.flatMap { $0.isEmpty ? nil : $0 }, swapKind: s["swap_kind"].str.flatMap { $0.isEmpty ? nil : $0 }, suggestSwap: r["suggest_swap"].bool
+        swappedFrom: s["swapped_from"].str.flatMap { $0.isEmpty ? nil : $0 }, swapKind: s["swap_kind"].str.flatMap { $0.isEmpty ? nil : $0 }, suggestSwap: r["suggest_swap"].bool,
+        swap: r["day_swap"].object != nil ? DaySwap(taken: r["day_swap"]["state"].text == "taken", date: r["day_swap"]["date"].text, kind: r["day_swap"]["kind"].text, title: r["day_swap"]["title"].text,
+                                                     why: r["day_swap"]["why"].str, reason: r["day_swap"]["reason"].str, choices: dayChoices(r["day_swap"]["choices"])) : nil,
+        choices: r["day_choices"].object != nil ? DayChoices(date: r["day_choices"]["date"].text, kind: r["day_choices"]["kind"].text, title: r["day_choices"]["title"].text, choices: dayChoices(r["day_choices"]["choices"]),
+                                                             reason: r["day_choices"]["reason"].str, lead: r["day_choices"]["stance"]["lead"].str ?? "either", line: r["day_choices"]["stance"]["line"].str) : nil
     )
 }
+
+/// One way to change today's run: `to` swim, ride, treadmill, short, move, nudge or run (anyway);
+/// a swim's, ride's or short run's minutes; the day it moves to.
+struct DayChoice: Identifiable {
+    let to: String
+    let minutes: Int?
+    let day: String?
+    var id: String { to }
+}
+
+/// Today's change: taken (with Undo) or suggested; the planned session; what the day is like then
+/// ("Icy at 07:00") and why that matters to you; the choices in your order.
+struct DaySwap {
+    let taken: Bool
+    let date: String
+    let kind: String
+    let title: String
+    let why: String?
+    let reason: String?
+    let choices: [DayChoice]
+}
+
+/// Different plan today?: the choices in your order, what's learned in a line, and the stance's
+/// line (lead with the run, or ease off).
+struct DayChoices {
+    let date: String
+    let kind: String
+    let title: String
+    let choices: [DayChoice]
+    let reason: String?
+    let lead: String
+    let line: String?
+}
+
+private func dayChoices(_ a: J) -> [DayChoice] { a.array.map { DayChoice(to: $0["to"].text, minutes: $0["minutes"].int, day: $0["day"].str) } }
 
 /// This morning's body as the watch measured it: resting heart rate against your usual, last night, oxygen.
 struct Vitals {
@@ -418,7 +463,7 @@ func clock(_ s: Int) -> String {
     return h > 0 ? "\(h):\(String(format: "%02d", m)):\(String(format: "%02d", sec))" : "\(m):\(String(format: "%02d", sec))"
 }
 
-let KIND_LABEL = ["easy": "Easy", "long": "Long", "tempo": "Tempo", "intervals": "Intervals", "hills": "Hills", "recovery": "Recovery", "race": "Race", "strength": "Strength", "cross": "Cross-training", "rest": "Rest"]
+let KIND_LABEL = ["easy": "Easy", "long": "Long", "tempo": "Tempo", "intervals": "Intervals", "hills": "Hills", "recovery": "Recovery", "race": "Race", "strength": "Strength", "cross": "Cross-training", "swim": "Swim", "ride": "Ride", "rest": "Rest"]
 
 /** The session's kind as a word, unless its name already says it. */
 func kindWord(_ kind: String, _ title: String) -> String? {

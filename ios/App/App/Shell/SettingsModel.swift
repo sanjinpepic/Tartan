@@ -12,7 +12,7 @@ final class SettingsModel {
 
     struct Goals { var weeklyKm: Double?; var weeklyWorkouts: Int?; var longRunKm: Double?; var raceKm: Double?; var raceName: String?; var raceDate: String?; var raceTarget: Int? }
     struct Profile { let maxHr: Int; let restHr: Int; let maxSource: String; let sex: String?; let fromWatch: Bool; let canUseWatch: Bool }
-    struct Times { let weekday: String; let weekend: String; let days: [String: String]; let remind: Bool; let before: Int; let after: Bool; let morning: Bool; let morningAt: String; let review: Bool; let runNote: Bool; let calendar: Bool; let calendarId: String?; let calendarName: String?; let next: String?; let anySlots: Bool }
+    struct Times { let weekday: String; let weekend: String; let days: [String: String]; let remind: Bool; let before: Int; let after: Bool; let morning: Bool; let morningAt: String; let review: Bool; let runNote: Bool; let calendar: Bool; let calendarId: String?; let calendarName: String?; let next: String?; let anySlots: Bool; var badWeather = "run"; var avoid: [String] = []; var coldBelow = 0 }
     struct Note: Identifiable { let id: String; let text: String; let kind: String }
     struct CoachInfo { let provider: String; let model: String; let ready: Bool }
 
@@ -118,7 +118,7 @@ final class SettingsModel {
         return Times(weekday: p["weekday"].text, weekend: p["weekend"].text, days: days, remind: r["on"].bool, before: r["before_min"].int ?? 30, after: r.has("after") ? r["after"].bool : true,
                      morning: n.has("morning") ? n["morning"].bool : true, morningAt: n["morning_at"].str ?? "07:30", review: n.has("review") ? n["review"].bool : true,
                      runNote: n.has("run") ? n["run"].bool : true, calendar: c["on"].bool, calendarId: c["calendar_id"].str, calendarName: c["calendar_name"].str, next: next,
-                     anySlots: !v["slots"].array.isEmpty)
+                     anySlots: !v["slots"].array.isEmpty, badWeather: p["bad_weather"].str ?? "run", avoid: p["avoid"].strings, coldBelow: p["cold_below"].int ?? 0)
     }
 
     /** Save, then read again and say `ok` (nil: say nothing); on failure, say why. */

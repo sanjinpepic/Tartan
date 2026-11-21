@@ -21,6 +21,10 @@ data class Check(
     val level: String, val reasons: List<String>,
     val sessionTitle: String?, val sessionKind: String?, val sessionDone: Boolean,
     val swappedFrom: String?, val swapKind: String?, val suggestSwap: Boolean,
+    /** Today's change (src/day-swap.ts): suggested in the session card with its reason, or taken (with Undo). */
+    val swap: DaySwap? = null,
+    /** The ways to change today's session when you ask (Different plan today?). */
+    val choices: DayChoices? = null,
 ) {
     /** "Ready for today." / "Go easy today." / "Rest or go very easy today." */
     val verdict get() = when (level) { "ready" -> str(R.string.today_ready_for_today); "rest" -> str(R.string.today_rest_or_go_very_easy_today); else -> str(R.string.today_go_easy_today) }
@@ -28,6 +32,20 @@ data class Check(
     /** Every question asked is answered: legs, and sleep when the watch didn't measure the night. */
     val complete get() = legs != null && (measured || sleep != null)
 }
+
+/** One way to change today's run: `to` swim, ride, treadmill, short, move, nudge or run (anyway); a swim's, ride's or short run's minutes; the day it moves to. */
+data class DayChoice(val to: String, val minutes: Int?, val day: String?)
+
+/**
+ * Today's change: `taken` (with Undo) or suggested; the planned session (date, kind, title); what
+ * the day is like then ("Icy at 07:00") and why that matters to you; the choices in your order.
+ */
+data class DaySwap(val taken: Boolean, val date: String, val kind: String, val title: String, val why: String?, val reason: String?, val choices: List<DayChoice>)
+
+/** Different plan today?: the choices in your order, what's learned in a line, and the stance's line (lead with the run, or ease off). */
+data class DayChoices(val date: String, val kind: String, val title: String, val choices: List<DayChoice>, val reason: String?, val lead: String, val line: String?)
+
+private fun choicesOf(a: JSONArray?): List<DayChoice> = a.each { DayChoice(it.optString("to"), it.dbl("minutes")?.toInt(), it.text("day")) }
 
 /** This morning's body as the watch measured it: resting heart rate against your usual, last night, oxygen. */
 data class Vitals(val rest: Int?, val restDiff: Int?, val sleepMin: Double?, val oxygen: Double?)
@@ -59,6 +77,13 @@ fun parseCheck(json: String): Check {
         c != null, r.has("sleep_measured") && !r.isNull("sleep_measured"),
         v.optString("level", "ready"), v.optJSONArray("reasons").strings(),
         s?.text("title"), s?.text("kind"), s?.optBoolean("done") ?: false, s?.text("swapped_from"), s?.text("swap_kind"), r.optBoolean("suggest_swap"),
+        r.optJSONObject("day_swap")?.let { w ->
+            DaySwap(w.optString("state") == "taken", w.optString("date"), w.optString("kind"), w.optString("title"), w.text("why"), w.text("reason"), choicesOf(w.optJSONArray("choices")))
+        },
+        r.optJSONObject("day_choices")?.let { c ->
+            val st = c.optJSONObject("stance")
+            DayChoices(c.optString("date"), c.optString("kind"), c.optString("title"), choicesOf(c.optJSONArray("choices")), c.text("reason"), st?.text("lead") ?: "either", st?.text("line"))
+        },
     )
 }
 
@@ -174,6 +199,43 @@ class TodayModel(private val scope: CoroutineScope, private val api: SettingsApi
         val b = JSONObject().put("date", c.date)
         if (undo) b.put("kind", c.swapKind).put("undo", true) else b.put("kind", c.sessionKind).put("reason", c.reasons.joinToString(", ").ifEmpty { str(R.string.today_a_hard_day) })
         send("/api/plan/swap", "POST", b, changed)
+    }
+
+    /** The nudge asked for on Today's session (null until it comes), and whether it's coming. */
+    var nudge by mutableStateOf<String?>(null)
+    var nudging by mutableStateOf(false)
+
+    /**
+     * Change today's session: a choice from the card (what it suggested, with its reason) or from
+     * Different plan today? (a swim, a ride, the treadmill, a shorter run, another day), or Run
+     * anyway. Every change undoes with one tap (undoChange).
+     */
+    fun change(c: DayChoice, fromCard: Boolean, changed: () -> Unit = {}) {
+        val ch = check ?: return
+        val (date, kind) = (if (fromCard) ch.swap?.let { it.date to it.kind } else ch.choices?.let { it.date to it.kind }) ?: return
+        val b = JSONObject().put("date", date).put("kind", kind)
+        val why = if (fromCard) ch.swap?.why?.replaceFirstChar { it.lowercase() } ?: "the weather" else "not feeling it"
+        if (c.to == "run") b.put("to", "keep").put("reason", "ran anyway") else { b.put("to", c.to).put("reason", why); c.day?.let { b.put("day", it) } }
+        send("/api/plan/swap", "POST", b, changed)
+    }
+
+    /** Take today's change back. */
+    fun undoChange(changed: () -> Unit = {}) {
+        val s = check?.swap?.takeIf { it.taken } ?: return
+        send("/api/plan/swap", "POST", JSONObject().put("date", s.date).put("kind", s.kind).put("undo", true), changed)
+    }
+
+    /** A few words from your own data (the coach's, with a cloud key; Tartan's otherwise). */
+    fun askNudge() {
+        if (nudging) return
+        nudging = true
+        scope.launch {
+            val (st, text) = api.send("/api/today/nudge", "POST", "{}")
+            val o = runCatching { JSONObject(text) }.getOrNull()
+            nudge = if (st in 200..299) o?.text("text") else null
+            if (nudge == null) said = str(R.string.common_couldnt_save, o?.text("error") ?: str(R.string.common_didnt_go_through_status, st))
+            nudging = false
+        }
     }
 
     private fun send(path: String, method: String, body: JSONObject, changed: () -> Unit) {

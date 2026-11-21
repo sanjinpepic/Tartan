@@ -90,7 +90,7 @@ interface CoachActions {
     suspend fun planOut(op: String): JSONObject? = null
 }
 
-/** A session kind's colour, as `.k-*` on the web: easy green, long blue, tempo orange, hard brick, strength grey. */
+/** A session kind's colour, as `.k-*` on the web: easy green, long blue, tempo orange, hard brick; strength, swims and rides grey. */
 @Composable
 fun kindColour(kind: String): Color {
     val d = LocalData.current
@@ -103,6 +103,9 @@ fun kindColour(kind: String): Color {
         else -> if (dark) Color(0xFF8F8280) else Color(0xFF9A8B88)
     }
 }
+
+/** A session kind's icon: strength a bolt, a swim and a ride their own, the rest a run. */
+fun kindGlyph(kind: String): String = when (kind) { "strength" -> "bolt"; "swim" -> "swim"; "ride" -> "ride"; else -> "run" }
 
 private fun Color.luminance() = 0.2126f * red + 0.7152f * green + 0.0722f * blue
 
@@ -153,8 +156,8 @@ fun CoachScreen(coach: Coach?, actions: CoachActions, weeklySeen: String? = null
                 Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { LoadingIndicator(Modifier.size(64.dp)) }
                 return@Column
             }
-            // No plan yet: making one.
-            if (p == null) { NoPlan(coach, maker, setup, actions); return@Column }
+            // No plan yet, or the last one has ended (and nothing new is waiting): making one.
+            if (p == null || (coach.ended && coach.proposal == null)) { NoPlan(coach, maker, setup, actions); return@Column }
             var i = 0
             val current = coach.weeks.firstOrNull { it.time == "current" }
             val later = coach.weeks.filter { it.time == "future" }

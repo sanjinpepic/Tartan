@@ -17,6 +17,8 @@ struct Coach {
     let ill: String?
     /** No plan yet: what the first plan's questions ask, and what the coach already knows. */
     var intake: Intake? = nil
+    /** The plan's last day has gone: Coach asks for the next one, as for the first. */
+    var ended = false
 }
 
 /// The first plan's questions (web/views/plan.ts intakeCard): the answers so far, the last four weeks, the race.
@@ -62,7 +64,7 @@ struct PWeek: Identifiable {
 }
 
 private let CHANGE_WORD = ["added": "New", "removed": "Out", "moved": "Moved", "changed": "Changed", "zones": "Zones", "length": "Length"]
-let FROM = ["chat": "From your conversation", "update": "Your new plan", "weekly": "From the weekly review", "agent": "From an outside agent", "life": "From what you told Tartan"]
+let FROM = ["chat": "From your conversation", "update": "Your new plan", "weekly": "From the weekly review", "agent": "From an outside agent", "life": "From what you told Tartan", "weather": "For the weather ahead"]
 
 private func change(_ c: J) -> Change {
     let type = c["type"].text
@@ -124,7 +126,8 @@ func parseCoach(_ planJson: String, _ statusJson: String?, _ weeklyJson: String?
     let st = J(json: statusJson)
     let ready = st.object == nil ? true : (st.has("ready") ? st["ready"].bool : true)
     var intake: Intake?
-    if plan == nil {
+    let ended = plan != nil && !weeks.contains { $0.time == "current" || $0.time == "future" }
+    if plan == nil || ended {
         let a = v["availability"], rc = v["recent"]
         let upcoming = race["date"].str.flatMap { $0 >= v["today"].text ? $0 : nil }
         intake = Intake(days: a["days_per_week"].int.flatMap { $0 > 0 ? $0 : nil }, hours: a["hours_per_week"].int.flatMap { $0 > 0 ? $0 : nil }, longDay: a["long_run_day"].str,
@@ -132,7 +135,7 @@ func parseCoach(_ planJson: String, _ statusJson: String?, _ weeklyJson: String?
                         workouts: rc["workouts"].int ?? 0, hoursWeek: rc["hours_per_week"].num ?? 0,
                         raceName: upcoming != nil ? race["name"].str : nil, raceKm: upcoming != nil ? race["distance_km"].num : nil, raceDate: upcoming)
     }
-    return Coach(plan: plan, weeks: weeks, today: v["today"].text, goal: goal, proposal: proposal, lastChange: last, weekly: weekly, ready: ready, ill: v["life"]["ill"]["from"].str, intake: intake)
+    return Coach(plan: plan, weeks: weeks, today: v["today"].text, goal: goal, proposal: proposal, lastChange: last, weekly: weekly, ready: ready, ill: v["life"]["ill"]["from"].str, intake: intake, ended: ended)
 }
 
 extension String {

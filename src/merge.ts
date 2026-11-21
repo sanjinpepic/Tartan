@@ -156,6 +156,7 @@ export function mergeActivities(candidates: Candidate[], links: LinkTable = {}):
   });
 
   const out: MergedActivity[] = [];
+  const used = new Set(Object.values(links));
   for (const members of groups.values()) {
     const rank = (s: Source, order: Source[]) => order.indexOf(s);
     members.sort((a, b) => rank(a.source, PRIORITY.default!) - rank(b.source, PRIORITY.default!));
@@ -172,15 +173,26 @@ export function mergeActivities(candidates: Candidate[], links: LinkTable = {}):
     }
     // One time series: the device's own file when it has one, else the Strava streams.
     merged.streams_from = members.find((m) => m.source === "watch" && m.has_streams)?.key ?? members.find((m) => m.has_streams)?.key;
-    merged.id = canonicalId(members, links);
+    merged.id = canonicalId(members, links, used);
     out.push(merged);
   }
   return out.sort((a, b) => b.start - a.start);
 }
 
-function canonicalId(members: Candidate[], links: LinkTable): string {
+/**
+ * The group's id: the one its copies already have, else one from its start time. Two different
+ * workouts can start the same second (two told to the coach for the same day, both at midday):
+ * the second gets a letter after it.
+ */
+function canonicalId(members: Candidate[], links: LinkTable, used: Set<string>): string {
   const known = [...new Set(members.map((m) => links[m.key]).filter((x): x is string => !!x))].sort();
-  const id = known[0] ?? `a${Math.round(Math.min(...members.map((m) => m.start)) / 1000).toString(36)}`;
+  let id = known[0];
+  if (!id) {
+    const base = `a${Math.round(Math.min(...members.map((m) => m.start)) / 1000).toString(36)}`;
+    id = base;
+    for (let n = 0; used.has(id); n++) id = `${base}${String.fromCharCode(98 + (n % 24))}${n >= 24 ? Math.floor(n / 24) : ""}`;
+  }
+  used.add(id);
   for (const m of members) links[m.key] = id;
   return id;
 }

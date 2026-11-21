@@ -56,12 +56,15 @@ struct SessionCard: View {
     let openWorkout: (String) -> Void
     let mark: (() -> Void)?
     let busy: Bool
+    /** Today's change (suggested here, or taken), and the way to the choices on a normal day. */
+    var today: TodayModel? = nil
+    var openChoices: (() -> Void)? = nil
 
     var body: some View {
         let done = s.status == "done"
         Card(action: open, label: "Open \(s.title)") {
             HStack(spacing: 14) {
-                Badge(symbol: done ? "checkmark" : s.kind == "strength" ? "dumbbell.fill" : "figure.run",
+                Badge(symbol: done ? "checkmark" : kindSymbol(s.kind),
                       fill: done ? Brand.goodContainer : Brand.container, ink: done ? Brand.good : Brand.onContainer, size: 52)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(s.title).font(.title3.weight(.semibold))
@@ -99,12 +102,183 @@ struct SessionCard: View {
                     .buttonStyle(.glass)
                     .disabled(busy)
             }
+            // Today's change: suggested here when there's a reason, or taken (with Undo); on a
+            // normal day only a quiet way in.
+            if !done, let today {
+                if let w = today.check?.swap, w.taken {
+                    TakenLine(w: w, today: today)
+                } else if let w = today.check?.swap, w.date == s.date, w.kind == s.kind {
+                    Suggested(w: w, today: today)
+                } else if let openChoices, let c = today.check?.choices, c.date == s.date, c.kind == s.kind {
+                    Button("Different plan today?", action: openChoices)
+                        .font(.subheadline.weight(.medium))
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Brand.tint)
+                }
+            }
         }
     }
 
     private func subtitle(_ done: Bool) -> String {
         let lead = done ? "Done today" : kindWord(s.kind, s.title).map { "Today · \($0)" } ?? "Today"
         return [lead, s.detail].filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+}
+
+/// A session kind's symbol: strength a dumbbell, a swim and a ride their own, the rest a run.
+func kindSymbol(_ kind: String) -> String {
+    switch kind {
+    case "strength": return "dumbbell.fill"
+    case "swim": return "figure.pool.swim"
+    case "ride": return "figure.outdoor.cycle"
+    default: return "figure.run"
+    }
+}
+
+/// The weekday of a date, in full ("Thursday").
+private func fullDay(_ iso: String) -> String {
+    guard let d = dateOf(iso) else { return iso }
+    return d.formatted(.dateTime.weekday(.wide))
+}
+
+/// A choice as a few words: Swim instead, Shorter, 25 min, Move to Thursday, Run anyway.
+func choiceLabel(_ c: DayChoice) -> String {
+    switch c.to {
+    case "swim": return "Swim instead"
+    case "ride": return "Ride instead"
+    case "treadmill": return "Treadmill instead"
+    case "short": return "Shorter, \(c.minutes ?? 20) min"
+    case "move": return "Move to \(fullDay(c.day ?? ""))"
+    case "nudge": return "Give me a nudge"
+    default: return "Run anyway"
+    }
+}
+
+/// The session card's own suggestion, warm and short: what the day is like then and why it
+/// matters to you, then small choices in your order, the first a little stronger, Run anyway
+/// always there.
+private struct Suggested: View {
+    let w: DaySwap
+    let today: TodayModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("\(Text(w.why.map { "\($0). " } ?? "").fontWeight(.semibold))\(w.reason ?? "")")
+                .font(.subheadline)
+            FlowLayout(spacing: 8) {
+                ForEach(Array(w.choices.enumerated()), id: \.offset) { i, c in
+                    if i == 0 {
+                        Button(choiceLabel(c)) { today.change(c, fromCard: true) }.buttonStyle(.glassProminent)
+                    } else {
+                        Button(choiceLabel(c)) { today.change(c, fromCard: true) }.buttonStyle(.glass)
+                    }
+                }
+            }
+            .font(.subheadline.weight(.semibold))
+            .disabled(today.busy)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Brand.container.opacity(0.6), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+/// A change taken today, in a line, with Undo.
+private struct TakenLine: View {
+    let w: DaySwap
+    let today: TodayModel
+
+    var body: some View {
+        HStack {
+            Text(line).font(.subheadline).foregroundStyle(.secondary)
+            Spacer(minLength: 8)
+            Button("Undo") { today.undoChange() }.font(.subheadline.weight(.semibold)).disabled(today.busy)
+        }
+    }
+
+    private var line: String {
+        let c = w.choices.first
+        switch c?.to {
+        case "swim": return "A \(c?.minutes ?? 0) min swim instead of \(w.title) today."
+        case "ride": return "A \(c?.minutes ?? 0) min ride instead of \(w.title) today."
+        case "treadmill": return "\(w.title) on the treadmill today."
+        case "short": return "\(w.title) cut to \(c?.minutes ?? 0) easy minutes today."
+        default: return "\(w.title) moved to \(fullDay(c?.day ?? ""))."
+        }
+    }
+}
+
+/// Different plan today? (asked from the session): no guilt, a few ways to go in your order, the
+/// stance's line when it leads with the run or eases off, what's learned in a line. A nudge shows
+/// its words here; a change closes the sheet and shows in the session with Undo.
+struct DayChoicesSheet: View {
+    let c: DayChoices
+    let today: TodayModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(c.line ?? "No guilt either way. A few ways to go:").font(.subheadline).foregroundStyle(.secondary)
+                    if let r = c.reason { Text(r).font(.footnote).foregroundStyle(.secondary) }
+                    ForEach(c.choices) { ch in
+                        Button {
+                            if ch.to == "nudge" { today.askNudge() } else { today.change(ch, fromCard: false); dismiss() }
+                        } label: {
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: symbol(ch)).foregroundStyle(Brand.tint).frame(width: 24)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(title(ch)).font(.headline)
+                                    Text(sub(ch)).font(.subheadline).foregroundStyle(ch.to == "nudge" && today.nudge != nil ? .primary : .secondary)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                Spacer(minLength: 0)
+                            }
+                            .padding(16)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Brand.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        }
+                        .buttonStyle(Press())
+                    }
+                }
+                .padding(16)
+            }
+            .background(Brand.ground)
+            .navigationTitle("Different plan today?")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { dismiss() } label: { Image(systemName: "xmark") }.accessibilityLabel("Close") } }
+        }
+        .presentationDetents([.medium, .large])
+        .onDisappear { today.nudge = nil }
+    }
+
+    private func symbol(_ ch: DayChoice) -> String {
+        switch ch.to {
+        case "nudge": return "sparkles"
+        case "swim": return "figure.pool.swim"
+        case "ride": return "figure.outdoor.cycle"
+        case "move": return "calendar"
+        default: return "figure.run"
+        }
+    }
+
+    private func title(_ ch: DayChoice) -> String {
+        switch ch.to {
+        case "short": return "A shorter version"
+        case "move": return "Move it"
+        default: return choiceLabel(ch)
+        }
+    }
+
+    private func sub(_ ch: DayChoice) -> String {
+        switch ch.to {
+        case "nudge": return today.nudge ?? (today.nudging ? "…" : "A few words from your own data.")
+        case "swim", "ride": return "About \(ch.minutes ?? 0) min easy, the same aerobic work."
+        case "treadmill": return "The same session, out of the weather."
+        case "short": return "\(ch.minutes ?? 20) min easy. You can stop after 10."
+        default: return "To \(fullDay(ch.day ?? "")), the next free day."
+        }
     }
 }
 
@@ -128,14 +302,16 @@ struct RestDayCard: View {
 
 /// No plan yet: Tartan's own rules make one from the workouts it has, no key needed. Make my plan
 /// opens Coach's few questions (each with Not sure), then the plan is there.
+/// `ended`: there was a plan and its last day has gone: Make the next one.
 struct NoPlanCard: View {
+    var ended = false
     let make: () -> Void
 
     var body: some View {
-        Card(action: make, label: "Make my plan") {
-            CardTitle(text: "No plan yet")
-            Text("Tartan makes one from the workouts it has, by its own rules: a few quick questions, no key needed.").font(.subheadline).foregroundStyle(.secondary)
-            Button { make() } label: { Label("Make my plan", systemImage: "sparkles").font(.subheadline.weight(.semibold)) }
+        Card(action: make, label: ended ? "Make the next one" : "Make my plan") {
+            CardTitle(text: ended ? "Your plan has ended" : "No plan yet")
+            Text(ended ? "Tartan makes the next one from where you are now, by its own rules: a few quick questions, no key needed." : "Tartan makes one from the workouts it has, by its own rules: a few quick questions, no key needed.").font(.subheadline).foregroundStyle(.secondary)
+            Button { make() } label: { Label(ended ? "Make the next one" : "Make my plan", systemImage: "sparkles").font(.subheadline.weight(.semibold)) }
                 .buttonStyle(.glassProminent)
         }
     }
@@ -1063,5 +1239,47 @@ struct NoteCard: View {
                 }
             }
         }
+    }
+}
+
+/// Small buttons in a row that wrap to the next line when they don't fit (the session's choices).
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = arrange(proposal.width ?? .infinity, subviews)
+        let width = rows.map { r in r.map(\.width).reduce(0, +) + spacing * CGFloat(max(0, r.count - 1)) }.max() ?? 0
+        let height = rows.map { r in r.map(\.height).max() ?? 0 }.reduce(0, +) + spacing * CGFloat(max(0, rows.count - 1))
+        return CGSize(width: min(width, proposal.width ?? width), height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        var i = 0
+        for row in arrange(bounds.width, subviews) {
+            var x = bounds.minX
+            let h = row.map(\.height).max() ?? 0
+            for size in row {
+                subviews[i].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+                x += size.width + spacing
+                i += 1
+            }
+            y += h + spacing
+        }
+    }
+
+    private func arrange(_ width: CGFloat, _ subviews: Subviews) -> [[CGSize]] {
+        var rows: [[CGSize]] = [[]]
+        var x: CGFloat = 0
+        for v in subviews {
+            let s = v.sizeThatFits(.unspecified)
+            if x > 0 && x + s.width > width {
+                rows.append([])
+                x = 0
+            }
+            rows[rows.count - 1].append(s)
+            x += s.width + spacing
+        }
+        return rows
     }
 }

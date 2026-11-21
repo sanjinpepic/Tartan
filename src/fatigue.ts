@@ -220,7 +220,7 @@ export async function loadBody(deps: {
         if (s.status !== "done" || s.kind === "rest") continue;
         if (s.activity) planned.set(s.activity.id, s);
         // Ticked off without a recording: the session as planned, late afternoon that day.
-        else if (s.manual) ticked.push({ start: new Date(`${d.date}T17:00:00`).toISOString(), sport: s.kind === "strength" ? "strength" : s.kind === "cross" ? "workout" : "run", title: s.title, minutes: s.duration_min ?? 30, kind: s.kind, exercises: s.exercises });
+        else if (s.manual) ticked.push({ start: new Date(`${d.date}T17:00:00`).toISOString(), sport: s.kind === "strength" ? "strength" : s.kind === "cross" ? "workout" : s.kind === "swim" ? "swim" : s.kind === "ride" ? "ride" : "run", title: s.title, minutes: s.duration_min ?? 30, kind: s.kind, exercises: s.exercises });
       }
   const workouts: Workout[] = rows.map((r) => {
     const s = planned.get(r.id);

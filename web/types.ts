@@ -52,7 +52,7 @@ export interface Availability {
   notes?: string;
 }
 
-export type SessionKind = "easy" | "long" | "tempo" | "intervals" | "hills" | "recovery" | "race" | "strength" | "cross" | "rest";
+export type SessionKind = "easy" | "long" | "tempo" | "intervals" | "hills" | "recovery" | "race" | "strength" | "cross" | "swim" | "ride" | "rest";
 type Brief = Pick<Activity, "id" | "name" | "sport" | "distance_km" | "moving_min">;
 export interface PlanSession {
   date: string;

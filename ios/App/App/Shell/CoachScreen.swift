@@ -15,7 +15,10 @@ struct CoachScreen: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    if let c = coach.data, let p = c.plan {
+                    // No plan yet, or the last one has ended (and nothing new is waiting): making one.
+                    if let c = coach.data, c.intake != nil, c.plan == nil || (c.ended && c.proposal == nil) {
+                        NoPlanView(shell: shell, coach: c, maker: coach.maker)
+                    } else if let c = coach.data, let p = c.plan {
                         Text("Plan updated \(ago(p.updated)) · \(c.weeks.count) week\(c.weeks.count == 1 ? "" : "s")")
                             .font(.subheadline.weight(.medium)).foregroundStyle(.secondary).padding(.horizontal, 4)
                         content(c, p)

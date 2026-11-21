@@ -119,6 +119,8 @@ private let TOOLS: [(String, String)] = [
     ("get_training_plan", "The plan, each session done, missed or ahead."),
     ("save_training_plan", "Write or change the plan the app shows."),
     ("mark_plan_session", "Tick a session off by hand."),
+    ("swap_plan_session", "Change a run on the day: a swim, a ride, the treadmill, shorter or another day."),
+    ("get_habits", "What puts you off, and what you usually do on days like it."),
     ("log_workout / remove_logged_workout", "Log a workout nothing recorded, or take it back."),
     ("set_training_availability", "Days, hours and long-run day you have."),
     ("get_training_times / set_training_times", "When you usually train; reminders and calendar follow."),

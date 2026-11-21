@@ -10,12 +10,14 @@ import { bodySigns, Health } from "./health.ts";
 import { z } from "zod";
 import { Analytics } from "./analytics.ts";
 import { durability } from "./durability.ts";
-import { upcomingWeather, Weather } from "./weather.ts";
+import { forecastSoon, pastSoon, upcomingWeather, Weather } from "./weather.ts";
+import { bodyTags, Habits } from "./habits.ts";
+import { nudgeFacts, nudgeLines } from "./nudge.ts";
 import type { Library } from "./library.ts";
 import { planInput, Plans, SESSION_KINDS, today, type PlanInput } from "./plan.ts";
 import { LOGGED_SPORTS } from "./logged.ts";
 import { sportFamily } from "./merge.ts";
-import { DAY_KEYS, readPrefs, savePrefs, slots, toIcs } from "./schedule.ts";
+import { AVOID, BAD_WEATHER, DAY_KEYS, readPrefs, savePrefs, slots, toIcs } from "./schedule.ts";
 import { Routes, toGpx, type LngLat } from "./routes.ts";
 import { Faces } from "./faces.ts";
 import { Memory, NOTE_KINDS, MAX_TEXT } from "./memory.ts";
@@ -61,6 +63,13 @@ export function dataTools(lib: Library, opts: DataToolOptions = {}): DataTool[] 
   const analytics = new Analytics(lib);
   const plans = new Plans(lib);
   const checkins = new CheckIns(lib.disk);
+  const habits = new Habits(lib.disk);
+  const raceDays = async () => {
+    const d = (await analytics.goals()).race?.date;
+    const n = d ? Math.round((Date.parse(`${d}T12:00:00Z`) - Date.parse(`${today()}T12:00:00Z`)) / 86400_000) : -1;
+    return n >= 0 ? n : null;
+  };
+  const readyNow = () => todayReadiness({ plans, load: () => analytics.load(60), checkins, body, feelings: () => recentFeelings(lib), prefs: () => readPrefs(lib.disk), habits, forecast: () => forecastSoon(new Weather(lib)), past: () => pastSoon(new Weather(lib)), raceDays });
   const health = new Health(lib.disk);
   const body = async () => bodySigns(await health.view());
   const routes = new Routes(lib.disk);
@@ -173,7 +182,7 @@ export function dataTools(lib: Library, opts: DataToolOptions = {}): DataTool[] 
 
     tool(
       "get_weather",
-      "The forecast at each planned session in the next week, at the athlete's training times, where they run (the start of their latest GPS workout, to about a kilometre): temperature, dew point, chance of rain, wind, and heat as temperature plus dew point in °F with the pace to give up for the same effort (Hadley's table; past 180 °F, no hard running), plus a cooler hour that day when heat costs 2% or more. Use it to move or soften hard sessions on hot days. From Open-Meteo.",
+      "The forecast at each planned session in the next week, at the athlete's training times, where they run (the start of their latest GPS workout, to about a kilometre): temperature, dew point, chance of rain, wind, and heat as temperature plus dew point in °F with the pace to give up for the same effort (Hadley's table; past 180 °F, no hard running), plus a cooler hour that day when heat costs 2% or more. Use it to move or soften hard sessions on hot days. With `bad_weather`, the athlete's choice for a rough day (swim, ride, treadmill, or run anyway). From Open-Meteo.",
       {},
       () => upcomingWeather(lib),
     ),
@@ -194,9 +203,9 @@ export function dataTools(lib: Library, opts: DataToolOptions = {}): DataTool[] 
 
     tool(
       "get_goals",
-      "The athlete's own targets (weekly distance and workouts, long run, a race with distance, date and target time, and `availability`: training days and hours a week they have, preferred long-run day, notes) and progress: this week so far, weeks the target was met (of the last 12), the longest recent run, and the race (the targets' while it's ahead, else the training plan's next race session): days to go, a predicted finish time from the last 12 weeks' runs, and from 12 weeks out `countdown`: how the prediction moved over the last 4 weeks, the gap to the target, and the taper in the last two weeks.",
+      "The athlete's own targets (weekly distance and workouts, long run, a race with distance, date and target time, and `availability`: training days and hours a week they have, preferred long-run day, notes; `bad_weather`: what they'd rather do than run in bad weather, swim, ride, treadmill or run, their setting) and progress: this week so far, weeks the target was met (of the last 12), the longest recent run, and the race (the targets' while it's ahead, else the training plan's next race session): days to go, a predicted finish time from the last 12 weeks' runs, and from 12 weeks out `countdown`: how the prediction moved over the last 4 weeks, the gap to the target, and the taper in the last two weeks.",
       {},
-      () => analytics.goalProgress(),
+      async () => ({ ...(await analytics.goalProgress()), bad_weather: (await readPrefs(lib.disk)).bad_weather }),
     ),
 
     tool(
@@ -208,9 +217,21 @@ export function dataTools(lib: Library, opts: DataToolOptions = {}): DataTool[] 
 
     tool(
       "get_readiness",
-      "Today's readiness: the athlete's morning check-in (legs 1 heavy to 3 fresh; sleep 1-3 only when the watch didn't measure the night; pain with where and 1 a niggle, 2 sore, 3 painful), the niggles they reported in the last three weeks, their form (fitness minus fatigue), last night's sleep, resting heart rate and HRV against their usual when measured, the verdict (ready, go easy, rest) with its reasons, and today's session (hard or not, done, or swapped for an easy run on a bad day). Plan around niggles: a recurring one means less load on it, not more.",
+      "Today's readiness: the athlete's morning check-in (legs 1 heavy to 3 fresh; sleep 1-3 only when the watch didn't measure the night; pain with where and 1 a niggle, 2 sore, 3 painful), the niggles they reported in the last three weeks, their form (fitness minus fatigue), last night's sleep, resting heart rate and HRV against their usual when measured, the verdict (ready, go easy, rest) with its reasons, and today's session (hard or not, done, or swapped for an easy run on a bad day), plus `day_choices` (the ways to change today's session, in the athlete's order, with `stance`: lead with the run or ease off, and why) and `day_swap` (the change Today suggests in the session card, with its reason, or the one they took). Plan around niggles: a recurring one means less load on it, not more.",
       {},
-      () => todayReadiness({ plans, load: () => analytics.load(60), checkins, body, feelings: () => recentFeelings(lib) }),
+      () => readyNow(),
+    ),
+
+    tool(
+      "get_habits",
+      "What Tartan has learned about the athlete's days, plainly: what puts them off (their setting, `avoid`, and `bad_weather`, their usual swap), each condition's tendency (ice, rain, wind, cold, heat, dark, heavy legs, go-easy mornings: days like it, how many runs they changed, and `strong` once there's enough evidence), the strong ones in words, and today: the ways to change today's session in their order with the stance (lead with the run on a key session or after two changes in ten days; ease off with a niggle, a go-easy morning or a dislike in the forecast) and a nudge from their data in Tartan's words. Use it when they aren't feeling it: give a short pep from it in your own words (no guilt, no exclamation marks), offer the choices, and change the plan with swap_plan_session only when they pick one.",
+      {},
+      async () => {
+        const [r, prefs, view, answers, goals] = await Promise.all([readyNow(), readPrefs(lib.disk), plans.view(), habits.answers(), analytics.goals()]);
+        const c = r.day_choices;
+        const nudge = c ? nudgeLines(await nudgeFacts({ lib, view, session: c, answers, race: goals.race, stance: c.stance })).text : null;
+        return { avoid: prefs.avoid, cold_below: prefs.cold_below, bad_weather: prefs.bad_weather, tendencies: r.habits?.tendencies ?? [], learned: r.habits?.lines ?? [], today: c ? { ...c, nudge } : null, suggested: r.day_swap };
+      },
     ),
 
     tool(
@@ -287,8 +308,39 @@ export function dataTools(lib: Library, opts: DataToolOptions = {}): DataTool[] 
     },
     {
       ...tool(
+        "swap_plan_session",
+        "Change a planned run on the day, when the athlete picks it (\"swap today's run for a swim\", \"a shorter one then\", \"can I do the intervals tomorrow?\"): swim or ride, an easy, long or recovery run as an easy swim or ride of about the same time (a swim an hour at most), never a hard session; treadmill, the same run on the treadmill; short, a short easy run of 20-25 min (\"you can stop after 10\"); move, to a later free day in the plan (`day`, get_habits today.choices has the next free one); easy, a hard session as an easy run on a bad day. undo takes it back. It shows on the Coach tab and Today at once, goes to the watch with the week, and what they picked is kept for what Tartan learns. Running is the core: change only what the athlete chose, and never fill the plan with cross-training.",
+        {
+          date: z.string().describe("the planned session's date, YYYY-MM-DD"),
+          kind: z.enum(SESSION_KINDS).describe("its kind as planned, as in get_training_plan (swap_kind once swapped)"),
+          to: z.enum(["swim", "ride", "treadmill", "short", "move", "easy"]).optional().describe("default easy"),
+          day: z.string().optional().describe("move: the day it goes to, YYYY-MM-DD, later and free in the plan"),
+          reason: z.string().max(120).optional().describe("in a few words, shown with the session, e.g. 'the weather'"),
+          undo: z.boolean().optional(),
+        },
+        async (a) => {
+          try {
+            await plans.swap(a.date, a.kind, a.reason ?? (a.to && a.to !== "easy" ? "not feeling it" : "a hard day"), a.undo === true, a.to ?? "easy", a.day);
+          } catch (e) {
+            return { error: (e as Error).message };
+          }
+          if (a.undo) await habits.undo(a.date, a.kind);
+          else if (a.to && a.to !== "easy") {
+            const c = await checkins.get(a.date);
+            await habits.answer(a.date, a.kind, bodyTags(c, null), a.to);
+          }
+          const v = await plans.view();
+          const s = v.weeks.flatMap((w) => w.days).flatMap((d) => d.sessions.map((x) => ({ ...x, on: d.date }))).find((x) => (x.swap_kind === a.kind && (x.moved_from ?? x.on) === a.date) || (x.kind === a.kind && x.on === a.date));
+          return { ok: true, ...(s ? { session: { date: s.on, kind: s.kind, title: s.title, duration_min: s.duration_min, notes: s.notes } } : {}) };
+        },
+        false,
+      ),
+      local: true,
+    },
+    {
+      ...tool(
         "log_workout",
-        "Log a workout the athlete tells you about that nothing recorded (\"I swam 25x25m today\", \"did 40 min on the bike\", \"ran 5 k, left the watch at home\"). It's saved as a workout of its own: it shows in their activities, fills that day's planned session of its kind (a swim or ride fills cross training, a gym session strength, a run a run) and counts in their load. Work out what you can from their words (25 lengths of 25 m is 625 m) and log it at once, without questions: with no time or distance it still ticks the day off (it just can't count in the load; a passing word that the time would help is enough, never a question). Not for a workout already recorded that day (it says so). Say in a few words what you logged.",
+        "Log a workout the athlete tells you about that nothing recorded (\"I swam 25x25m today\", \"did 40 min on the bike\", \"ran 5 k, left the watch at home\"). It's saved as a workout of its own: it shows in their activities, fills that day's planned session of its kind (a swim fills a planned swim, a ride a planned ride, else either fills cross training; a gym session strength, a run a run) and counts in their load. Work out what you can from their words (25 lengths of 25 m is 625 m) and log it at once, without questions: with no time or distance it still ticks the day off (it just can't count in the load; a passing word that the time would help is enough, never a question). Not for a workout already recorded that day (it says so). Say in a few words what you logged.",
         {
           sport: z.enum(LOGGED_SPORTS).describe("WeightTraining for the gym, Workout for anything else"),
           date: z.string().optional().describe("YYYY-MM-DD, default today; not in the future"),
@@ -408,22 +460,25 @@ export function dataTools(lib: Library, opts: DataToolOptions = {}): DataTool[] 
       { limit: z.number().int().min(1).max(100).optional().describe("sessions to list, default 14") },
       async (a) => {
         const [prefs, v] = await Promise.all([readPrefs(lib.disk), plans.view()]);
-        return { weekday: prefs.weekday, weekend: prefs.weekend, days: prefs.days ?? {}, reminders: prefs.remind, upcoming: slots(v.weeks, prefs, v.today).slice(0, a.limit ?? 14) };
+        return { weekday: prefs.weekday, weekend: prefs.weekend, days: prefs.days ?? {}, reminders: prefs.remind, bad_weather: prefs.bad_weather, avoid: prefs.avoid, cold_below: prefs.cold_below, upcoming: slots(v.weeks, prefs, v.today).slice(0, a.limit ?? 14) };
       },
     ),
     {
       ...tool(
         "set_training_times",
-        "Set when the athlete usually trains, e.g. weekdays 18:00 after work and weekends 09:00; a day can have its own time (an empty string goes back to the weekday or weekend time). Only the fields given change. The app's reminders and calendar events follow.",
+        "Set when the athlete usually trains, e.g. weekdays 18:00 after work and weekends 09:00; a day can have its own time (an empty string goes back to the weekday or weekend time); bad_weather, what they'd rather do than run in bad weather (\"I swim when it pours\"); and avoid, what puts them off (\"I hate running on ice\"). Only the fields given change. The app's reminders and calendar events follow.",
         {
           weekday: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional().describe("HH:MM, Monday to Friday"),
           weekend: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional().describe("HH:MM, Saturday and Sunday"),
           days: z.object(Object.fromEntries(DAY_KEYS.map((d) => [d, z.string().optional()]))).optional().describe('a day with its own time, e.g. {"wed": "12:00"}; "" clears a day'),
+          bad_weather: z.enum(BAD_WEATHER).optional().describe("on a bad-weather day they'd rather: swim, ride, treadmill, or run anyway"),
+          avoid: z.array(z.enum(AVOID)).optional().describe("what puts them off running, the whole list: ice (ice, snow, slippery ground), rain (heavy), wind (strong), cold, heat, dark. Set it from their own words (\"I hate running on ice\"); Today then suggests a change on such days, at once"),
+          cold_below: z.number().int().min(-30).max(15).optional().describe("cold is below this, °C (default 0)"),
         },
         async (a) => {
           const cur = await readPrefs(lib.disk);
-          const p = await savePrefs(lib.disk, { weekday: a.weekday, weekend: a.weekend, ...(a.days ? { days: { ...cur.days, ...(a.days as Record<string, string | undefined>) } } : {}) });
-          return { weekday: p.weekday, weekend: p.weekend, days: p.days ?? {} };
+          const p = await savePrefs(lib.disk, { weekday: a.weekday, weekend: a.weekend, ...(a.days ? { days: { ...cur.days, ...(a.days as Record<string, string | undefined>) } } : {}), ...(a.bad_weather ? { bad_weather: a.bad_weather } : {}), ...(a.avoid ? { avoid: a.avoid } : {}), ...(a.cold_below !== undefined ? { cold_below: a.cold_below } : {}) });
+          return { weekday: p.weekday, weekend: p.weekend, days: p.days ?? {}, bad_weather: p.bad_weather, avoid: p.avoid, cold_below: p.cold_below };
         },
         false,
       ),

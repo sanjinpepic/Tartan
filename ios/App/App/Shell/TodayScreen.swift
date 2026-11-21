@@ -8,6 +8,8 @@ struct TodayScreen: View {
     let shell: ShellModel
     let today: TodayModel
     @State private var raceSheet = false
+    /** Different plan today? (from today's session). */
+    @State private var choicesSheet = false
 
     var body: some View {
         NavigationStack {
@@ -79,12 +81,22 @@ struct TodayScreen: View {
                     RaceWeekSheet(race: race, week: week, today: today)
                 }
             }
+            .sheet(isPresented: $choicesSheet) {
+                if let c = today.check?.choices { DayChoicesSheet(c: c, today: today) }
+            }
+            .task {
+                // Screenshots (Launch): Different plan today? open, once the choices are in.
+                guard Launch.open == "choices" else { return }
+                for _ in 0..<120 where today.check?.choices == nil { try? await Task.sleep(for: .milliseconds(500)) }
+                try? await Task.sleep(for: .seconds(1.5))
+                choicesSheet = today.check?.choices != nil
+            }
         }
     }
 
     @ViewBuilder private var content: some View {
         if let t = today.data {
-            TodayCards(t: t, shell: shell, today: today, openRaceWeek: { raceSheet = true })
+            TodayCards(t: t, shell: shell, today: today, openRaceWeek: { raceSheet = true }, openChoices: { choicesSheet = true })
         } else if today.failed {
             ContentUnavailableView {
                 Label("Today couldn't be read", systemImage: "exclamationmark.triangle")
@@ -110,6 +122,7 @@ struct TodayCards: View {
     let shell: ShellModel
     let today: TodayModel
     let openRaceWeek: () -> Void
+    var openChoices: () -> Void = {}
 
     var body: some View {
         let justIn = t.last?.justIn == true
@@ -129,13 +142,13 @@ struct TodayCards: View {
         }
         ForEach(t.sessions) { s in
             SessionCard(s: s, open: { shell.openSession(date: s.date, kind: s.kind) }, openWorkout: { shell.openActivity($0) },
-                        mark: markFor(s), busy: today.busy)
+                        mark: markFor(s), busy: today.busy, today: today, openChoices: openChoices)
         }
         if t.sessions.isEmpty && t.planOn {
             RestDayCard(next: t.next, open: { n in shell.openSession(date: n.date, kind: n.kind) }, toPlan: { shell.go("coach") })
         } else if !t.planOn {
             // No plan yet: one is a few taps away, by Tartan's own rules (no key needed).
-            NoPlanCard { shell.go("coach") }
+            NoPlanCard(ended: t.planEnded) { shell.go("coach") }
         }
         if let race = t.race, let week = today.raceWeek {
             RaceWeekCard(race: race, week: week, open: openRaceWeek)

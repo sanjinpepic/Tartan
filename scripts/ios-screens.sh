@@ -95,6 +95,10 @@ for look in light dark; do
   shot "$look-12b-intro-sources" sources -TartanIntro 1
   shot "$look-13-intro-coach" coachsetup -TartanIntro 2
   shot "$look-14-face-builder" face -TartanTab face/copy
+  # Today's session suggesting a swim (a rainy week, rain ticked as what puts you off).
+  shot "$look-14b-today-suggested" rain -TartanTab today -TartanRain YES
+  # Different plan today? from today's session (the easy run the shot above put there).
+  shot "$look-14c-today-choices" choices -TartanTab today -TartanOpen choices
   # Last: Coach before its first plan, then a plan just made by Tartan's rules (they clear the
   # plan and make a new one, so they come after every shot that shows it).
   shot "$look-15-coach-noplan" noplan -TartanTab coach -TartanNoPlan YES
