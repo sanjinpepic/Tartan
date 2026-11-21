@@ -42,6 +42,7 @@ export const COACH_PROVIDERS: Record<Provider, { label: string; keyName: string;
     defaultModel: "gemini-3.8-flash",
     models: [
       { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", note: "Best coaching" },
+      { id: "gemini-4-hydrogen", label: "Gemini 4 Hydrogen", note: "Deepest, slower" },
       { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", note: "Fastest, cheapest" },
     ],
   },
@@ -67,6 +68,12 @@ export const TURN = { hubAge: 30_000 };
 /** Plans and weekly reviews on a lighter model chosen for the chat take the provider's best one. */
 export const PLAN_MODEL: Partial<Record<Provider, string>> = { anthropic: "claude-opus-5-5", google: "gemini-3.8-flash" };
 export const LIGHTER = new Set(["claude-sonnet-5-5", "claude-haiku-5-5", "gemini-3.5-flash-lite"]);
+/**
+ * The Gemini model that answers when the chosen one is still busy after the retries: one step
+ * down, so it runs on other servers (Gemini 4 to 3.8 Flash, any other to Flash-Lite).
+ */
+export const geminiBackup = (model: string): string | undefined =>
+  /^gemini-([4-9]|\d{2,})-/.test(model) ? "gemini-3.8-flash" : model === "gemini-3.5-flash-lite" ? undefined : "gemini-3.5-flash-lite";
 export const planModelFor = (p: Provider, chosen: string): string => (LIGHTER.has(chosen) && PLAN_MODEL[p] ? PLAN_MODEL[p]! : chosen);
 /** A model's name as people read it. */
 export const modelLabel = (p: Provider, model: string) => COACH_PROVIDERS[p].models.find((m) => m.id === model)?.label ?? model;

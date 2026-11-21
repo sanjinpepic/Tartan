@@ -7,6 +7,7 @@ const sse = (body: string) => new Response(body, { headers: { "content-type": "t
 /** What each model answers, by call: a list of responses taken in turn. */
 const plans: Record<string, Array<() => Response>> = {};
 const calls: Record<string, number> = {};
+const bodies: string[] = [];
 let server: ReturnType<typeof Bun.serve>;
 
 beforeAll(() => {
@@ -30,9 +31,12 @@ beforeAll(() => {
   plans["minute-limit"] = [limited([{ "@type": "type.googleapis.com/google.rpc.RetryInfo", retryDelay: "0.05s" }]), () => sse(`${chunk("Waited.", "STOP")}\n\n`)];
   const perDay = limited([{ "@type": "type.googleapis.com/google.rpc.QuotaFailure", violations: [{ quotaId: "GenerateRequestsPerDayPerProjectPerModel-FreeTier" }] }, { "@type": "type.googleapis.com/google.rpc.RetryInfo", retryDelay: "0.05s" }]);
   plans["day-limit"] = [perDay, perDay, perDay];
+  // A model that refuses the thinking level sent: asked again at its own default.
+  plans["gemini-3-no-level"] = [() => Response.json({ error: { code: 400, message: "Thinking level LOW is not supported for this model.", status: "INVALID_ARGUMENT" } }, { status: 400 }), () => sse(`${chunk("Own pace.", "STOP")}\n\n`)];
   server = Bun.serve({
     port: 0,
-    fetch(req) {
+    async fetch(req) {
+      bodies.push(await req.text());
       const model = /models\/([^:]+):/.exec(new URL(req.url).pathname)?.[1] ?? "";
       const n = (calls[model] = (calls[model] ?? 0) + 1);
       return plans[model]![n - 1]!();
@@ -99,4 +103,15 @@ test("a stream cut after words keeps them and says it was cut", async () => {
   const r = await turn("cut-late");
   expect(r).toMatchObject({ text: "Half an ", stop: "CUT" });
   expect(r.contents.at(-1)).toEqual({ role: "model", parts: [{ text: "Half an " }] });
+});
+
+test("a model that refuses the thinking level answers at its own default", async () => {
+  bodies.length = 0;
+  expect(await turn("gemini-3-no-level", { thinking: "low" })).toMatchObject({ text: "Own pace.", stop: "STOP" });
+  expect(bodies.map((b) => JSON.parse(b).generationConfig?.thinkingConfig)).toEqual([{ thinkingLevel: "LOW", includeThoughts: true }, undefined]);
+});
+
+test("the backup is one step down: Gemini 4 to 3.8 Flash, any other to Flash-Lite", async () => {
+  const { geminiBackup } = await import("../src/coach/settings.ts");
+  expect([geminiBackup("gemini-4-hydrogen"), geminiBackup("gemini-3.8-flash"), geminiBackup("gemini-3.5-flash-lite")]).toEqual(["gemini-3.8-flash", "gemini-3.5-flash-lite", undefined]);
 });

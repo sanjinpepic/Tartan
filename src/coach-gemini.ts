@@ -42,8 +42,6 @@ export interface GeminiOptions {
 
 /** Google's busy, timeout and gateway answers: worth a few more tries before saying so. */
 const BUSY = [408, 500, 502, 503, 504];
-/** The lighter model asked when the chosen one stays busy. */
-export const GEMINI_FALLBACK = "gemini-3.5-flash-lite";
 
 export function geminiClient(apiKey: string, baseUrl?: string, retryDelay = 1, onBusy?: () => void): GoogleGenAI {
   return new GoogleGenAI({
@@ -123,6 +121,8 @@ export async function* geminiTurn(contents: Content[], o: GeminiOptions): AsyncG
   let retried = false;
   let model = o.model;
   let busyError: ApiError | null = null;
+  let level: "low" | "medium" | "high" | null = null;
+  let noLevel = false;
   let saidAny = false;
   const stall = o.stall ?? { first: 90, between: 60 };
   for (let round = 0; round < o.maxRounds; round++) {
@@ -138,7 +138,7 @@ export async function* geminiTurn(contents: Content[], o: GeminiOptions): AsyncG
     };
     wait(stall.first);
     try {
-      const level = o.thinking && thinksInLevels(model) ? o.thinking : null;
+      level = o.thinking && thinksInLevels(model) && !noLevel ? o.thinking : null;
       const stream = await ai.models.generateContentStream({
         model,
         contents,
@@ -171,6 +171,12 @@ export async function* geminiTurn(contents: Content[], o: GeminiOptions): AsyncG
         busyError = e;
         model = o.fallback;
         yield { type: "model", model };
+        round--;
+        continue;
+      }
+      // A model that doesn't take this thinking level (a newer one may not): its own default, once.
+      if (e instanceof ApiError && e.status === 400 && level && !noLevel && /thinking/i.test(e.message)) {
+        noLevel = true;
         round--;
         continue;
       }

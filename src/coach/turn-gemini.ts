@@ -7,7 +7,7 @@ import { failTurn, shown, type ChatImage, type CoachEvent, type Conversation, ty
 import { toolLabel } from "./labels.ts";
 import type { Effort } from "./routing.ts";
 import { SYSTEM } from "./prompt.ts";
-import { MAX_RESULT_CHARS, MAX_TOOL_ROUNDS, modelLabel } from "./settings.ts";
+import { geminiBackup, MAX_RESULT_CHARS, MAX_TOOL_ROUNDS, modelLabel } from "./settings.ts";
 // The Gemini module (and Google's SDK) loads only when a Gemini conversation needs it.
 const gemini = () => import("../coach-gemini.ts");
 
@@ -25,10 +25,10 @@ export async function* chatGemini(c: Coach, conv: Conversation, text: string, in
   const reply: Reply = { role: "assistant", text: "", tools: [], by: modelLabel("google", conv.model) };
   conv.display.push(reply);
   yield { type: "by", label: reply.by! };
-  const { GEMINI_FALLBACK, geminiError, geminiTurn } = await gemini();
+  const { geminiError, geminiTurn } = await gemini();
   try {
     let stop = "STOP";
-    for await (const ev of geminiTurn(conv.contents, { apiKey: key, model: conv.model, system: SYSTEM, tools: c.tools, maxRounds: MAX_TOOL_ROUNDS, maxResultChars: MAX_RESULT_CHARS, baseUrl: c.clientOptions.googleBaseUrl, thinking: effort, fallback: GEMINI_FALLBACK })) {
+    for await (const ev of geminiTurn(conv.contents, { apiKey: key, model: conv.model, system: SYSTEM, tools: c.tools, maxRounds: MAX_TOOL_ROUNDS, maxResultChars: MAX_RESULT_CHARS, baseUrl: c.clientOptions.googleBaseUrl, thinking: effort, fallback: geminiBackup(conv.model) })) {
       if (ev.type === "text") {
         reply.text += ev.delta!;
         yield { type: "text", delta: ev.delta! };
