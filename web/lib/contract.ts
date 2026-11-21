@@ -60,6 +60,8 @@ export interface EngineCalls {
   // ---- Files and Health Connect
   importFit: { name: string; data: string };
   hc: { op?: "state" | "toggle" | "connect" | "share" | "manage" | "stop"; kind?: HcKind; remove?: boolean };
+  /** Apple Health on iPhone, read only: its state; connect, bring in now, open the Health app, stop. */
+  ah: { op?: "state" | "connect" | "sync" | "open" | "stop" };
   saveFile: { path: string; name: string; type: string };
   // ---- The PC: pairing and syncing (lib/pairing.ts)
   pcState: None;

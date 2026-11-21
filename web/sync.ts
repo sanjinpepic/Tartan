@@ -1,5 +1,6 @@
 /** Strava sync, Strava sign-in, and the automatic sync that replaces a Sync button. */
 import { syncHc } from "./lib/health-connect.ts";
+import { syncAh } from "./lib/apple-health.ts";
 import { inDemo } from "./lib/demo.ts";
 import { weeklyBackup } from "./lib/backup.ts";
 import { keepWeekFace } from "./lib/week-face.ts";
@@ -351,6 +352,8 @@ export async function autoSync(force = false, why: SyncReason = "tick"): Promise
     }
     // Health Connect: what's new since the last round (at most every 30 minutes; nothing when off).
     if (isNative) await syncHc(force).catch(() => {});
+    // Apple Health (iPhone): new workouts from other apps (at most every 30 minutes; nothing when off).
+    if (isNative) workouts += (await syncAh(force).catch(() => undefined))?.added ?? 0;
     // The weekly encrypted backup, once the passphrase is set (Documents/Tartan; it says when it fails).
     await weeklyBackup();
   } finally {

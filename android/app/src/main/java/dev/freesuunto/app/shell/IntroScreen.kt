@@ -78,7 +78,7 @@ import org.json.JSONObject
 
 /**
  * Tartan 2: the first run, native (web/views/onboard.ts). Five short steps, each doing something
- * real: hello (a timing board where your watch, Strava and your coach cross the line), bringing
+ * real: hello (a timing board where Health Connect, your watch and your coach cross the line), bringing
  * workouts in, the coach, when you train, and where things live. Skippable at every step; where
  * you are is kept by the page, so the intro comes back to it.
  */
@@ -279,17 +279,17 @@ private fun Choice(icon: String, title: String, sub: String, i: Int, onClick: ()
 }
 
 /**
- * The welcome's timing board: your watch, Strava and your coach, a lane each, run to the finish
- * line one after another; each lights the line as it crosses.
+ * The welcome's timing board: Health Connect, your watch and your coach, a lane each, run to the
+ * finish line one after another; each lights the line as it crosses.
  */
 @Composable
 private fun Board() {
     val cs = MaterialTheme.colorScheme
     val data = LocalData.current
     val reduced = LocalReducedMotion.current
-    val lanes = listOf(Triple(stringResource(R.string.common_watch), stringResource(R.string.intro_straight_off_your_wrist_over_bluetooth), data.watch), Triple("Strava", stringResource(R.string.intro_your_whole_history_every_stream), data.effort), Triple(stringResource(R.string.common_coach), stringResource(R.string.intro_a_plan_built_around_your_week), data.pace))
+    val lanes = listOf(Triple(stringResource(R.string.common_health_connect), stringResource(R.string.intro_what_your_watch_s_app_already_shares), data.effort), Triple(stringResource(R.string.common_watch), stringResource(R.string.intro_straight_off_your_wrist_over_bluetooth), data.watch), Triple(stringResource(R.string.common_coach), stringResource(R.string.intro_a_plan_built_around_your_week), data.pace))
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(cs.surfaceContainerLow).padding(vertical = 6.dp).semantics { contentDescription = str(R.string.intro_your_watch_strava_and_your_coach) },
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(cs.surfaceContainerLow).padding(vertical = 6.dp).semantics { contentDescription = str(R.string.intro_health_your_watch_and_your_coach) },
     ) {
         lanes.forEachIndexed { i, (name, sub, hue) ->
             val run = remember { Animatable(if (reduced) 1f else 0f) }
@@ -431,7 +431,7 @@ private fun Places() {
     Fine(stringResource(R.string.intro_settings_sit_behind_the_sliders_at))
 }
 
-/** Where workouts come from: Strava and the watch, each a big choice that opens its guided setup, ticked once connected. */
+/** Where workouts come from: Health Connect, Strava, the watch and intervals.icu, each a big choice that opens its guided setup, ticked once connected. */
 @Composable
 private fun IntroSources(s: SourcesModel) {
     LaunchedEffect(Unit) { s.ensure() }

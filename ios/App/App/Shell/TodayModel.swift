@@ -74,7 +74,8 @@ final class TodayModel {
         failed = false
         data = view
         readOn = isoDay(Date())
-        if view.last != nil { Launch.ready("today") }
+        // Screenshots: Today with its data (before the first plan, with TartanNoPlan, once it's gone).
+        if view.last != nil && (!Launch.noPlan || !view.planOn) { Launch.ready("today") }
         keys.set(todayJson, forKey: "tartan.today.json")
         keys.set(planJson, forKey: "tartan.today.plan")
         await loadMore(view)

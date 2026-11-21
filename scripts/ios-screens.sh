@@ -92,11 +92,13 @@ for look in light dark; do
   shot "$look-10-routes" routes -TartanTab routes
   shot "$look-11-route" route -TartanTab route
   shot "$look-12-intro" intro -TartanIntro 0
+  shot "$look-12b-intro-sources" sources -TartanIntro 1
   shot "$look-13-intro-coach" coachsetup -TartanIntro 2
   shot "$look-14-face-builder" face -TartanTab face/copy
   # Last: Coach before its first plan, then a plan just made by Tartan's rules (they clear the
   # plan and make a new one, so they come after every shot that shows it).
   shot "$look-15-coach-noplan" noplan -TartanTab coach -TartanNoPlan YES
+  shot "$look-15b-today-noplan" today -TartanTab today -TartanNoPlan YES
   shot "$look-16-coach-plan-made" planmade -TartanTab coach -TartanMakePlan YES
 done
 xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true

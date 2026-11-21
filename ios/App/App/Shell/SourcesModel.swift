@@ -72,8 +72,30 @@ struct IcuNow {
     var line: String?
 }
 
+/// Apple Health (rpc:ah, web/lib/apple-health.ts): there or not, on, and how the last look went.
+struct HealthNow {
+    /** HealthKit is on this iPhone (and this build has its plugin). */
+    let available: Bool
+    let on: Bool
+    /** Bringing workouts in right now. */
+    let running: Bool
+    /** Workouts read from it so far. */
+    let workouts: Int
+    /** Workouts it showed Tartan the last time it looked (0: none allowed, or none there). */
+    let seen: Int?
+    let lastAt: Double?
+    let error: String?
+}
+
+func parseHealth(_ json: String) -> HealthNow? {
+    let o = J(json: json)
+    guard o.object != nil else { return nil }
+    return HealthNow(available: o["status"].text == "available", on: o["on"].bool, running: o["running"].bool, workouts: o["workouts"].int ?? 0,
+                     seen: o["seen"].int, lastAt: o["last"]["at"].num, error: o["last"]["error"].str)
+}
+
 /**
- * Where workouts come from (Android's SourcesModel, web/views/sync.ts): Strava, the watch,
+ * Where workouts come from (Android's SourcesModel, web/views/sync.ts): Apple Health, Strava, the watch,
  * intervals.icu and your PC. Bluetooth and the sign-ins are the page's work, asked for over the
  * bridge (`rpc:…`); the watch's state comes with every change.
  */
@@ -85,6 +107,7 @@ final class SourcesModel {
     var watch: WatchNow?
     var strava: StravaNow?
     var icu: IcuNow?
+    var health: HealthNow?
     /** Paired with a PC: its address and name. */
     var pc: (url: String, name: String?)?
     var pcRead = false
@@ -113,6 +136,7 @@ final class SourcesModel {
         async let i = engine.get("/api/intervals/status")
         async let p = engine.rpc("pcState")
         async let w = engine.get("/api/strava/send-watch")
+        async let h = engine.rpc("ah")
         if let j = await s {
             let o = J(json: j), a = o["athlete"]
             let acts = o["activities"].int ?? 0
@@ -122,6 +146,7 @@ final class SourcesModel {
         }
         if let j = await i { icu = parseIcu(j) }
         if let j = await w { sendWatch = parseSendWatch(j) }
+        if case .success(let j) = await h { health = parseHealth(j) }
         if case .success(let j) = await p {
             let o = J(json: j)
             pc = o.object == nil ? nil : (url: o["url"].text, name: o["name"].str)
@@ -155,6 +180,20 @@ final class SourcesModel {
             }
         }
         return IcuNow(connected: o["connected"].bool, name: o["name"].str.flatMap { $0.isEmpty ? nil : $0 }, workouts: o["workouts"].int ?? 0, line: line)
+    }
+
+    /** Apple Health: "connect" (its sheet, then the workouts come in), "sync", "open" (the Health app), "stop". */
+    func healthDo(_ op: String) {
+        busy = "health"
+        Task {
+            switch await engine.rpc("ah", ["op": op]) {
+            case .success(let j):
+                health = parseHealth(j) ?? health
+                if let note = J(json: j)["note"].str { say(note) }
+            case .failure(let e): say(e.message)
+            }
+            busy = nil
+        }
     }
 
     func watchConnect() { run("watch", "watchConnect") }

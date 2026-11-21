@@ -147,7 +147,9 @@ fun TodayScreen(today: Today?, refreshing: Boolean, actions: TodayActions, date:
                                 if (s.activityId == null && !s.manual && s.kind != "strength" && s.status != "done" && more != null) ({ more.mark(s.date, s.kind) }) else null,
                             )
                         }
+                        // A rest day says what's next; no plan yet, one is a few taps away by Tartan's own rules (no key needed).
                         if (today.sessions.isEmpty() && today.planOn) RestDay(today.next, Modifier.reveal(i++), { actions.openSession(it.date, it.kind) }) { actions.go("coach") }
+                        else if (!today.planOn) NoPlanCard(Modifier.reveal(i++)) { actions.go("coach") }
                     }
                     val week: @Composable () -> Unit = { if (race != null && rw != null) RaceWeekCard(race, rw, Modifier.reveal(i++)) { raceSheet = true } }
                     val ready: @Composable () -> Unit = { ReadinessCard(today.readiness, Modifier.reveal(i++), more, actions, numbers = false) }

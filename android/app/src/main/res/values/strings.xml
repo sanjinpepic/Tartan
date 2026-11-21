@@ -202,6 +202,7 @@
     <string name="coach_your_coach_plans_around_these_and">Your coach plans around these, and you can change anything later by asking.</string>
     <string name="coach_tartan_plans_by_its_own_rules" formatted="false">Tartan plans by its own rules: about 10% more a week, every fourth week easier, mostly easy running, a taper before a race.</string>
     <string name="coach_make_my_plan">Make my plan</string>
+    <string name="today_tartan_makes_one_from_your_workouts">Tartan makes one from the workouts it has, by its own rules: a few quick questions, no key needed.</string>
     <string name="common_back">Back</string>
     <string name="coach_an_ai_coach">An AI coach</string>
     <string name="coach_want_a_coach_to_talk_to">Want a coach to talk to?</string>
@@ -281,7 +282,7 @@
     <string name="coach_ask_your_coach_to_carry_the">Ask your coach to carry the plan on from today.</string>
     <string name="coach_or_just_ask_your_coach_anything">Or just ask your coach anything</string>
     <string name="coach_ask_your_coach_or_change_the">Ask your coach or change the plan</string>
-    <string name="coach_set_up_your_coach_to_talk">Set up your coach to talk the plan over</string>
+    <string name="coach_set_up_your_coach_to_talk">Want a coach to talk to?</string>
     <string name="coach_days_already_behind_you_stay_as">Days already behind you stay as they were. You can undo it for a week.</string>
     <string name="coach_accepting_2">Accepting…</string>
     <string name="coach_accept">Accept</string>
@@ -444,7 +445,8 @@
     <string name="intro_straight_off_your_wrist_over_bluetooth">Straight off your wrist, over Bluetooth</string>
     <string name="intro_your_whole_history_every_stream">Your whole history, every stream</string>
     <string name="intro_a_plan_built_around_your_week">A plan built around your week</string>
-    <string name="intro_your_watch_strava_and_your_coach">Your watch, Strava and your coach, side by side</string>
+    <string name="intro_health_your_watch_and_your_coach">Health Connect, your watch and your coach, side by side</string>
+    <string name="intro_what_your_watch_s_app_already_shares">What your watch\'s app already shares</string>
     <string name="intro_bring_it_over_from_your_pc">Bring it over from your PC</string>
     <string name="intro_your_phone_pairs_with_tartan_on">Your phone pairs with Tartan on your PC and copies everything: workouts, plan, coach and its key, notes, lifts and morning checks. After that the two keep in step.</string>
     <string name="intro_connect_strava_on_this_phone_in">Connect Strava on this phone in Settings → Sources: one tap, your app\'s details came over (each device signs in itself).</string>

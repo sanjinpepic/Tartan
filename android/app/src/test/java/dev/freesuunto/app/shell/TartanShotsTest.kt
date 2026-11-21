@@ -178,6 +178,31 @@ class TartanShotsTest {
 
     @Test fun todayLight() = todayShot("today-light", dark = false)
 
+    /** Workouts in but no plan yet (no key): Today offers to make one, by Tartan's rules, from Coach. */
+    private fun todayNoPlanShot(name: String, dark: Boolean) {
+        val t = parseToday(fixture("today.json"), null, day)
+        assertEquals(false, t.planOn)
+        val went = mutableListOf<String>()
+        val actions = object : TodayActions by none { override fun go(hash: String) { went.add(hash) } }
+        rule.mainClock.autoAdvance = false
+        rule.setContent {
+            TartanTheme(wallpaper = false, dark = dark) {
+                Box(Modifier.fillMaxSize()) {
+                    TodayScreen(t, refreshing = false, actions = actions, date = day)
+                    Chrome(folded = false)
+                    FloatingBar("today", hidden = false, onSelect = {}, modifier = Modifier.align(Alignment.BottomCenter))
+                }
+            }
+        }
+        rule.mainClock.advanceTimeBy(2500)
+        save(name)
+        rule.onNodeWithText("Make my plan").performClick()
+        assertEquals(listOf("coach"), went)
+    }
+
+    @Test fun todayNoPlan() = todayNoPlanShot("today-noplan", dark = false)
+    @Test fun todayNoPlanDark() = todayNoPlanShot("today-noplan-dark", dark = true)
+
     /** A new best stays at the top of Today for a few days; ✕ puts it back under what's worth knowing. */
     @Test fun newBestCelebrated() {
         androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().getSharedPreferences("tartan-today", 0).edit().clear().commit()

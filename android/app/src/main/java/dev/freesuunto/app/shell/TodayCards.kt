@@ -112,6 +112,21 @@ fun RestDay(next: Session?, modifier: Modifier, open: (Session) -> Unit, toPlan:
     }
 }
 
+/**
+ * No plan yet: Tartan's own rules make one from the workouts it has, no key needed. Make my plan
+ * opens Coach's few questions (each with Not sure), then the plan is there.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun NoPlanCard(modifier: Modifier, make: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    TCard(modifier, make) {
+        Text(stringResource(R.string.coach_no_plan_yet), style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.today_tartan_makes_one_from_your_workouts), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+        Button(onClick = make, shapes = ButtonDefaults.shapes()) { Icon(Glyphs["spark"], null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.coach_make_my_plan)) }
+    }
+}
+
 /** This morning's body from the watch: resting heart rate against your usual, last night, oxygen. A tap opens Body. */
 @Composable
 fun VitalsRow(v: Vitals, open: () -> Unit) {

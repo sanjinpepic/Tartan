@@ -43,6 +43,8 @@
 	<string>To put your training sessions in your calendar.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>To scan your PC's pairing code, and to photograph a shoe or a meal for the coach.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Tartan reads your workouts from Apple Health, with their heart rate, distance and route, so what your watch's app keeps there comes in without an account. It writes nothing there.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>To find and sync with Tartan on your PC over your home network.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

@@ -111,7 +111,7 @@ The native screens (Android today, iOS later) draw everything; the TypeScript en
 **`planOut`** · Where the coming week can go besides a Suunto, and how each stands; an op sends, stops or shares.
 
 - takes `{ op?: 'hc' | 'state' | 'intervals' | 'intervalsOff' | 'hcOff' | 'files' | undefined; }`
-- answers `{ wanted: number; intervals: IcuPlanState; hc: { status: 'available' | 'update' | 'unavailable' | 'web'; on: boolean; plan: boolean; last: { at: number; written: number; unsupported?: boolean | undefined; denied?: boolean | undefined; error?: string | undefined; } | null; }; line: string | null; }`
+- answers `PlanOutState`
 
 **`sessionFile`** · One session as a .fit workout file through the share sheet.
 
@@ -149,8 +149,13 @@ The native screens (Android today, iOS later) draw everything; the TypeScript en
 
 **`hc`**
 
-- takes `{ op?: 'state' | 'toggle' | 'connect' | 'share' | 'manage' | 'stop' | undefined; kind?: HcKind | undefined; remove?: boolean | undefined; }`
-- answers `{ status: 'available' | 'update' | 'unavailable' | 'web'; on: boolean; kinds: Record<HcKind, boolean>; missing: { [k: string]: boolean; }; last: { at: number; written: number; covered: number; sleep: number; imported?: number | undefined; error?: string | undefined; } | null; note: string | null; }`
+- takes `{ op?: 'state' | 'connect' | 'stop' | 'toggle' | 'share' | 'manage' | undefined; kind?: HcKind | undefined; remove?: boolean | undefined; }`
+- answers `{ status: 'available' | 'update' | 'unavailable' | 'web'; on: boolean; kinds: { [k: string]: boolean; }; missing: { [k: string]: boolean; }; last: { at: number; written: number; covered: number; sleep: number; imported?: number | undefined; error?: string | undefined; } | null; note: string | null; }`
+
+**`ah`** · Apple Health on iPhone, read only: its state; connect, bring in now, open the Health app, stop.
+
+- takes `{ op?: 'state' | 'connect' | 'sync' | 'open' | 'stop' | undefined; }`
+- answers `{ status: 'available' | 'unavailable' | 'web'; on: boolean; running: boolean; workouts: number; seen: number | null; last: { at: number; added: number; error?: string | undefined; } | null; note: string | null; }`
 
 **`saveFile`**
 
@@ -208,7 +213,7 @@ The native screens (Android today, iOS later) draw everything; the TypeScript en
 
 **`modelHub`** · With "dropOld", Tartan's own model file from before 2.37 goes (Model Hub holds the models now).
 
-- takes `{ op?: 'updates' | 'state' | 'allow' | 'open' | 'dropOld' | undefined; }`
+- takes `{ op?: 'state' | 'open' | 'updates' | 'allow' | 'dropOld' | undefined; }`
 - answers `true | { allowed: boolean; }`
 
 ### Watch faces (lib/faces.ts, lib/face-install.ts)

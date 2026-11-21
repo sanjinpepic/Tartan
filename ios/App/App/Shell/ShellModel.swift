@@ -233,6 +233,9 @@ final class ShellModel {
             if J(json: plan)["plan"].object != nil { _ = await engine.call("/api/plan/reset", method: "POST") }
             coach.stale = true
             await coach.fetch()
+            // Today reads again without it.
+            today.stale = true
+            if shown == "today" { today.freshen() }
             // Then (TartanMakePlan) a plan by Tartan's rules from the answers as they stand, as Make my plan makes it.
             if Launch.makePlan, let a = coach.data?.intake {
                 try? await Task.sleep(for: .seconds(1.5))

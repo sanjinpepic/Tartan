@@ -52,7 +52,7 @@ jobs:
                 "localizedDescription": "The latest build from main.",
                 "downloadURL": f"{base}/releases/download/ios/Tartan-{v}.ipa", "size": size, "minOSVersion": "26.0",
               }],
-              "appPermissions": {"entitlements": [], "privacy": {}},
+              "appPermissions": {"entitlements": ["com.apple.developer.healthkit"], "privacy": {"NSHealthShareUsageDescription": "Tartan reads your workouts from Apple Health, with their heart rate, distance and route. It writes nothing there."}},
             }],
             "news": [],
           }

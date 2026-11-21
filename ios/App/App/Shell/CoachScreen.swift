@@ -51,7 +51,7 @@ struct CoachScreen: View {
         }
     }
 
-    /** Ask your coach (or set it up), floating above the tab bar. */
+    /** Ask your coach (or, without a key, the offer of one: never a wall), floating above the tab bar. */
     @ViewBuilder private var askBar: some View {
         if let c = coach.data, c.plan != nil {
             Group {
@@ -70,7 +70,7 @@ struct CoachScreen: View {
                     .glassEffect(.regular.interactive(), in: Capsule())
                 } else {
                     Button { shell.go("settings/coach") } label: {
-                        Label("Set up your coach to talk the plan over", systemImage: "bubble.left.and.text.bubble.right").frame(maxWidth: .infinity)
+                        Label("Want a coach to talk to?", systemImage: "bubble.left.and.text.bubble.right").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.glass)
                     .controlSize(.large)

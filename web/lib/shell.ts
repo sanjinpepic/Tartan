@@ -6,7 +6,7 @@
  * each native part on or off, so the two can be compared on the same phone.
  */
 import { Capacitor, registerPlugin, type PluginListenerHandle } from "@capacitor/core";
-import { app, isNative } from "../state.ts";
+import { app, isNative, notify } from "../state.ts";
 import { allowReminders, syncSchedule, writableCalendars } from "./schedule.ts";
 import { saveFile } from "./files.ts";
 import { WEEKLY_OFF } from "./weekly.ts";
@@ -323,6 +323,38 @@ const RPC = {
     const kinds = (Object.keys(hc.PERMISSIONS) as Array<keyof typeof hc.PERMISSIONS>).filter((k) => k !== "plan");
     const missing = Object.fromEntries(kinds.map((k) => [k, s.on && s.kinds[k] && !hc.PERMISSIONS[k].filter((p) => !p.endsWith("ROUTE") && !hc.OPTIONAL(p)).every((p) => granted.has(p))]));
     return { status, on: s.on, kinds: Object.fromEntries(kinds.map((k) => [k, s.kinds[k]])), missing, last: s.last ?? null, note };
+  },
+  /**
+   * Apple Health on iPhone (lib/apple-health.ts), read only: its state, and connect, bring in
+   * now, open the Health app, stop. `status` "unavailable" (no HealthKit here) or "web" (not an
+   * iPhone): the screens say so and offer nothing else.
+   */
+  ah: async (a) => {
+    const ah = await import("./apple-health.ts");
+    const op = String(a.op ?? "state");
+    let note: string | null = null;
+    if (op === "connect" || op === "sync") {
+      if ((await ah.ahStatus()) !== "available") throw new Error("Apple Health isn't on this device.");
+      if (op === "connect") await ah.connectAh();
+      // Two years of workouts can take a while: in the background, saying how it went when done
+      // (each one in tells the screens to read again).
+      const first = op === "connect";
+      void ah.syncAh(true).then((last) => {
+        const n = last?.added ?? 0;
+        if (last?.error) notify(`Apple Health: ${last.error}`, "error");
+        else if (n > 0) notify(`${n} ${n === 1 ? "workout" : "workouts"} from Apple Health.`);
+        else if (!ah.readAh().seen) notify("Apple Health shows Tartan no workouts. If you said no to it, allow it in the Health app: Sharing, then Apps, then Tartan.");
+        else if (!first) notify("Apple Health: nothing new.");
+        void Shell.changed().catch(() => {});
+      });
+      note = first ? "Apple Health is on. Your workouts are coming in." : null;
+    } else if (op === "open") await ah.openHealth();
+    else if (op === "stop") {
+      ah.stopAh();
+      note = "Apple Health is off. The workouts it brought stay here.";
+    }
+    const s = ah.readAh();
+    return { status: await ah.ahStatus(), on: s.on, running: ah.ahRunning(), workouts: s.imported.length, seen: s.seen ?? null, last: s.last ?? null, note };
   },
   /** The PC this phone is paired with, if any. */
   pcState: async () => (app.link ? { url: app.link.url, name: app.link.name ?? null } : null),

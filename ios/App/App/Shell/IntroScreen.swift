@@ -4,8 +4,8 @@ import UniformTypeIdentifiers
 
 /**
  * The first run, native (Android's IntroScreen.kt, web/views/onboard.ts). Five short steps, each
- * doing something real: hello (a timing board where your watch, Strava and your coach cross the
- * line), bringing workouts in, the coach, when you train, and where things live. Skippable at
+ * doing something real: hello (a timing board where Apple Health, your watch and your coach cross
+ * the line), bringing workouts in, the coach, when you train, and where things live. Skippable at
  * every step; where you are is kept by the page, so the intro comes back to it.
  */
 @MainActor
@@ -146,11 +146,11 @@ struct IntroScreen: View {
             switch m.step {
             case 0: Welcome(m: m)
             case 1:
-                Title(title: "Bring in your workouts", lede: "Connect any of these. Strava brings your whole history; the watch gives the files it recorded; intervals.icu brings Garmin, Coros, Polar and more. A run that's in more than one shows up once.")
+                Title(title: "Bring in your workouts", lede: "Connect any of these. Apple Health brings what your watch's app already keeps there, with no account; Strava brings your whole history; the watch gives the files it recorded. A run that's in more than one shows up once.")
                 sources
                 Fine(text: "Files from other apps and more are in Settings → Sources, any time.")
             case 2:
-                Title(title: "Add your coach", lede: "The coach reads your workouts, builds your plan, changes it when you ask and answers your questions. It runs on your own AI key from Google or Anthropic, or on Tartan's rules with no AI at all.")
+                Title(title: "Add your coach", lede: "Tartan makes your plan by its own rules, with no key at all. Want a coach to talk to as well? It reads your workouts, changes the plan when you ask and answers your questions, on your own AI key from Google or Anthropic.")
                 CoachSetupCard(m: shell.coachSetup, shell: shell)
             case 3: Times(settings: shell.settings)
             default: Places()
@@ -160,12 +160,27 @@ struct IntroScreen: View {
 
     @ViewBuilder private var sources: some View {
         let s = shell.sources
+        let h = s.health
+        SourceRow(icon: .symbol("heart.fill"), title: "Apple Health",
+                  line: h?.available == false ? "Not on this device" : "Apple Watch, Garmin, Suunto, Coros, Polar…", done: h?.on == true,
+                  doneLine: healthLine(h)) { s.healthDo(h?.on == true ? "open" : "connect") }
+            .disabled(s.busy == "health")
+            .onAppear { Launch.ready("sources") }
         SourceRow(icon: .strava, title: "Strava", line: "Your whole history, every stream", done: s.strava?.connected == true,
                   doneLine: s.strava.flatMap { $0.name.isEmpty ? nil : "Connected as \($0.name)" } ?? "Connected") { flow = "strava" }
         SourceRow(icon: .symbol("watch.analog"), title: "Your watch", line: "Straight off your wrist, over Bluetooth", done: s.watch?.connected == true,
                   doneLine: s.watch.flatMap { $0.name.isEmpty ? nil : "Connected to \($0.name)" } ?? "Connected") { flow = "watch" }
         SourceRow(icon: .symbol("chart.bar.xaxis"), title: "intervals.icu", line: "Garmin, Coros, Polar, Wahoo, Zwift: a key, no app", done: s.icu?.connected == true,
                   doneLine: s.icu?.name.map { "Connected as \($0)" } ?? "Connected") { flow = "icu" }
+    }
+
+    /** Apple Health once on: coming in, how many, or that it showed none. */
+    private func healthLine(_ h: HealthNow?) -> String {
+        guard let h else { return "Connected" }
+        if h.running { return "Connected: your workouts are coming in" }
+        if h.workouts > 0 { return "Connected: \(h.workouts) workouts read" }
+        if h.seen == 0 { return "No workouts there yet, or not allowed" }
+        return "Connected: workouts come in with each sync"
     }
 }
 
@@ -334,7 +349,7 @@ private struct Welcome: View {
         WayIn(icon: "desktopcomputer", title: "I use Tartan on my PC", sub: "Bring it all over: plan, coach, notes, lifts, workouts") { m.open("pc") }
         WayIn(icon: "clock.arrow.circlepath", title: "I have a backup", sub: "Restore a Tartan backup file") { m.open("backup") }
         Button("Just looking? Try it with sample data") { m.demo() }.font(.subheadline.weight(.semibold))
-        Fine(text: "Works with intervals.icu, Strava or files from any watch, or a Suunto watch read directly over Bluetooth (unofficial; not made by or affiliated with Suunto).")
+        Fine(text: "Works with Apple Health, intervals.icu, Strava or files from any watch, or a Suunto watch read directly over Bluetooth (unofficial; not made by or affiliated with Suunto).")
     }
 }
 
@@ -369,13 +384,13 @@ private struct WayIn: View {
     }
 }
 
-/// The welcome's timing board: your watch, Strava and your coach, a lane each, run to the finish
-/// line one after another; each lights the line as it crosses.
+/// The welcome's timing board: Apple Health, your watch and your coach, a lane each, run to the
+/// finish line one after another; each lights the line as it crosses.
 private struct Board: View {
     @Environment(\.accessibilityReduceMotion) private var reduced
     private let lanes: [(String, String, Color)] = [
+        ("Apple Health", "What your watch's app already keeps", Brand.fatigue),
         ("Watch", "Straight off your wrist, over Bluetooth", Brand.watch),
-        ("Strava", "Your whole history, every stream", Brand.fatigue),
         ("Coach", "A plan built around your week", Brand.fitness),
     ]
     @State private var start = Date()
@@ -424,7 +439,7 @@ private struct Board: View {
         }
         .background(Brand.card, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Your watch, Strava and your coach, side by side")
+        .accessibilityLabel("Apple Health, your watch and your coach, side by side")
         .onAppear { start = Date() }
     }
 }

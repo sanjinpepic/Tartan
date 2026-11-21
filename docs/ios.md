@@ -49,9 +49,24 @@ an invite link, up to 10,000 testers. It's also what the App Store needs.
 ## What works on iPhone, step 1
 
 Everything the web app does, plus the watch over Bluetooth, GPS runs, reminders, the calendar,
-files and sharing. Not yet: Apple Health (instead of Health Connect), dictation, the home-screen
+files and sharing, and Apple Health (read only: other apps' workouts, see below). Not yet: dictation, the home-screen
 widget, Live Activities (instead of Live Updates), Model Hub (Android only; the phone's own AI on
 iPhone would be Apple's Foundation Models, later).
+
+## Apple Health
+
+Workouts other apps keep in Apple Health (the Apple Watch's own, Garmin Connect, Suunto, Coros,
+Polar…) come in with their heart rate, distance, energy and route, read only: Tartan writes
+nothing there. It's first in the intro's "Bring in your workouts" and in Settings → Sources. The
+native side is `ios/App/App/TartanAppleHealthPlugin.swift` (the `TartanAppleHealth` plugin); the
+page drives it (`web/lib/apple-health.ts`) and the engine keeps each workout as a FIT file in a
+folder per app (`src/apple-health.ts`), as Health Connect's on Android.
+
+The app asks for HealthKit in `App/App.entitlements`; `scripts/ios-build.sh` signs the .ipa ad hoc
+with it, so SideStore or AltStore sees it and asks your Apple ID for it (a free one may). Without
+it (or on an iPad, or when you say no), Apple Health says so in Settings → Sources and nothing
+else changes. Apple Health never tells an app whether you said no: Tartan then sees no workouts,
+and says where to allow it (the Health app: Sharing, Apps, Tartan).
 
 ## Native iPhone screens
 

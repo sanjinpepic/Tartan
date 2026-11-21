@@ -126,6 +126,21 @@ struct RestDayCard: View {
     }
 }
 
+/// No plan yet: Tartan's own rules make one from the workouts it has, no key needed. Make my plan
+/// opens Coach's few questions (each with Not sure), then the plan is there.
+struct NoPlanCard: View {
+    let make: () -> Void
+
+    var body: some View {
+        Card(action: make, label: "Make my plan") {
+            CardTitle(text: "No plan yet")
+            Text("Tartan makes one from the workouts it has, by its own rules: a few quick questions, no key needed.").font(.subheadline).foregroundStyle(.secondary)
+            Button { make() } label: { Label("Make my plan", systemImage: "sparkles").font(.subheadline.weight(.semibold)) }
+                .buttonStyle(.glassProminent)
+        }
+    }
+}
+
 // MARK: - How you are
 
 struct ReadinessCard: View {

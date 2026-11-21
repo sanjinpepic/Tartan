@@ -59,7 +59,7 @@ export async function importFit(store: LocalStore, name: string, data: Uint8Arra
  * Connect", "intervals.icu"), so they merge, read and show like a watch's. These folders came
  * from another app: they aren't sent on to Strava (it has its own way there).
  */
-export const IMPORT_PREFIXES = ["hc-", "intervals-icu", "gpx-files", "sample-data"];
+export const IMPORT_PREFIXES = ["hc-", "apple-health-", "intervals-icu", "gpx-files", "sample-data"];
 export const isImportFolder = (id: string) => id === slug(IMPORTED) || IMPORT_PREFIXES.some((p) => id.startsWith(p));
 
 /** Keep one workout as a FIT file in its source's folder; the same `id` again writes nothing. */

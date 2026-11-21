@@ -18,6 +18,7 @@ import { nigglePattern, recentFeelings, RunNotes } from "./run-notes.ts";
 import { CheckIns, todayReadiness } from "./readiness.ts";
 import { Memory } from "./memory.ts";
 import { bodySigns, Health, localDate } from "./health.ts";
+import { alreadyHere, hkFolder, hkWorkout, type HkSession } from "./apple-health.ts";
 import { coveredBy, HealthConnectStore, hcFolder, hcWorkout, sleepSession, trendRecords, workoutKey, workoutRecords, type HcRecord, type HcSession } from "./health-connect.ts";
 import type { Analytics } from "./analytics.ts";
 import { durability } from "./durability.ts";
@@ -834,6 +835,37 @@ export function createApi(o: ApiOptions): Api {
           const r = await importWorkout(store, hcFolder(s), s.id, hcWorkout(s));
           if (r.already) already++;
           else added++;
+          done.push(s.id);
+        }
+        if (added) library.invalidate();
+        return Response.json({ added, already, done });
+      },
+    ],
+    [
+      // Apple Health, in (iPhone): other apps' workouts in full, each kept as a FIT file in its app's folder.
+      "POST",
+      "/api/apple-health/workouts",
+      async (req) => {
+        const b = (await req.json().catch(() => ({}))) as { sessions?: HkSession[] };
+        let added = 0;
+        let already = 0;
+        const done: string[] = [];
+        const sessions = (b.sessions ?? []).filter((s) => s?.id && s.source && Number.isFinite(s.start) && Number.isFinite(s.end) && s.end > s.start);
+        const first = Math.min(...sessions.map((s) => s.start));
+        const rows = sessions.length ? await library.activities({ since: new Date(first - 86400_000).toISOString(), limit: 5000 }) : [];
+        for (const s of sessions) {
+          // The watch's own copy is here already (its file, or the same run through another app).
+          if (alreadyHere(s, rows)) {
+            already++;
+            done.push(s.id);
+            continue;
+          }
+          const r = await importWorkout(store, hkFolder(s), s.id, hkWorkout(s));
+          if (r.already) already++;
+          else {
+            added++;
+            rows.push({ start: new Date(s.start).toISOString(), sport: r.sport, elapsed_min: (s.end - s.start) / 60_000, ...(r.distance_km ? { distance_km: r.distance_km } : {}), sources: ["watch"] } as never);
+          }
           done.push(s.id);
         }
         if (added) library.invalidate();

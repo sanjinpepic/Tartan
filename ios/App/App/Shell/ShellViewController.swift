@@ -2,12 +2,14 @@ import UIKit
 import SwiftUI
 import Capacitor
 
-/// Capacitor's view controller (its view is the web view), with the TartanShell plugin
-/// registered before the page loads, so `Capacitor.isPluginAvailable("TartanShell")` is true.
+/// Capacitor's view controller (its view is the web view), with the TartanShell plugin (and
+/// Apple Health's, TartanAppleHealthPlugin.swift) registered before the page loads, so
+/// `Capacitor.isPluginAvailable("TartanShell")` is true.
 /// The web view is see-through, so the page can open its sheets over a native screen.
 class TartanBridgeViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(TartanShellPlugin())
+        bridge?.registerPluginInstance(TartanAppleHealthPlugin())
     }
 
     override func viewDidLoad() {

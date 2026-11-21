@@ -133,6 +133,9 @@ struct TodayCards: View {
         }
         if t.sessions.isEmpty && t.planOn {
             RestDayCard(next: t.next, open: { n in shell.openSession(date: n.date, kind: n.kind) }, toPlan: { shell.go("coach") })
+        } else if !t.planOn {
+            // No plan yet: one is a few taps away, by Tartan's own rules (no key needed).
+            NoPlanCard { shell.go("coach") }
         }
         if let race = t.race, let week = today.raceWeek {
             RaceWeekCard(race: race, week: week, open: openRaceWeek)

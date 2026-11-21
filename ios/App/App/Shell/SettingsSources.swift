@@ -24,7 +24,7 @@ struct TwoTap: View {
 }
 
 /**
- * Settings → Sources, native (Android's SourcesGroup, web/views/sync.ts): Strava, the watch,
+ * Settings → Sources, native (Android's SourcesGroup, web/views/sync.ts): Apple Health, Strava, the watch,
  * intervals.icu, workout files from other apps, sending watch workouts to Strava, and where the
  * plan goes for your watch. Bluetooth and the sign-ins are the page's work (`rpc:…`).
  */
@@ -36,6 +36,7 @@ struct SourcesGroup: View {
     private var s: SourcesModel { shell.sources }
 
     var body: some View {
+        healthSection
         stravaSection
         watchSection
         icuSection
@@ -54,6 +55,40 @@ struct SourcesGroup: View {
             .fullScreenCover(isPresented: Binding(get: { flow == "strava" }, set: { if !$0 { flow = nil } })) { StravaFlow(s: s) { flow = nil } }
             .fullScreenCover(isPresented: Binding(get: { flow == "watch" }, set: { if !$0 { flow = nil } })) { WatchFlow(s: s) { flow = nil } }
             .sheet(isPresented: Binding(get: { flow == "icu" }, set: { if !$0 { flow = nil } })) { IcuFlow(s: s) { flow = nil } }
+    }
+
+    // MARK: Apple Health
+
+    @ViewBuilder private var healthSection: some View {
+        let h = s.health
+        Section {
+            if let h, !h.available {
+                Text("Apple Health isn't on this device. Strava, the watch or intervals.icu bring your workouts in instead.").font(.subheadline).foregroundStyle(.secondary)
+            } else if let h, h.on {
+                Button { s.healthDo("sync") } label: { Label(h.running ? "Bringing them in…" : "Bring in now", systemImage: "arrow.triangle.2.circlepath") }
+                    .disabled(s.busy == "health" || h.running)
+                if h.seen == 0 && !h.running {
+                    Text("Apple Health shows Tartan no workouts. If you said no to it, allow it in the Health app: Sharing, then Apps, then Tartan.").font(.footnote).foregroundStyle(.secondary)
+                }
+                if let e = h.error { Text(e).font(.footnote).foregroundStyle(.red) }
+                Button { s.healthDo("open") } label: { Label("Open the Health app", systemImage: "heart") }
+                TwoTap(label: "Stop", again: "Tap again to stop", danger: true) { s.healthDo("stop") }
+            } else if h != nil {
+                Text("Workouts your watch's app already keeps in Apple Health (Apple Watch, Garmin Connect, Suunto, Coros, Polar…), with heart rate and route. No account, and Tartan writes nothing there.").font(.subheadline).foregroundStyle(.secondary)
+                Button { s.healthDo("connect") } label: {
+                    Label("Connect Apple Health", systemImage: "heart.fill").font(.headline).frame(maxWidth: .infinity, minHeight: 36)
+                }
+                .buttonStyle(.glassProminent)
+                .disabled(s.busy == "health")
+            } else {
+                ProgressView()
+            }
+        } header: { Text("Apple Health") } footer: {
+            if let h, h.on {
+                let last = h.lastAt.map { ago(ISO8601DateFormatter().string(from: Date(timeIntervalSince1970: $0 / 1000))) } ?? "not yet"
+                Text("Connected · \(h.workouts) workouts read · syncs by itself · last \(last)")
+            }
+        }
     }
 
     // MARK: Strava

@@ -62,6 +62,7 @@
 		32EB4806CCABE73742480EF4 /* SettingsShoes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2834344488E3815DCAE45411 /* SettingsShoes.swift */; };
 		434D994BB340695584B66D72 /* CoachPlanMaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4ECE218588D930AA4103F57 /* CoachPlanMaker.swift */; };
 		4D2E2353FC5DB3344E7E86CE /* FaceBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F096A3D843811BE50B088F42 /* FaceBuilder.swift */; };
+		A7E4C1D2B3F5061728394A5B /* TartanAppleHealthPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F5D2E3C4A6172839405B6C /* TartanAppleHealthPlugin.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -132,6 +133,8 @@
 		2834344488E3815DCAE45411 /* SettingsShoes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsShoes.swift; sourceTree = "<group>"; };
 		D4ECE218588D930AA4103F57 /* CoachPlanMaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachPlanMaker.swift; sourceTree = "<group>"; };
 		F096A3D843811BE50B088F42 /* FaceBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceBuilder.swift; sourceTree = "<group>"; };
+		B8F5D2E3C4A6172839405B6C /* TartanAppleHealthPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TartanAppleHealthPlugin.swift; sourceTree = "<group>"; };
+		C9A6E3F4D5B7283940516C7D /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -191,6 +194,8 @@
 			children = (
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
 				AF2253B7017F21CE1F9B0720 /* Shell */,
+				B8F5D2E3C4A6172839405B6C /* TartanAppleHealthPlugin.swift */,
+				C9A6E3F4D5B7283940516C7D /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -317,6 +322,11 @@
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1100;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.HealthKit = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -373,6 +383,7 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				A7E4C1D2B3F5061728394A5B /* TartanAppleHealthPlugin.swift in Sources */,
 				4D2E2353FC5DB3344E7E86CE /* FaceBuilder.swift in Sources */,
 				434D994BB340695584B66D72 /* CoachPlanMaker.swift in Sources */,
 				32EB4806CCABE73742480EF4 /* SettingsShoes.swift in Sources */,
@@ -571,6 +582,7 @@
 			baseConfigurationReference = 958DCC722DB07C7200EA8C5F /* debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = App/Info.plist;
@@ -593,6 +605,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = App/Info.plist;
