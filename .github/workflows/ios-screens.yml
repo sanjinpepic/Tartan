@@ -6,10 +6,8 @@ name: iPhone screenshots
 permissions:
   contents: write
 
+# By hand only (Actions → iPhone screenshots → Run): not on every push, to save build time.
 on:
-  push:
-    branches: [main]
-    paths: ["ios/**", "web/**", "src/**", "scripts/ios-*.sh", ".github/workflows/ios-screens.yml"]
   workflow_dispatch:
 
 concurrency:
