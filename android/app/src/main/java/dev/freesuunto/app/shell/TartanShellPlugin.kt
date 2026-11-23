@@ -256,7 +256,8 @@ class TartanShellPlugin : Plugin() {
     private fun loadMore() { todayMore.load(today?.race, today?.last, workoutApi) }
 
     private val todayActions = object : TodayActions {
-        override fun go(hash: String) = go(hash, null)
+        // "trends/week" (the This week card): Progress on this week, whatever range it showed last.
+        override fun go(hash: String) = if (hash == "trends/week") { progress.weekOf = null; progress.range = 7; go("trends", null) } else go(hash, null)
         override fun chat() { notifyListeners("go", JSObject().put("hash", "").put("action", "chat")) }
         override fun leaveDemo() { scope.launch { shellApi.call("demo", org.json.JSONObject().put("op", "leave")) } }
         override fun openActivity(id: String) = openWorkout(id)

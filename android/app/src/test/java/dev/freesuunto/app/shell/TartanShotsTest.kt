@@ -359,6 +359,17 @@ class TartanShotsTest {
         assertEquals(listOf("coach"), went)
     }
 
+    /** The This week card opens Progress on this week, not on whatever range it showed last. */
+    @Test fun todayWeekOpensTheWeek() {
+        val t = parseToday(fixture("today.json"), null, day)
+        val went = mutableListOf<String>()
+        val actions = object : TodayActions by none { override fun go(hash: String) { went.add(hash) } }
+        rule.setContent { TartanTheme(wallpaper = false, dark = false) { TodayScreen(t, refreshing = false, actions = actions, date = day) } }
+        rule.mainClock.advanceTimeBy(2500)
+        rule.onNodeWithText("This week").performScrollTo().performClick()
+        assertEquals(listOf("trends/week"), went)
+    }
+
     @Test fun todayNoPlan() = todayNoPlanShot("today-noplan", dark = false)
     @Test fun todayNoPlanDark() = todayNoPlanShot("today-noplan-dark", dark = true)
 

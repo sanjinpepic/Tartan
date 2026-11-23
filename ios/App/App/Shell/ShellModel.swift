@@ -487,6 +487,13 @@ final class ShellModel {
         plugin?.emit("go", ["hash": hash], retain: retain)
     }
 
+    /** Progress on this week (the This week card), whatever range it showed last. */
+    func goThisWeek() {
+        progress.weekOf = nil
+        progress.range = 7
+        go("trends")
+    }
+
     /** Ask the web app for something: "sync", "board", or a workout's or a session's sheet. */
     func goAction(_ action: String, extra: [String: Any] = [:]) {
         var data: [String: Any] = ["hash": ""]

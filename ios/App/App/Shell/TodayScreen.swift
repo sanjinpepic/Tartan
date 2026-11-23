@@ -214,7 +214,7 @@ struct TodayCards: View {
                 RaceCard(race: race) { shell.go("trends") }.settleIn(6, on: first)
             }
         }
-        WeekCard(w: t.week) { shell.go("trends") }.settleIn(7, on: first)
+        WeekCard(w: t.week) { shell.goThisWeek() }.settleIn(7, on: first)
         MoreToday(open: today.moreOpen, inside: inside(justIn: justIn, worth: worth.count)) {
             withAnimation(Motion.settle) { today.moreOpen.toggle() }
         }

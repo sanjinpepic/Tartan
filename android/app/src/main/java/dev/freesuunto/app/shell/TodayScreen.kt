@@ -201,7 +201,7 @@ fun TodayScreen(today: Today?, refreshing: Boolean, actions: TodayActions, date:
                         }
                     }
                     sessions(); week(); ready(); raceLater()
-                    WeekCard(today.week, date, Modifier.reveal(i++)) { actions.go("trends") }
+                    WeekCard(today.week, date, Modifier.reveal(i++)) { actions.go("trends/week") }
                     // The rest, folded: the numbers behind the verdict, the last workout, what's worth
                     // knowing and the notes, with a line saying what's in there.
                     // Pairing with a PC is a tool beyond the coach: suggested to someone who uses others (src/in-use.ts).
