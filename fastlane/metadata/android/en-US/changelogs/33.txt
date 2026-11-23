@@ -1,0 +1,2 @@
+- Garmin: the watch sends your day to Tartan: Body Battery on waking, stress, recovery time, breathing, resting and lowest heart rate, blood oxygen and VO2 max
+- The This week card on Today opens Progress on this week
