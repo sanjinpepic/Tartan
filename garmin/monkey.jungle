@@ -2,3 +2,13 @@ project.manifest = manifest.xml
 # stub/: nothing. The screenshot build (screens.jungle) puts screens/ in its place: a sample plan
 # and a run driven by itself, for the simulator's pictures (.github/workflows/garmin.yml).
 base.sourcePath = source;stub
+# The phone's messages may wake the background service (TartanApp.listenInBackground), except on
+# watches with 32 KB for the background (Garmin's device reference), where a plan arriving there
+# wouldn't fit: on those they wait for the app to open, as before.
+base.excludeAnnotations = phoneInAppOnly
+fr245.excludeAnnotations = phoneInBackground
+fenix6.excludeAnnotations = phoneInBackground
+fenix6pro.excludeAnnotations = phoneInBackground
+fenix6s.excludeAnnotations = phoneInBackground
+fenix6spro.excludeAnnotations = phoneInBackground
+fenix6xpro.excludeAnnotations = phoneInBackground

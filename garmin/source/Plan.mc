@@ -102,6 +102,7 @@ module Phone {
             Communications.transmit({ "t" => "want", "v" => 1 }, null, new AskListener());
         } catch (e) {
             Plan.status = null;
+            Body.send(true);
         }
     }
 
@@ -114,6 +115,8 @@ module Phone {
                 Plan.status = "Open Tartan on your phone";
             }
             WatchUi.requestUpdate();
+            // Then the day's numbers (one message at a time).
+            Body.send(true);
         }
         function onError() as Void {
             if (!Plan.got()) {

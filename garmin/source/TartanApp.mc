@@ -1,12 +1,15 @@
 import Toybox.Application;
+import Toybox.Background;
 import Toybox.Communications;
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.System;
 import Toybox.WatchUi;
 
 // Tartan on a Garmin: today's session from the phone (and the next days'), guided step by step
-// and recorded as a normal Garmin activity, which reaches Tartan the way any Garmin run does.
-(:glance)
+// and recorded as a normal Garmin activity, which reaches Tartan the way any Garmin run does. The
+// day's recovery and sleep numbers go the other way (Body.mc), from a background service.
+(:background :glance)
 class TartanApp extends Application.AppBase {
     // A run in progress: saved if the app is closed under it, so a run is never lost.
     var run as Run or Null = null;
@@ -17,16 +20,22 @@ class TartanApp extends Application.AppBase {
         AppBase.initialize();
     }
 
+    // Also called when a background run ends: there's never a run there.
+    (:typecheck(disableBackgroundCheck))
     function onStop(state as Dictionary or Null) as Void {
         if (run != null) {
             (run as Run).saveIfStarted();
         }
     }
 
+    (:typecheck(disableBackgroundCheck))
     function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
         Communications.registerForPhoneAppMessages(method(:onPhone));
         // The screenshot build has its own plan and no phone to ask.
         if (!Sample.seed()) {
+            // The day's numbers every half hour from now on, and right after asking for the plan.
+            Body.start();
+            listenInBackground();
             Phone.ask();
         }
         var v = new HomeView();
@@ -39,8 +48,32 @@ class TartanApp extends Application.AppBase {
         return [new TartanGlance()];
     }
 
+    // The background service (Service.mc): the day's numbers to the phone.
+    function getServiceDelegate() as [System.ServiceDelegate] {
+        return [new Service()];
+    }
+
+    // The phone's messages wake the background service while the app is closed (an "ask" sends the
+    // day at once), where the background has room for a plan: 64 KB (monkey.jungle).
+    (:phoneInBackground)
+    function listenInBackground() as Void {
+        try {
+            Background.registerForPhoneAppMessageEvent();
+        } catch (e) {
+        }
+    }
+    // The 32 KB ones: the phone's messages wait for the app to open, as before.
+    (:phoneInAppOnly)
+    function listenInBackground() as Void {}
+
+    (:typecheck(disableBackgroundCheck))
     function onPhone(msg as Communications.PhoneAppMessage) as Void {
-        Phone.take(msg.data);
+        var d = msg.data;
+        if (d instanceof Dictionary && "ask".equals((d as Dictionary)["t"])) {
+            Body.send(true);
+            return;
+        }
+        Phone.take(d);
     }
 }
 

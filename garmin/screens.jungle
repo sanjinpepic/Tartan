@@ -1,4 +1,4 @@
 project.manifest = manifest.xml
 base.sourcePath = source;screens
 # Straight into the app (no glance first), so the simulator shows the app's own screens.
-base.excludeAnnotations = withGlance
+base.excludeAnnotations = withGlance;phoneInAppOnly

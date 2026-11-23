@@ -10,6 +10,19 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 mkdir -p "$OUT"
 IDS=$(grep -o 'iq:product id="[^"]*"' "$HERE/manifest.xml" | sed 's/.*id="\(.*\)"/\1/')
 FAILED=()
+# The memory each watch gives a background service (Garmin's device files): one with less than
+# 64 KB must leave phone messages to the app (monkey.jungle), since a plan arriving in the
+# background wouldn't fit there.
+DEVICES=${CIQ_DEVICES:-$HOME/.Garmin/ConnectIQ/Devices}
+for id in $IDS; do
+  f="$DEVICES/$id/compiler.json"
+  [ -f "$f" ] || continue
+  bg=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(next((a.get("memoryLimit",0) for a in d.get("appTypes",[]) if a.get("type")=="background"),0))' "$f")
+  echo "$id: $bg bytes for the background"
+  if [ "$bg" -gt 0 ] && [ "$bg" -lt 65536 ] && ! grep -q "^$id.excludeAnnotations = phoneInBackground$" "$HERE/monkey.jungle"; then
+    echo "  $id: add '$id.excludeAnnotations = phoneInBackground' to garmin/monkey.jungle"; FAILED+=("$id")
+  fi
+done
 for id in $IDS; do
   if monkeyc -f "$HERE/monkey.jungle" -d "$id" -o "$OUT/tartan-$id.prg" -y "$KEY" -r -w > "$OUT/$id.log" 2>&1; then
     echo "built $id"
