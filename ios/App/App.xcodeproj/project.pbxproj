@@ -1,0 +1,751 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A1C1E00100000000000000A1 /* ConnectIQ in Frameworks */ = {isa = PBXBuildFile; productRef = A1C1E00100000000000000A2 /* ConnectIQ */; };
+		A1C1E00100000000000000A3 /* GarminLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C1E00100000000000000A4 /* GarminLink.swift */; };
+		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
+		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
+		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
+		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
+		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
+		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
+		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
+		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
+		B7C85020072CCF35796D919E /* TartanShellPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B24FD9EE6C9BB15B49CB6DC /* TartanShellPlugin.swift */; };
+		C57C6D727182156026AD0FCE /* ShellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 206430853AA384BAD4258A0C /* ShellModel.swift */; };
+		408A1732733D44FEBAEC936A /* ShellViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29696DD462BD1053F3C98F54 /* ShellViewController.swift */; };
+		838086257F85A3779D3875E5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB0F58926D479CB33E6804B /* Theme.swift */; };
+		A89CE74156C10087E77753CE /* TabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC91B3914BAD014A99F2DA39 /* TabBar.swift */; };
+		C7B72D8C9BC8134E99B22858 /* TodayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D022AD1329E267C8189E33C /* TodayData.swift */; };
+		40C4F994BDAEAC5A96375B9F /* TodayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85432B932216439148FE6134 /* TodayModel.swift */; };
+		7DC7CCF976379ECBDEA36C90 /* TodayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39674D117FDCDB391F6BFA7B /* TodayScreen.swift */; };
+		A55BE05E1B93E5D7F8F0469E /* TodayCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5CD06DCC7F73E9B1FB129C /* TodayCards.swift */; };
+		098CB5BAA04622BF0EB6EABB /* Launch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8386D56D7620F5C9FFB4FE12 /* Launch.swift */; };
+		9A07F2D71C8C98430A5D0958 /* SheetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E177FC08D1D87B38EDAD31 /* SheetData.swift */; };
+		CDD34F69C7830EBB900100E4 /* SheetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C0C951E94E5CD809732713A /* SheetModels.swift */; };
+		F91A4CCAF65FF79E3FBC6252 /* SessionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28832B72FFCB0ABE8C824B60 /* SessionSheet.swift */; };
+		69148F70C11B7C8A5FEEA54C /* WorkoutSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD3E267F2BA85365A984250 /* WorkoutSheet.swift */; };
+		46DB91C2760BD467A8823A30 /* CoachData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A1137EB9135C09B30AAEC9 /* CoachData.swift */; };
+		7C35402ED7FD069B855A029D /* CoachScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 364107FF4BCBBF8FB3286A9D /* CoachScreen.swift */; };
+		AAA6C6D71A6A4874DD38B790 /* ActivitiesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C582CB4C6522F96EAD400D /* ActivitiesScreen.swift */; };
+		4A04023C939DC5FD45E35B23 /* ProgressData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC40FC2B07C3524C1196DA69 /* ProgressData.swift */; };
+		B87F79C373EB1D0B1D2C8DBD /* ProgressScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88BBCBA2B2B7906431CD95D /* ProgressScreen.swift */; };
+		19CBED7FD1F5964154BE680E /* ChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3B881C88556686F9A1EB0F /* ChatModel.swift */; };
+		268F8BC2EEED51DFEBA99393 /* ChatScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA386988D30A88B18C6E4992 /* ChatScreen.swift */; };
+		58E5C0243C76229ADC8A72CA /* SettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA3A620BFF2DB52ED1FDA99D /* SettingsModel.swift */; };
+		7A726A51CBA21F69CC3DED02 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73D3897DBF6E2A96E499ECB5 /* SettingsScreen.swift */; };
+		6A73CB8762ECAE0A0C8D6789 /* musclemap.json in Resources */ = {isa = PBXBuildFile; fileRef = 1C967BDB5B9B030094D16BD3 /* musclemap.json */; };
+		15599D205C96F0F3AB6C10F2 /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 419DD0CC3D9FB9DED5EA037E /* SVGPath.swift */; };
+		703913EA9063731C887D8C89 /* BodyData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23F9C9E53BB219E1D17A04C1 /* BodyData.swift */; };
+		677647453FEE5042CD85B35B /* BodyScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293FA8B71D8124E194E085A4 /* BodyScreen.swift */; };
+		94F4108C34C74D4E9481B707 /* RecordScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E527951A0B9AD28D2E0867 /* RecordScreen.swift */; };
+		C9D9E1423FAC51B4EEA17B71 /* LiftScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6660C3697BF6595E4714B267 /* LiftScreen.swift */; };
+		64CD5FC1317431ADB784675C /* LiveRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9451A6AC335BE0C95B561B /* LiveRun.swift */; };
+		D876D5724CA8E7E5A014353D /* LiveRunAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */; };
+		3D6EF0EC2E6A918A30BFBD5E /* TartanWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DDB44BD19D4E9C3E7B0F7F5 /* TartanWidgets.swift */; };
+		7235974C2471CE33BD343BCA /* LiveRunAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */; };
+		10FBD997071E4E14846A0D26 /* TartanWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1D6C511EC2A7CAF827A6AF4C /* TartanWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FDD44E667EFE27F9EFDDCC53 /* RoutesData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135884C397C61D3A884E92E3 /* RoutesData.swift */; };
+		4DF30E01EA0F3DE4237F455A /* RoutesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32EED04F8BD087E165512B39 /* RoutesScreen.swift */; };
+		6C0FB4CF22CC21EF3E1A8E2A /* SourcesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6047B8DA4E60D89B07D7E409 /* SourcesModel.swift */; };
+		0F6C322677974238D7682B3D /* SetupFlows.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE962D3821CA6D61A7143C2E /* SetupFlows.swift */; };
+		21C47D0DB6E66A9A9174DA23 /* CoachSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA5C729492BE64EADE48073 /* CoachSetup.swift */; };
+		A0113A235C3A075385EB9634 /* IntroScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94231B3394C3A22969DE282 /* IntroScreen.swift */; };
+		13F0E5E1593C00B1B46895A6 /* SettingsSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D23E344901DA3FD3B088432 /* SettingsSources.swift */; };
+		7387AFDC4AD242521B0CB6E4 /* SettingsWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACF3D5FE19D5BA725C65D9C1 /* SettingsWatch.swift */; };
+		5B218CC9836BC650E4BCC592 /* SettingsMore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E679AB27FA07A8A9803D43B9 /* SettingsMore.swift */; };
+		32EB4806CCABE73742480EF4 /* SettingsShoes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2834344488E3815DCAE45411 /* SettingsShoes.swift */; };
+		6BE122A1A19756E70438FF37 /* Milestones.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57D301445C224A2E05376AE /* Milestones.swift */; };
+		397B171B83F6510BFD455208 /* ShareWorkout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49230F791AC73202D3703F04 /* ShareWorkout.swift */; };
+		434D994BB340695584B66D72 /* CoachPlanMaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4ECE218588D930AA4103F57 /* CoachPlanMaker.swift */; };
+		4D2E2353FC5DB3344E7E86CE /* FaceBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F096A3D843811BE50B088F42 /* FaceBuilder.swift */; };
+		A7E4C1D2B3F5061728394A5B /* TartanAppleHealthPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F5D2E3C4A6172839405B6C /* TartanAppleHealthPlugin.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		85C64DD22865B89D4D0BA075 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 53ED4BD8D2DA8B5D9D0E337C;
+			remoteInfo = TartanWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		A1C1E00100000000000000A4 /* GarminLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarminLink.swift; sourceTree = "<group>"; };
+		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
+		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
+		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		504EC30C1FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		504EC30E1FED79650016851F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
+		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		8B24FD9EE6C9BB15B49CB6DC /* TartanShellPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TartanShellPlugin.swift; sourceTree = "<group>"; };
+		206430853AA384BAD4258A0C /* ShellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellModel.swift; sourceTree = "<group>"; };
+		29696DD462BD1053F3C98F54 /* ShellViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellViewController.swift; sourceTree = "<group>"; };
+		8EB0F58926D479CB33E6804B /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		AC91B3914BAD014A99F2DA39 /* TabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBar.swift; sourceTree = "<group>"; };
+		6D022AD1329E267C8189E33C /* TodayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayData.swift; sourceTree = "<group>"; };
+		85432B932216439148FE6134 /* TodayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayModel.swift; sourceTree = "<group>"; };
+		39674D117FDCDB391F6BFA7B /* TodayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScreen.swift; sourceTree = "<group>"; };
+		3D5CD06DCC7F73E9B1FB129C /* TodayCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayCards.swift; sourceTree = "<group>"; };
+		8386D56D7620F5C9FFB4FE12 /* Launch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Launch.swift; sourceTree = "<group>"; };
+		F3E177FC08D1D87B38EDAD31 /* SheetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetData.swift; sourceTree = "<group>"; };
+		9C0C951E94E5CD809732713A /* SheetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetModels.swift; sourceTree = "<group>"; };
+		28832B72FFCB0ABE8C824B60 /* SessionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSheet.swift; sourceTree = "<group>"; };
+		9BD3E267F2BA85365A984250 /* WorkoutSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSheet.swift; sourceTree = "<group>"; };
+		11A1137EB9135C09B30AAEC9 /* CoachData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachData.swift; sourceTree = "<group>"; };
+		364107FF4BCBBF8FB3286A9D /* CoachScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachScreen.swift; sourceTree = "<group>"; };
+		39C582CB4C6522F96EAD400D /* ActivitiesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitiesScreen.swift; sourceTree = "<group>"; };
+		BC40FC2B07C3524C1196DA69 /* ProgressData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressData.swift; sourceTree = "<group>"; };
+		F88BBCBA2B2B7906431CD95D /* ProgressScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressScreen.swift; sourceTree = "<group>"; };
+		9B3B881C88556686F9A1EB0F /* ChatModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModel.swift; sourceTree = "<group>"; };
+		AA386988D30A88B18C6E4992 /* ChatScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScreen.swift; sourceTree = "<group>"; };
+		DA3A620BFF2DB52ED1FDA99D /* SettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModel.swift; sourceTree = "<group>"; };
+		73D3897DBF6E2A96E499ECB5 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		1C967BDB5B9B030094D16BD3 /* musclemap.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = musclemap.json; sourceTree = "<group>"; };
+		419DD0CC3D9FB9DED5EA037E /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPath.swift; sourceTree = "<group>"; };
+		23F9C9E53BB219E1D17A04C1 /* BodyData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyData.swift; sourceTree = "<group>"; };
+		293FA8B71D8124E194E085A4 /* BodyScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyScreen.swift; sourceTree = "<group>"; };
+		47E527951A0B9AD28D2E0867 /* RecordScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordScreen.swift; sourceTree = "<group>"; };
+		6660C3697BF6595E4714B267 /* LiftScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftScreen.swift; sourceTree = "<group>"; };
+		4D9451A6AC335BE0C95B561B /* LiveRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRun.swift; sourceTree = "<group>"; };
+		11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRunAttributes.swift; sourceTree = "<group>"; };
+		5DDB44BD19D4E9C3E7B0F7F5 /* TartanWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TartanWidgets.swift; sourceTree = "<group>"; };
+		DAA03EC6CBECB84C968D081E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1D6C511EC2A7CAF827A6AF4C /* TartanWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TartanWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		135884C397C61D3A884E92E3 /* RoutesData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutesData.swift; sourceTree = "<group>"; };
+		32EED04F8BD087E165512B39 /* RoutesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutesScreen.swift; sourceTree = "<group>"; };
+		6047B8DA4E60D89B07D7E409 /* SourcesModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourcesModel.swift; sourceTree = "<group>"; };
+		DE962D3821CA6D61A7143C2E /* SetupFlows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupFlows.swift; sourceTree = "<group>"; };
+		FDA5C729492BE64EADE48073 /* CoachSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachSetup.swift; sourceTree = "<group>"; };
+		B94231B3394C3A22969DE282 /* IntroScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroScreen.swift; sourceTree = "<group>"; };
+		7D23E344901DA3FD3B088432 /* SettingsSources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSources.swift; sourceTree = "<group>"; };
+		ACF3D5FE19D5BA725C65D9C1 /* SettingsWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWatch.swift; sourceTree = "<group>"; };
+		E679AB27FA07A8A9803D43B9 /* SettingsMore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMore.swift; sourceTree = "<group>"; };
+		2834344488E3815DCAE45411 /* SettingsShoes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsShoes.swift; sourceTree = "<group>"; };
+		E57D301445C224A2E05376AE /* Milestones.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Milestones.swift; sourceTree = "<group>"; };
+		49230F791AC73202D3703F04 /* ShareWorkout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareWorkout.swift; sourceTree = "<group>"; };
+		D4ECE218588D930AA4103F57 /* CoachPlanMaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachPlanMaker.swift; sourceTree = "<group>"; };
+		F096A3D843811BE50B088F42 /* FaceBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceBuilder.swift; sourceTree = "<group>"; };
+		B8F5D2E3C4A6172839405B6C /* TartanAppleHealthPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TartanAppleHealthPlugin.swift; sourceTree = "<group>"; };
+		C9A6E3F4D5B7283940516C7D /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		151A2045F23B58D2AF81FC9C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				10FBD997071E4E14846A0D26 /* TartanWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		504EC3011FED79650016851F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */,
+				A1C1E00100000000000000A1 /* ConnectIQ in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1032BF444717D0E3201A2B94 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		504EC2FB1FED79650016851F = {
+			isa = PBXGroup;
+			children = (
+				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
+				504EC3061FED79650016851F /* App */,
+				F49B72BCF61D1D1CA8A84557 /* TartanWidgets */,
+				504EC3051FED79650016851F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		504EC3051FED79650016851F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				504EC3041FED79650016851F /* App.app */,
+				1D6C511EC2A7CAF827A6AF4C /* TartanWidgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		504EC3061FED79650016851F /* App */ = {
+			isa = PBXGroup;
+			children = (
+				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
+				AF2253B7017F21CE1F9B0720 /* Shell */,
+				B8F5D2E3C4A6172839405B6C /* TartanAppleHealthPlugin.swift */,
+				C9A6E3F4D5B7283940516C7D /* App.entitlements */,
+				50379B222058CBB4000EE86E /* capacitor.config.json */,
+				504EC3071FED79650016851F /* AppDelegate.swift */,
+				504EC30B1FED79650016851F /* Main.storyboard */,
+				504EC30E1FED79650016851F /* Assets.xcassets */,
+				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
+				504EC3131FED79650016851F /* Info.plist */,
+				2FAD9762203C412B000D30F8 /* config.xml */,
+				50B271D01FEDC1A000F3C39B /* public */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		AF2253B7017F21CE1F9B0720 /* Shell */ = {
+			isa = PBXGroup;
+			children = (
+				8B24FD9EE6C9BB15B49CB6DC /* TartanShellPlugin.swift */,
+				206430853AA384BAD4258A0C /* ShellModel.swift */,
+				29696DD462BD1053F3C98F54 /* ShellViewController.swift */,
+				8EB0F58926D479CB33E6804B /* Theme.swift */,
+				AC91B3914BAD014A99F2DA39 /* TabBar.swift */,
+				6D022AD1329E267C8189E33C /* TodayData.swift */,
+				85432B932216439148FE6134 /* TodayModel.swift */,
+				39674D117FDCDB391F6BFA7B /* TodayScreen.swift */,
+				3D5CD06DCC7F73E9B1FB129C /* TodayCards.swift */,
+				8386D56D7620F5C9FFB4FE12 /* Launch.swift */,
+				F3E177FC08D1D87B38EDAD31 /* SheetData.swift */,
+				9C0C951E94E5CD809732713A /* SheetModels.swift */,
+				28832B72FFCB0ABE8C824B60 /* SessionSheet.swift */,
+				9BD3E267F2BA85365A984250 /* WorkoutSheet.swift */,
+				11A1137EB9135C09B30AAEC9 /* CoachData.swift */,
+				364107FF4BCBBF8FB3286A9D /* CoachScreen.swift */,
+				39C582CB4C6522F96EAD400D /* ActivitiesScreen.swift */,
+				BC40FC2B07C3524C1196DA69 /* ProgressData.swift */,
+				F88BBCBA2B2B7906431CD95D /* ProgressScreen.swift */,
+				9B3B881C88556686F9A1EB0F /* ChatModel.swift */,
+				AA386988D30A88B18C6E4992 /* ChatScreen.swift */,
+				DA3A620BFF2DB52ED1FDA99D /* SettingsModel.swift */,
+				73D3897DBF6E2A96E499ECB5 /* SettingsScreen.swift */,
+				1C967BDB5B9B030094D16BD3 /* musclemap.json */,
+				419DD0CC3D9FB9DED5EA037E /* SVGPath.swift */,
+				23F9C9E53BB219E1D17A04C1 /* BodyData.swift */,
+				293FA8B71D8124E194E085A4 /* BodyScreen.swift */,
+				47E527951A0B9AD28D2E0867 /* RecordScreen.swift */,
+				6660C3697BF6595E4714B267 /* LiftScreen.swift */,
+				4D9451A6AC335BE0C95B561B /* LiveRun.swift */,
+				11CD3D2D143161E4EF3BE3A6 /* LiveRunAttributes.swift */,
+				135884C397C61D3A884E92E3 /* RoutesData.swift */,
+				32EED04F8BD087E165512B39 /* RoutesScreen.swift */,
+				6047B8DA4E60D89B07D7E409 /* SourcesModel.swift */,
+				A1C1E00100000000000000A4 /* GarminLink.swift */,
+				DE962D3821CA6D61A7143C2E /* SetupFlows.swift */,
+				FDA5C729492BE64EADE48073 /* CoachSetup.swift */,
+				B94231B3394C3A22969DE282 /* IntroScreen.swift */,
+				7D23E344901DA3FD3B088432 /* SettingsSources.swift */,
+				ACF3D5FE19D5BA725C65D9C1 /* SettingsWatch.swift */,
+				E679AB27FA07A8A9803D43B9 /* SettingsMore.swift */,
+				2834344488E3815DCAE45411 /* SettingsShoes.swift */,
+				E57D301445C224A2E05376AE /* Milestones.swift */,
+				49230F791AC73202D3703F04 /* ShareWorkout.swift */,
+				D4ECE218588D930AA4103F57 /* CoachPlanMaker.swift */,
+				F096A3D843811BE50B088F42 /* FaceBuilder.swift */,
+			);
+			path = Shell;
+			sourceTree = "<group>";
+		};
+		F49B72BCF61D1D1CA8A84557 /* TartanWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				5DDB44BD19D4E9C3E7B0F7F5 /* TartanWidgets.swift */,
+				DAA03EC6CBECB84C968D081E /* Info.plist */,
+			);
+			path = TartanWidgets;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		504EC3031FED79650016851F /* App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 504EC3161FED79650016851F /* Build configuration list for PBXNativeTarget "App" */;
+			buildPhases = (
+				504EC3001FED79650016851F /* Sources */,
+				504EC3011FED79650016851F /* Frameworks */,
+				504EC3021FED79650016851F /* Resources */,
+				151A2045F23B58D2AF81FC9C /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AC0125BB2C4EEC1565810B1D /* PBXTargetDependency */,
+			);
+			name = App;
+			packageProductDependencies = (
+				4D22ABE82AF431CB00220026 /* CapApp-SPM */,
+				A1C1E00100000000000000A2 /* ConnectIQ */,
+			);
+			productName = App;
+			productReference = 504EC3041FED79650016851F /* App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		53ED4BD8D2DA8B5D9D0E337C /* TartanWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D5DCEAB05FC75C3C1FE621CB /* Build configuration list for PBXNativeTarget "TartanWidgets" */;
+			buildPhases = (
+				4FB931EE3DA21CCC7D0F5F83 /* Sources */,
+				1032BF444717D0E3201A2B94 /* Frameworks */,
+				ADF5CE55965EABD4463C4C9C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TartanWidgets;
+			productName = TartanWidgets;
+			productReference = 1D6C511EC2A7CAF827A6AF4C /* TartanWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		504EC2FC1FED79650016851F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0920;
+				LastUpgradeCheck = 0920;
+				TargetAttributes = {
+					504EC3031FED79650016851F = {
+						CreatedOnToolsVersion = 9.2;
+						LastSwiftMigration = 1100;
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.HealthKit = {
+								enabled = 1;
+							};
+						};
+					};
+				};
+			};
+			buildConfigurationList = 504EC2FF1FED79650016851F /* Build configuration list for PBXProject "App" */;
+			compatibilityVersion = "Xcode 8.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 504EC2FB1FED79650016851F;
+			packageReferences = (
+				D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */,
+				A1C1E00100000000000000A5 /* XCRemoteSwiftPackageReference "connectiq-companion-app-sdk-ios" */,
+			);
+			productRefGroup = 504EC3051FED79650016851F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				504EC3031FED79650016851F /* App */,
+				53ED4BD8D2DA8B5D9D0E337C /* TartanWidgets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		504EC3021FED79650016851F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */,
+				6A73CB8762ECAE0A0C8D6789 /* musclemap.json in Resources */,
+				50B271D11FEDC1A000F3C39B /* public in Resources */,
+				504EC30F1FED79650016851F /* Assets.xcassets in Resources */,
+				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
+				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
+				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ADF5CE55965EABD4463C4C9C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		504EC3001FED79650016851F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				A7E4C1D2B3F5061728394A5B /* TartanAppleHealthPlugin.swift in Sources */,
+				4D2E2353FC5DB3344E7E86CE /* FaceBuilder.swift in Sources */,
+				434D994BB340695584B66D72 /* CoachPlanMaker.swift in Sources */,
+				32EB4806CCABE73742480EF4 /* SettingsShoes.swift in Sources */,
+				6BE122A1A19756E70438FF37 /* Milestones.swift in Sources */,
+				397B171B83F6510BFD455208 /* ShareWorkout.swift in Sources */,
+				5B218CC9836BC650E4BCC592 /* SettingsMore.swift in Sources */,
+				7387AFDC4AD242521B0CB6E4 /* SettingsWatch.swift in Sources */,
+				13F0E5E1593C00B1B46895A6 /* SettingsSources.swift in Sources */,
+				A0113A235C3A075385EB9634 /* IntroScreen.swift in Sources */,
+				21C47D0DB6E66A9A9174DA23 /* CoachSetup.swift in Sources */,
+				0F6C322677974238D7682B3D /* SetupFlows.swift in Sources */,
+				6C0FB4CF22CC21EF3E1A8E2A /* SourcesModel.swift in Sources */,
+				A1C1E00100000000000000A3 /* GarminLink.swift in Sources */,
+				4DF30E01EA0F3DE4237F455A /* RoutesScreen.swift in Sources */,
+				FDD44E667EFE27F9EFDDCC53 /* RoutesData.swift in Sources */,
+				D876D5724CA8E7E5A014353D /* LiveRunAttributes.swift in Sources */,
+				64CD5FC1317431ADB784675C /* LiveRun.swift in Sources */,
+				C9D9E1423FAC51B4EEA17B71 /* LiftScreen.swift in Sources */,
+				94F4108C34C74D4E9481B707 /* RecordScreen.swift in Sources */,
+				677647453FEE5042CD85B35B /* BodyScreen.swift in Sources */,
+				703913EA9063731C887D8C89 /* BodyData.swift in Sources */,
+				15599D205C96F0F3AB6C10F2 /* SVGPath.swift in Sources */,
+				7A726A51CBA21F69CC3DED02 /* SettingsScreen.swift in Sources */,
+				58E5C0243C76229ADC8A72CA /* SettingsModel.swift in Sources */,
+				268F8BC2EEED51DFEBA99393 /* ChatScreen.swift in Sources */,
+				19CBED7FD1F5964154BE680E /* ChatModel.swift in Sources */,
+				B87F79C373EB1D0B1D2C8DBD /* ProgressScreen.swift in Sources */,
+				4A04023C939DC5FD45E35B23 /* ProgressData.swift in Sources */,
+				AAA6C6D71A6A4874DD38B790 /* ActivitiesScreen.swift in Sources */,
+				7C35402ED7FD069B855A029D /* CoachScreen.swift in Sources */,
+				46DB91C2760BD467A8823A30 /* CoachData.swift in Sources */,
+				69148F70C11B7C8A5FEEA54C /* WorkoutSheet.swift in Sources */,
+				F91A4CCAF65FF79E3FBC6252 /* SessionSheet.swift in Sources */,
+				CDD34F69C7830EBB900100E4 /* SheetModels.swift in Sources */,
+				9A07F2D71C8C98430A5D0958 /* SheetData.swift in Sources */,
+				098CB5BAA04622BF0EB6EABB /* Launch.swift in Sources */,
+				B7C85020072CCF35796D919E /* TartanShellPlugin.swift in Sources */,
+				C57C6D727182156026AD0FCE /* ShellModel.swift in Sources */,
+				408A1732733D44FEBAEC936A /* ShellViewController.swift in Sources */,
+				838086257F85A3779D3875E5 /* Theme.swift in Sources */,
+				A89CE74156C10087E77753CE /* TabBar.swift in Sources */,
+				C7B72D8C9BC8134E99B22858 /* TodayData.swift in Sources */,
+				40C4F994BDAEAC5A96375B9F /* TodayModel.swift in Sources */,
+				7DC7CCF976379ECBDEA36C90 /* TodayScreen.swift in Sources */,
+				A55BE05E1B93E5D7F8F0469E /* TodayCards.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4FB931EE3DA21CCC7D0F5F83 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3D6EF0EC2E6A918A30BFBD5E /* TartanWidgets.swift in Sources */,
+				7235974C2471CE33BD343BCA /* LiveRunAttributes.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AC0125BB2C4EEC1565810B1D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 53ED4BD8D2DA8B5D9D0E337C /* TartanWidgets */;
+			targetProxy = 85C64DD22865B89D4D0BA075 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		504EC30B1FED79650016851F /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				504EC30C1FED79650016851F /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		504EC3101FED79650016851F /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				504EC3111FED79650016851F /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		504EC3141FED79650016851F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 958DCC722DB07C7200EA8C5F /* debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		504EC3151FED79650016851F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		504EC3171FED79650016851F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 958DCC722DB07C7200EA8C5F /* debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = App/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
+				PRODUCT_BUNDLE_IDENTIFIER = app.tartan;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		504EC3181FED79650016851F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = App/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tartan;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		25CE93D7F781CB9A5C6B5081 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TartanWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tartan.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		040E74A4400BE46603646DCE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TartanWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.tartan.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		504EC2FF1FED79650016851F /* Build configuration list for PBXProject "App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				504EC3141FED79650016851F /* Debug */,
+				504EC3151FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		504EC3161FED79650016851F /* Build configuration list for PBXNativeTarget "App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				504EC3171FED79650016851F /* Debug */,
+				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D5DCEAB05FC75C3C1FE621CB /* Build configuration list for PBXNativeTarget "TartanWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				25CE93D7F781CB9A5C6B5081 /* Debug */,
+				040E74A4400BE46603646DCE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "CapApp-SPM";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A1C1E00100000000000000A5 /* XCRemoteSwiftPackageReference "connectiq-companion-app-sdk-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/garmin/connectiq-companion-app-sdk-ios";
+			requirement = {
+				kind = exactVersion;
+				version = 1.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1C1E00100000000000000A2 /* ConnectIQ */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1C1E00100000000000000A5 /* XCRemoteSwiftPackageReference "connectiq-companion-app-sdk-ios" */;
+			productName = ConnectIQ;
+		};
+		4D22ABE82AF431CB00220026 /* CapApp-SPM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */;
+			productName = "CapApp-SPM";
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 504EC2FC1FED79650016851F /* Project object */;
+}

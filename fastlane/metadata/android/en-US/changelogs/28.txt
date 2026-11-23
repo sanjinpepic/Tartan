@@ -1,0 +1,1 @@
+- Coach on Gemini answers much sooner in long chats: older messages keep only what was said, not every lookup again.

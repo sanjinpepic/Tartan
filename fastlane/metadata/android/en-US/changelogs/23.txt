@@ -1,0 +1,2 @@
+- Tell the coach about a workout nothing recorded ("I swam 25x25m today", "an hour of yoga", "ran 5 k without the watch") and it logs it: it shows in Activities, ticks off that day's planned session and counts in your training load. Say "take that back" to remove it.
+- When the watch or Strava later brings that day's recording, the told one steps aside, so nothing counts twice.

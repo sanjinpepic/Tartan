@@ -1,0 +1,1 @@
+- A run from intervals.icu and the watch's own file shows once, whichever comes first.

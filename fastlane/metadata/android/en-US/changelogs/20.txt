@@ -1,0 +1,1 @@
+- Behind the scenes: on iPhone, making your first plan and the watch face builder are native screens now, so the whole iPhone app is native. Nothing changes on Android.

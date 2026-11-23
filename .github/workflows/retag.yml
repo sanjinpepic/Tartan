@@ -1,0 +1,25 @@
+name: Move tags to main
+
+# One-off, after main's history was made one fresh commit: every tag moves onto main's newest
+# commit, so the releases (and their downloads) stay and nothing points at the old history.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  retag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Move every tag
+        run: |
+          set -euo pipefail
+          git ls-remote --tags origin | awk '{print $2}' | grep -v '\^{}$' | sort -u > tags.txt
+          wc -l < tags.txt
+          while read -r ref; do git push --force origin "HEAD:$ref"; done < tags.txt
+          git ls-remote --tags origin | grep -v '\^{}$' | awk '{print $1}' | sort | uniq -c

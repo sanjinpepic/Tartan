@@ -1,0 +1,1 @@
+- The morning check stays open until you've answered everything it asks, and folds again after you change it (Done, or a moment after your last answer).

@@ -1,0 +1,163 @@
+name: Garmin watch app
+
+# Tartan's Connect IQ watch app (garmin/, docs/garmin.md): one .prg per watch in garmin/manifest.xml
+# for sideloading, and the .iq package the Connect IQ Store takes, on the "garmin" pre-release.
+#
+# The device files need a Garmin developer login (secrets GARMIN_USERNAME and GARMIN_PASSWORD),
+# fetched with lindell/connect-iq-sdk-manager-cli (Apache-2.0). Nothing of the SDK, the devices or
+# the key is committed. The signing key is GARMIN_DEVELOPER_KEY (a base64 DER key) when that secret
+# is set; otherwise each run makes its own, which is fine for sideloading but not for the Store
+# (an app keeps its key for life there).
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: [main]
+    paths: ["garmin/**", ".github/workflows/garmin.yml"]
+  workflow_dispatch:
+
+env:
+  SDK_VERSION: "9.3.0"
+  MANAGER_VERSION: "0.8.4"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: The SDK manager
+        run: |
+          set -euo pipefail
+          N=connect-iq-sdk-manager-cli_${MANAGER_VERSION}_Linux_x86_64.tar.gz
+          curl -fsSL -o /tmp/$N "https://github.com/lindell/connect-iq-sdk-manager-cli/releases/download/v${MANAGER_VERSION}/$N"
+          mkdir -p "$HOME/bin" && tar -xzf /tmp/$N -C "$HOME/bin" connect-iq-sdk-manager
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Log in (the agreement, the account)
+        env:
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$GARMIN_USERNAME" || { echo "No GARMIN_USERNAME secret"; exit 1; }
+          connect-iq-sdk-manager agreement accept
+          # Only the outcome is printed: never the account or what Garmin answers.
+          if ! connect-iq-sdk-manager login > /tmp/login.log 2>&1; then
+            if grep -qiE "mfa|two.?step|verif|code" /tmp/login.log; then echo "Login failed: the Garmin account asks for two-step verification."; else echo "Login failed (not a two-step verification prompt)."; fi
+            sed -E 's/[^ ]+@[^ ]+/<account>/g' /tmp/login.log | grep -oiE "status[^,]{0,60}|could not[^,]{0,80}|unexpected[^,]{0,80}" | head -5 || true
+            exit 1
+          fi
+          echo "Logged in."
+      - name: The SDK
+        run: |
+          set -euo pipefail
+          connect-iq-sdk-manager sdk set "$SDK_VERSION"
+          echo "$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_PATH"
+      - name: The watches Garmin lists (Forerunner and fenix)
+        run: connect-iq-sdk-manager device list | grep -iE "fr[0-9]|fenix|epix|venu|NAME" || true
+      - name: The devices in the manifest
+        if: hashFiles('garmin/manifest.xml') != ''
+        run: connect-iq-sdk-manager device download --manifest=garmin/manifest.xml --include-fonts
+      - name: The signing key
+        if: hashFiles('garmin/manifest.xml') != ''
+        env:
+          KEY: ${{ secrets.GARMIN_DEVELOPER_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -n "$KEY" ]; then
+            echo "$KEY" | base64 -d > /tmp/developer_key.der
+            echo "Signing with GARMIN_DEVELOPER_KEY."
+          else
+            openssl genrsa -out /tmp/developer_key.pem 4096 2>/dev/null
+            openssl pkcs8 -topk8 -inform PEM -outform DER -in /tmp/developer_key.pem -out /tmp/developer_key.der -nocrypt
+            rm /tmp/developer_key.pem
+            echo "No GARMIN_DEVELOPER_KEY secret: a key made for this run (fine for sideloading, not for the Store)."
+          fi
+      - name: Build every watch, and the store package
+        if: hashFiles('garmin/manifest.xml') != ''
+        run: garmin/build.sh /tmp/developer_key.der build/garmin
+      - uses: actions/upload-artifact@v4
+        if: hashFiles('garmin/manifest.xml') != ''
+        with:
+          name: tartan-garmin
+          path: build/garmin/*
+          if-no-files-found: error
+      - uses: softprops/action-gh-release@v2
+        if: hashFiles('garmin/manifest.xml') != '' && github.ref == 'refs/heads/main'
+        with:
+          tag_name: garmin
+          name: Tartan for Garmin watches (sideload)
+          prerelease: true
+          make_latest: false
+          target_commitish: ${{ github.sha }}
+          files: build/garmin/*
+          body: |
+            Tartan's watch app for Garmin Forerunner and fenix watches: today's session from the Tartan phone app, guided step by step, recorded as a normal Garmin activity.
+            Sideload: take the .prg for your watch (tartan-<watch>.prg), connect the watch over USB and copy it into GARMIN/APPS. See docs/garmin.md.
+            tartan.iq is the package for the Connect IQ Store.
+
+  # Pictures of the watch app in the Connect IQ simulator, headless: an AMOLED watch (Forerunner
+  # 265) and a MIP one (Forerunner 955), committed to screenshots/garmin/. Best effort: a failure
+  # here doesn't fail the build.
+  # Run by hand only (Actions → Garmin watch app → Run workflow).
+  screens:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: The simulator's libraries
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends xvfb imagemagick libwebkit2gtk-4.0-37 libsecret-1-0 libsoup2.4-1 libusb-1.0-0 python3-pil > /dev/null
+      - name: The SDK, the account, the devices
+        env:
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          N=connect-iq-sdk-manager-cli_${MANAGER_VERSION}_Linux_x86_64.tar.gz
+          curl -fsSL -o /tmp/$N "https://github.com/lindell/connect-iq-sdk-manager-cli/releases/download/v${MANAGER_VERSION}/$N"
+          mkdir -p "$HOME/bin" && tar -xzf /tmp/$N -C "$HOME/bin" connect-iq-sdk-manager
+          export PATH="$HOME/bin:$PATH"
+          connect-iq-sdk-manager agreement accept
+          connect-iq-sdk-manager login > /dev/null 2>&1 || { echo "Login failed."; exit 1; }
+          connect-iq-sdk-manager sdk set "$SDK_VERSION"
+          connect-iq-sdk-manager device download --device=fr265 --device=fr955 --include-fonts
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_PATH"
+      - name: Pictures
+        run: |
+          set -euo pipefail
+          openssl genrsa -out /tmp/k.pem 4096 2>/dev/null
+          openssl pkcs8 -topk8 -inform PEM -outform DER -in /tmp/k.pem -out /tmp/k.der -nocrypt
+          Xvfb :99 -screen 0 1280x1024x24 > /dev/null 2>&1 &
+          export DISPLAY=:99
+          sleep 2
+          mkdir -p screenshots/garmin
+          garmin/screens.sh /tmp/k.der fr265 screenshots/garmin || (tail -20 /tmp/sim-fr265.log /tmp/monkeydo-fr265.log; exit 1)
+          garmin/screens.sh /tmp/k.der fr955 screenshots/garmin || (tail -20 /tmp/sim-fr955.log /tmp/monkeydo-fr955.log; exit 1)
+          ls -la screenshots/garmin
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: garmin-screens
+          path: |
+            screenshots/garmin/*.png
+            /tmp/shots-*/*.png
+      - name: Commit the pictures
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A screenshots/garmin
+          if git diff --cached --quiet; then echo "No change."; exit 0; fi
+          git commit -m "Garmin watch app pictures from the simulator, for ${GITHUB_SHA::7}"
+          for i in 1 2 3; do git pull --rebase --autostash origin main && git push origin HEAD:main && exit 0; sleep 5; done
+          exit 1

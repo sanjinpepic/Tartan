@@ -1,0 +1,77 @@
+name: iPhone app
+
+# The iPhone app, unsigned, for SideStore/AltStore (docs/ios.md): on each push that changes the
+# app (free on a public repository), or by hand. The .ipa is the run's artifact.
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: [main]
+    paths: ["ios/**", "web/**", "src/**", "package.json", "bun.lock", "scripts/ios-build.sh", "scripts/ios-prepare.sh", ".github/workflows/ios.yml"]
+  workflow_dispatch:
+
+jobs:
+  ipa:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+      - run: ./scripts/ios-build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tartan-ipa
+          path: build/*.ipa
+      # On the "ios" pre-release (regular releases stay Android's, for Obtainium and Orion): the
+      # .ipa, and a SideStore/AltStore source listing it, so SideStore offers each new build.
+      - name: The SideStore source
+        run: |
+          V=$(node -p "require('./package.json').version"); B=$(node -p "require('./package.json').versionCode")
+          IPA=build/Tartan-$V.ipa
+          python3 - "$V" "$B" "$(stat -f%z "$IPA")" <<'PY'
+          import json, sys, datetime
+          v, b, size = sys.argv[1], sys.argv[2], int(sys.argv[3])
+          base = "https://github.com/sanjinpepic/Tartan"
+          src = {
+            "name": "Tartan", "identifier": "app.tartan.source", "subtitle": "A running coach for your watch",
+            "website": base, "iconURL": "https://raw.githubusercontent.com/sanjinpepic/Tartan/main/icon.png", "tintColor": "A8321F",
+            "apps": [{
+              "name": "Tartan", "bundleIdentifier": "app.tartan", "developerName": "Tartan contributors",
+              "subtitle": "A running coach for your watch",
+              "localizedDescription": "Plans your running around your week, puts it on your watch and adapts when life gets in the way. Built-in rules, or your own Gemini or Claude key. Free, open source, and your data stays on your phone.",
+              "iconURL": "https://raw.githubusercontent.com/sanjinpepic/Tartan/main/icon.png", "tintColor": "A8321F",
+              "screenshots": [f"https://raw.githubusercontent.com/sanjinpepic/Tartan/main/screenshots/{n}.png" for n in ("1-today", "2-coach", "3-ask-your-coach")],
+              "versions": [{
+                "version": v, "buildVersion": b, "date": datetime.date.today().isoformat(),
+                "localizedDescription": "The latest build from main.",
+                "downloadURL": f"{base}/releases/download/ios/Tartan-{v}.ipa", "size": size, "minOSVersion": "26.0",
+              }],
+              # The listed build is the plain one (installs with any Apple ID); the -health.ipa beside it
+              # on the release asks for Apple Health, which a free Apple ID may not be allowed.
+              "appPermissions": {"entitlements": [], "privacy": {"NSHealthShareUsageDescription": "Tartan reads your workouts from Apple Health, with their heart rate, distance and route. It writes nothing there."}},
+            }],
+            "news": [],
+          }
+          json.dump(src, open("build/sidestore.json", "w"), indent=2)
+          PY
+      - uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: ios
+          name: Tartan for iPhone (sideload)
+          prerelease: true
+          make_latest: false
+          target_commitish: ${{ github.sha }}
+          files: |
+            build/*.ipa
+            build/sidestore.json
+          body: |
+            The iPhone app, unsigned: install it with SideStore or AltStore, which sign it with your own Apple ID (see docs/ios.md).
+            In SideStore, add this source once and it offers each new build: https://github.com/sanjinpepic/Tartan/releases/download/ios/sidestore.json
+            Tartan-<version>-health.ipa is the same app asking for Apple Health. A free Apple ID may not be allowed that; if it won't install, use the plain one.

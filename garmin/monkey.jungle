@@ -1,0 +1,4 @@
+project.manifest = manifest.xml
+# stub/: nothing. The screenshot build (screens.jungle) puts screens/ in its place: a sample plan
+# and a run driven by itself, for the simulator's pictures (.github/workflows/garmin.yml).
+base.sourcePath = source;stub

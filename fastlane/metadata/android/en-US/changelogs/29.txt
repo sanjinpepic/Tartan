@@ -1,0 +1,5 @@
+- Sessions ahead show the forecast at your usual time: on Today, in the week list and in the session sheet
+- Motion that shows what changed: day swaps, putting a milestone away, charts filling once; nothing moves with animations off
+- A light tap when a plan change lands
+- "Swim instead" is easy to see again
+- Tidier rows on iPhone and Android

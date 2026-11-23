@@ -1,0 +1,58 @@
+name: Release from source
+
+# Builds the public app (the foss flavour: app.tartan, nothing taken from Suunto's software) from
+# this repository, signs it with the release key and makes the GitHub release v<version>, where
+# Orion Store and Obtainium read it. Started by hand (Actions → Release from source → Run). It
+# needs the release key in the repository's secrets (Settings → Secrets and variables → Actions):
+#   TARTAN_KEYSTORE_B64        the keystore, base64 (base64 -w0 tartan-release.jks)
+#   TARTAN_KEYSTORE_PASSWORD   its password
+#   TARTAN_KEY_PASSWORD        the key's password
+# Until they're there, releases go through the release branch (its release.yml).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run check:public
+      - name: The release key, from the secrets
+        env:
+          KEY: ${{ secrets.TARTAN_KEYSTORE_B64 }}
+        run: |
+          test -n "$KEY" || { echo "Add the TARTAN_KEYSTORE_B64 secret (see the top of this file)"; exit 1; }
+          echo "$KEY" | base64 -d > "$RUNNER_TEMP/tartan-release.jks"
+          echo "TARTAN_KEYSTORE=$RUNNER_TEMP/tartan-release.jks" >> "$GITHUB_ENV"
+      - name: Build and sign
+        env:
+          TARTAN_KEYSTORE_PASSWORD: ${{ secrets.TARTAN_KEYSTORE_PASSWORD }}
+          TARTAN_KEY_PASSWORD: ${{ secrets.TARTAN_KEY_PASSWORD }}
+          TARTAN_KEY_ALIAS: tartan
+        run: bun run android:build:public
+      - name: Name it
+        run: |
+          V=$(node -p "require('./package.json').version")
+          cp android/app/build/outputs/apk/foss/release/app-foss-release.apk "tartan-$V.apk"
+          echo "APK=tartan-$V.apk" >> "$GITHUB_ENV"
+          echo "V=$V" >> "$GITHUB_ENV"
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.V }}
+          name: Tartan ${{ env.V }}
+          files: ${{ env.APK }}
+          body_path: notes.md
+          make_latest: true

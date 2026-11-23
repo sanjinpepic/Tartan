@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget's colours: Tartan's own before Android 12; the wallpaper's after (values-v31). -->
+<resources>
+    <color name="widget_surface">#FFF8F6</color>
+    <color name="widget_on_surface">#231918</color>
+    <color name="widget_muted">#534341</color>
+    <color name="widget_track">#F5DDDA</color>
+    <color name="widget_accent">#A63A2B</color>
+    <color name="widget_accent_container">#FFDAD4</color>
+    <color name="widget_on_accent_container">#3E0400</color>
+    <color name="widget_good_container">#C4EFCB</color>
+    <color name="widget_on_good_container">#00210B</color>
+    <color name="widget_warn_container">#FFDEA6</color>
+    <color name="widget_on_warn_container">#271900</color>
+    <color name="widget_good">#2E7D4A</color>
+    <color name="widget_track_high">#F5DDDA</color>
+</resources>

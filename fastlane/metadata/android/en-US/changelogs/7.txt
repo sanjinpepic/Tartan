@@ -1,0 +1,4 @@
+- After a run, a short note from the coach: how it went against the plan, any record, against last time, and what's next. Tap it to open the run. Settings → Training times → After a run turns it off.
+- From twelve weeks out, Today counts down to your race: the days to go, your predicted time and how it moved in the last month, the target, and the taper in the last two weeks.
+- Ask the coach for a route from one of your runs: "last Tuesday's loop, 2 km longer", "my usual Sunday long run", "last week's river run, reversed".
+- Buttons that don't fit side by side go on the next line instead of squeezing.

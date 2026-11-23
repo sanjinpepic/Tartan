@@ -1,0 +1,3 @@
+- Gemini keys that start with "AQ." are accepted (Google's newer keys).
+- The Coach tab shows your plan first; changing the plan and setting up the coach moved out of the way.
+- Smaller download.

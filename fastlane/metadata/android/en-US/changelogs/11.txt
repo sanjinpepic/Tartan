@@ -1,0 +1,3 @@
+- Today leads with your session, how you are and your week; the numbers, your last workout and notes are under More today.
+- Progress cards lead with what they found; how it's worked out is behind the ⓘ.
+- Effort this week reads as a share of your usual week. All Settings tabs fit. The chat header is shorter.

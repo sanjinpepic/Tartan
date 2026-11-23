@@ -1,0 +1,5 @@
+- A run swapped for a swim stays a swim when it moves to another day
+- Swims in the plan say how far: metres and 25 m lengths, from your own pool pace
+- The coach weighs a change before making it: the new day's weather, the week around it
+- Share a run on its colour, a street map or your own photo, with start and finish hidden on the map
+- After a run, the coach may point to one moment on the route

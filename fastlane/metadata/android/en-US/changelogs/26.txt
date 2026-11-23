@@ -1,0 +1,4 @@
+- The weather on each outdoor workout: on its card, and in full in the workout.
+- A run from Health Connect and the watch's own file shows once, whichever comes first.
+- Workouts you told the coach about can be removed from the workout.
+- Fresh screenshots.

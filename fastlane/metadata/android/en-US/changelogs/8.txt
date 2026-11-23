@@ -1,0 +1,1 @@
+- Tartan's own icon on its notifications again (some showed a generic one).

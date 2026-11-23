@@ -1,0 +1,23 @@
+node_modules/
+data/
+.freesuunto/
+*.log
+.DS_Store
+dist/
+.impeccable/review/
+.impeccable/questions/
+.impeccable/config.local.json
+
+# The release key and its passwords: never in the repo.
+android/keystore.properties
+*.jks
+*.keystore
+/build/
+
+# The owner's private add-on (scripts/owner-overlay.sh): never committed here.
+test/fixtures/captured-face-layout.json
+test/fixtures/suunto-workouts.json
+android/app/debug.keystore
+
+# Public APKs go on the release branch, never on main.
+apk/

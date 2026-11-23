@@ -1,0 +1,1 @@
+- Every button, switch, checkbox and chip gives a slight tick under your finger, and the ticks are a little easier to feel.

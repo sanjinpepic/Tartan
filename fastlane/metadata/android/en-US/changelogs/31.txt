@@ -1,0 +1,3 @@
+- Moments on the route: numbered pins on a run's map, one line each under it, tap one to see its stretch on the map and charts
+- Opening a run from the after-run note goes straight to its moments
+- Sharing on a map: the route stays on its streets whether start and finish are hidden or shown

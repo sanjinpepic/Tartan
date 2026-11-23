@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Resources looked up by name, which the public build's resource shrinker can't see and would
+  otherwise remove: the notification icon the engine's notifications use (capacitor.config.ts,
+  LocalNotifications.smallIcon, found with getIdentifier). Without it Android shows a generic icon.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_tartan" />

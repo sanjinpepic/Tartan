@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="description" content="Tartan: a training coach for your watch and Strava data, kept on your own device, with a plan, dashboards and an MCP server for AI agents." />
+    <meta name="theme-color" content="#fff8f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1110" media="(prefers-color-scheme: dark)" />
+    <title>Tartan</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <nav class="nav" id="nav" aria-label="Sections"></nav>
+    <header class="topbar" id="topbar">
+      <span class="topbar-title" id="topbar-title" aria-hidden="true"></span>
+      <button type="button" class="conn" id="conn" data-state="off" aria-label="Sync details"></button>
+      <a class="icon-btn gear" href="#settings" aria-label="Settings" id="gear"></a>
+    </header>
+    <main id="main" tabindex="-1">
+      <div id="view" class="view"></div>
+    </main>
+    <div id="snack" class="snack" aria-live="polite"></div>
+    <script type="module" src="./app.ts"></script>
+  </body>
+</html>

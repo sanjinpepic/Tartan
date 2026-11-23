@@ -1,0 +1,4 @@
+- Garmin watches: a Tartan watch app guides today's session step by step on Forerunner and Fenix
+- Find my watch tells a Garmin from a Suunto and takes the right path for each
+- Last night on the morning check and Today: sleep stages, energy, HRV, from whichever source has them
+- Readiness weighs low energy, a broken night and recovery time, and asks if you're getting ill

@@ -1,0 +1,2 @@
+- Coach on Gemini: Gemini 4 Hydrogen is in the model list. When the chosen model stays busy, the next one down answers (Gemini 4 to 3.8 Flash, 3.8 Flash to Flash-Lite).
+- A model that doesn't take Tartan's thinking setting answers at its own pace instead of failing.
