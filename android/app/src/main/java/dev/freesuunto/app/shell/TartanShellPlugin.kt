@@ -386,19 +386,33 @@ class TartanShellPlugin : Plugin() {
 
     /**
      * A Garmin watch (GarminLink): the plan to Tartan's watch app through Garmin Connect, when the
-     * app opens, when the plan changes and when the watch asks. Only when the watch is a Garmin: a
-     * Suunto never starts Garmin's SDK.
+     * app opens, when the plan changes and when the watch asks; the watch's day (Body Battery,
+     * stress, resting heart rate…) into the body signals as "garmin". Only when the watch is a
+     * Garmin: a Suunto never starts Garmin's SDK, and never takes Garmin's numbers.
      */
     private val garminLink: GarminLink by lazy {
-        GarminLink(context) { api("rpc:garminPlan", "POST", "{}").let { (st, b) -> if (st in 200..299) b else null } }.also { it.onWant = { garminSync(true) } }
+        GarminLink(context) { api("rpc:garminPlan", "POST", "{}").let { (st, b) -> if (st in 200..299) b else null } }.also {
+            it.onWant = { garminSync(true) }
+            it.onDay = { msg -> garminDay(msg) }
+        }
     }
     private var garminBusy = false
+    private suspend fun watchBrand(): String? =
+        api("rpc:watchBrand", "POST", "{}").let { (st, b) -> if (st in 200..299) runCatching { org.json.JSONObject(b).optString("brand") }.getOrNull() else null }
     private fun garminSync(force: Boolean = false): kotlinx.coroutines.Job = scope.launch {
         if (garminBusy) return@launch
-        val brand = api("rpc:watchBrand", "POST", "{}").let { (st, b) -> if (st in 200..299) runCatching { org.json.JSONObject(b).optString("brand") }.getOrNull() else null }
-        if (!GarminMessage.goesToGarmin(brand)) return@launch
+        if (!GarminMessage.goesToGarmin(watchBrand())) return@launch
         garminBusy = true
-        try { garminLink.sync(force)?.let { g -> activity.runOnUiThread { sources.garmin = g } } } finally { garminBusy = false }
+        try {
+            // A day that came while the engine couldn't take it.
+            garminLink.takeKeptDay()?.let { args -> if (api("rpc:signalsPut", "POST", args).first !in 200..299) garminLink.keepDay(args) }
+            garminLink.sync(force)?.let { g -> activity.runOnUiThread { sources.garmin = g } }
+        } finally { garminBusy = false }
+    }
+    /** The watch's day, checked (GarminMessage.signalsFor), to the engine's signalsPut as "garmin". */
+    private fun garminDay(msg: Any?) = scope.launch {
+        val args = GarminMessage.signalsFor(watchBrand(), msg, java.time.LocalDate.now()) ?: return@launch
+        if (api("rpc:signalsPut", "POST", args).first !in 200..299) garminLink.keepDay(args)
     }
 
     /** The rest of Settings, native: shoes, the coach's AI, Watch, More. */

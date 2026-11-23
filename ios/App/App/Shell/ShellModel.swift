@@ -213,6 +213,8 @@ final class ShellModel {
         showScreen()
         // A Garmin gets the plan on open, and whenever its watch app asks (nothing happens for a Suunto).
         GarminLink.shared.onWant = { [weak self] in Task { await self?.sources.garminSync(force: true) } }
+        // Its day (Body Battery, stress…) into the body signals, likewise only for a Garmin.
+        GarminLink.shared.onDay = { [weak self] text in Task { await self?.sources.garminDay(text) } }
         Task { await sources.garminSync() }
     }
 

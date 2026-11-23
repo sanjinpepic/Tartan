@@ -1,0 +1,18 @@
+{
+  "about": "Tartan's Garmin watch app's day message (garmin/source/Body.mc) and the signalsPut arguments the phone makes of it (GarminMessage.signalDays on Android, GarminLink.swift on iPhone). Read by test/garmin-signals.test.ts and the Android GarminTest.",
+  "today": "2026-11-23",
+  "watch": {
+    "t": "day",
+    "v": 1,
+    "days": [
+      { "date": "2026-11-23", "energy": 64, "stress": 31, "recovery_h": 18, "breathing_rate": 14.2, "resting_hr": 48, "vo2max": 54, "night_hr_min": 44, "spo2_max": 98 },
+      { "date": "2026-11-22", "energy": 58, "stress": 36, "recovery_h": 30, "resting_hr": 49, "vo2max": 54, "night_hr_min": 46 }
+    ]
+  },
+  "put": {
+    "days": [
+      { "date": "2026-11-23", "source": "garmin", "energy": 64, "stress": 31, "recovery_h": 18, "breathing_rate": 14.2, "resting_hr": 48, "vo2max": 54, "night_hr_min": 44, "spo2_max": 98 },
+      { "date": "2026-11-22", "source": "garmin", "energy": 58, "stress": 36, "recovery_h": 30, "resting_hr": 49, "vo2max": 54, "night_hr_min": 46 }
+    ]
+  }
+}

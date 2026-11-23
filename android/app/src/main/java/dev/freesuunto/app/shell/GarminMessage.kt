@@ -56,4 +56,78 @@ object GarminMessage {
 
     /** Whether a message from the watch asks for the plan ({ t: "want" }). */
     fun asksForPlan(msg: Any?): Boolean = (msg as? Map<*, *>)?.get("t") == "want"
+
+    // ---------------------------------------------------------------- The watch's day (garmin/source/Body.mc)
+
+    /** Whether a message from the watch carries the day's body numbers ({ t: "day", days: [...] }). */
+    fun isDay(msg: Any?): Boolean = (msg as? Map<*, *>)?.get("t") == "day"
+
+    /** What the phone sends the watch to have the day's numbers now (Tartan opened). */
+    val ASK_DAY: Map<String, Any> = mapOf("t" to "ask", "v" to 1)
+
+    /**
+     * What the watch may send, as the engine's SignalValues (src/signals.ts): each number's range.
+     * Nothing else is taken: no sleep stages or HRV (Connect IQ doesn't give them; other sources do).
+     */
+    val DAY_RANGES: Map<String, ClosedFloatingPointRange<Double>> = mapOf(
+        "energy" to 0.0..100.0,
+        "stress" to 0.0..100.0,
+        "sleep_score" to 0.0..100.0,
+        "recovery_h" to 0.0..240.0,
+        "breathing_rate" to 3.0..60.0,
+        "resting_hr" to 20.0..200.0,
+        "vo2max" to 10.0..100.0,
+        "night_hr_min" to 20.0..200.0,
+        "spo2_max" to 50.0..100.0,
+    )
+    /** The night's times, when the watch has real ones (local "YYYY-MM-DDTHH:MM"). */
+    private val DAY_TIMES = setOf("sleep_start", "sleep_end")
+    private val TIME = Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$")
+
+    /** The days a message may be for: today, the two before (a phone that was away), tomorrow (a watch a time zone ahead). */
+    fun dayAllowed(date: String, today: java.time.LocalDate): Boolean {
+        val d = runCatching { java.time.LocalDate.parse(date) }.getOrNull() ?: return false
+        return date.length == 10 && !d.isBefore(today.minusDays(2)) && !d.isAfter(today.plusDays(1))
+    }
+
+    /**
+     * The watch's message, checked, as the engine's signalsPut arguments ({ days: [...] } with
+     * source "garmin"): each day's date within reach of today, each value a number in its range
+     * (one decimal at most) or, for the night's times, a real time. What isn't is left out; null
+     * when nothing in the message holds.
+     */
+    fun signalDays(msg: Any?, today: java.time.LocalDate): JSONObject? {
+        if (!isDay(msg)) return null
+        val days = (msg as Map<*, *>)["days"] as? List<*> ?: return null
+        val out = JSONArray()
+        for (d in days.take(7)) {
+            val m = d as? Map<*, *> ?: continue
+            val date = m["date"] as? String ?: continue
+            if (!dayAllowed(date, today)) continue
+            val day = JSONObject().put("date", date).put("source", "garmin")
+            var any = false
+            for ((k, v) in m) {
+                val key = k as? String ?: continue
+                val range = DAY_RANGES[key]
+                if (range != null) {
+                    val n = (v as? Number)?.toDouble()?.takeIf { it.isFinite() && it in range } ?: continue
+                    val r = Math.round(n * 10) / 10.0
+                    day.put(key, if (r == Math.floor(r)) r.toLong() else r)
+                    any = true
+                } else if (key in DAY_TIMES && v is String && TIME.matches(v) && v.substring(0, 10).let { s -> s == date || s == java.time.LocalDate.parse(date).minusDays(1).toString() }) {
+                    day.put(key, v)
+                    any = true
+                }
+            }
+            if (any) out.put(day)
+        }
+        return if (out.length() == 0) null else JSONObject().put("days", out)
+    }
+
+    /**
+     * The engine's signalsPut arguments for a message from the watch, only while the watch is a
+     * Garmin (the brand the engine keeps, the same switch as the plan): a Suunto never takes them.
+     */
+    fun signalsFor(brand: String?, msg: Any?, today: java.time.LocalDate): String? =
+        if (!goesToGarmin(brand)) null else signalDays(msg, today)?.toString()
 }

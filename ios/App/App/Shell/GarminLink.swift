@@ -36,6 +36,87 @@ enum GarminMessage {
         guard let d = (m["days"] as? [[String: Any]])?.first, let t = d["title"] as? String else { return nil }
         return (t, d["date"] as? String ?? "")
     }
+
+    // MARK: The watch's day (garmin/source/Body.mc), as Android's GarminMessage takes it
+
+    /** Whether a message from the watch carries the day's body numbers ({ t: "day", days: [...] }). */
+    static func isDay(_ msg: Any?) -> Bool { (msg as? [String: Any])?["t"] as? String == "day" }
+
+    /** What the phone sends the watch to have the day's numbers now (Tartan opened). */
+    static let askDay: [String: Any] = ["t": "ask", "v": 1]
+
+    /**
+     * What the watch may send, as the engine's SignalValues (src/signals.ts): each number's range.
+     * Nothing else is taken: no sleep stages or HRV (Connect IQ doesn't give them; other sources do).
+     */
+    static let dayRanges: [String: ClosedRange<Double>] = [
+        "energy": 0...100, "stress": 0...100, "sleep_score": 0...100, "recovery_h": 0...240,
+        "breathing_rate": 3...60, "resting_hr": 20...200, "vo2max": 10...100, "night_hr_min": 20...200, "spo2_max": 50...100,
+    ]
+    /** The night's times, when the watch has real ones (local "YYYY-MM-DDTHH:MM"). */
+    private static let dayTimes: Set<String> = ["sleep_start", "sleep_end"]
+
+    private static func dayText(_ d: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.timeZone = .current
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: d)
+    }
+    private static func days(from d: Date, _ n: Int) -> String { dayText(Calendar.current.date(byAdding: .day, value: n, to: d) ?? d) }
+
+    /** "2026-11-23" → "2026-11-22". */
+    private static func dayBefore(_ date: String) -> String? {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC")!
+        let p = date.split(separator: "-").compactMap { Int($0) }
+        guard p.count == 3, let d = c.date(from: DateComponents(year: p[0], month: p[1], day: p[2])), let b = c.date(byAdding: .day, value: -1, to: d) else { return nil }
+        let q = c.dateComponents([.year, .month, .day], from: b)
+        return String(format: "%04d-%02d-%02d", q.year ?? 0, q.month ?? 0, q.day ?? 0)
+    }
+
+    /** The days a message may be for: today, the two before (a phone that was away), tomorrow (a watch a time zone ahead). */
+    static func dayAllowed(_ date: String, today: Date) -> Bool {
+        (-2...1).contains { days(from: today, $0) == date }
+    }
+
+    /**
+     * The watch's message, checked, as the engine's signalsPut arguments ({ days: [...] } with
+     * source "garmin"): each day's date within reach of today, each value a number in its range
+     * (one decimal at most) or, for the night's times, a real time. What isn't is left out; nil
+     * when nothing in the message holds.
+     */
+    static func signalDays(_ msg: Any?, today: Date) -> [String: Any]? {
+        guard isDay(msg), let list = (msg as? [String: Any])?["days"] as? [Any] else { return nil }
+        var out: [[String: Any]] = []
+        for case let m as [String: Any] in list.prefix(7) {
+            guard let date = m["date"] as? String, dayAllowed(date, today: today) else { continue }
+            var day: [String: Any] = ["date": date, "source": "garmin"]
+            for (k, v) in m {
+                if let range = dayRanges[k] {
+                    guard let n = v as? NSNumber, CFGetTypeID(n) != CFBooleanGetTypeID() else { continue }
+                    let x = n.doubleValue
+                    guard x.isFinite, range.contains(x) else { continue }
+                    let r = (x * 10).rounded() / 10
+                    day[k] = r == r.rounded() ? Int(r) as Any : r as Any
+                } else if dayTimes.contains(k), let s = v as? String, s.range(of: #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$"#, options: .regularExpression) != nil {
+                    let d = String(s.prefix(10))
+                    if d == date || d == dayBefore(date) { day[k] = s }
+                }
+            }
+            if day.count > 2 { out.append(day) }
+        }
+        return out.isEmpty ? nil : ["days": out]
+    }
+
+    /**
+     * The engine's signalsPut arguments for a message from the watch, only while the watch is a
+     * Garmin (the brand the engine keeps, the same switch as the plan): a Suunto never takes them.
+     */
+    static func signalsFor(_ brand: String?, _ msg: Any?, today: Date) -> [String: Any]? {
+        goesToGarmin(brand) ? signalDays(msg, today: today) : nil
+    }
 }
 
 /// A continuation resumed once: by the answer or by the time running out, whichever comes first.
@@ -71,6 +152,8 @@ final class GarminLink: NSObject, IQUIOverrideDelegate, IQDeviceEventDelegate, I
     private var choosing: (([IQDevice]) -> Void)?
     /** The watch app asked for the plan. */
     var onWant: (() -> Void)?
+    /** The watch app sent the day's body numbers (the message as JSON; GarminMessage.signalsFor checks it). */
+    var onDay: ((String) -> Void)?
     /** Garmin Connect isn't on this iPhone (the SDK said so when asked to hand over). */
     private(set) var gcmMissing = false
     private let defaults = UserDefaults.standard
@@ -130,18 +213,29 @@ final class GarminLink: NSObject, IQUIOverrideDelegate, IQDeviceEventDelegate, I
     func use(_ d: IQDevice) {
         start()
         device = d
-        for k in ["key", "title", "date", "error", "app"] { defaults.removeObject(forKey: "garmin.\(k)") }
+        for k in ["key", "title", "date", "error", "app", "askedAt"] { defaults.removeObject(forKey: "garmin.\(k)") }
         listen(d)
     }
 
     func forget() {
         if started { ConnectIQ.sharedInstance()?.unregister(forAllDeviceEvents: self); ConnectIQ.sharedInstance()?.unregister(forAllAppMessages: self) }
         device = nil
-        for k in ["key", "title", "date", "error", "app"] { defaults.removeObject(forKey: "garmin.\(k)") }
+        for k in ["key", "title", "date", "error", "app", "askedAt", "dayKept"] { defaults.removeObject(forKey: "garmin.\(k)") }
     }
 
+    /**
+     * A message from the watch app: it asks for the plan ({ t: "want" }), or sends its day
+     * ({ t: "day" }, about every half hour and when it opens). The SDK hands them over only while
+     * Tartan runs; one while it's closed is lost, so sync() asks the watch for its day again.
+     */
     nonisolated func receivedMessage(_ message: Any!, from app: IQApp!) {
-        guard (message as? [String: Any])?["t"] as? String == "want" else { return }
+        let t = (message as? [String: Any])?["t"] as? String
+        if t == "day", let m = message, JSONSerialization.isValidJSONObject(m), let data = try? JSONSerialization.data(withJSONObject: m) {
+            let text = String(decoding: data, as: UTF8.self)
+            Task { @MainActor in self.onDay?(text) }
+            return
+        }
+        guard t == "want" else { return }
         Task { @MainActor in self.onWant?() }
     }
 
@@ -177,9 +271,9 @@ final class GarminLink: NSObject, IQUIOverrideDelegate, IQDeviceEventDelegate, I
             defaults.set(got, forKey: "garmin.app")
             if !got { return now() }
         }
-        guard let answer = await plan(), let r = GarminMessage.fromEngine(answer) else { return now() }
+        guard let answer = await plan(), let r = GarminMessage.fromEngine(answer) else { await askDay(a); return now() }
         let key = r.key, msg = r.message
-        if !force && key == defaults.string(forKey: "garmin.key") { return now() }
+        if !force && key == defaults.string(forKey: "garmin.key") { await askDay(a); return now() }
         let ok: Bool = await withCheckedContinuation { (c: CheckedContinuation<Bool, Never>) in
             let once = Once(c)
             ConnectIQ.sharedInstance()?.sendMessage(msg, to: a, progress: { _, _ in }, completion: { result in once.resume(result.rawValue == 0) })
@@ -194,7 +288,33 @@ final class GarminLink: NSObject, IQUIOverrideDelegate, IQDeviceEventDelegate, I
         } else {
             defaults.set("not connected", forKey: "garmin.error")
         }
+        await askDay(a)
         return now()
+    }
+
+    /**
+     * Ask the watch app for the day's numbers (it answers with { t: "day" }, to onDay): on the
+     * watches whose background takes phone messages it answers even when closed, on the others the
+     * next time it opens (when it sends its day anyway). At most every ten minutes.
+     */
+    private func askDay(_ a: IQApp) async {
+        let at = Date().timeIntervalSince1970
+        if at - defaults.double(forKey: "garmin.askedAt") < 600 { return }
+        defaults.set(at, forKey: "garmin.askedAt")
+        let _: Bool = await withCheckedContinuation { (c: CheckedContinuation<Bool, Never>) in
+            let once = Once(c)
+            ConnectIQ.sharedInstance()?.sendMessage(GarminMessage.askDay, to: a, progress: { _, _ in }, completion: { result in once.resume(result.rawValue == 0) })
+            DispatchQueue.main.asyncAfter(deadline: .now() + 20) { once.resume(false) }
+        }
+    }
+
+    /** A day the engine couldn't take when it came (signalsPut's arguments as JSON): kept for the next sync. */
+    func keepDay(_ args: String) { defaults.set(args, forKey: "garmin.dayKept") }
+    /** The day kept, taken out (nil when none). */
+    func takeKeptDay() -> String? {
+        let s = defaults.string(forKey: "garmin.dayKept")
+        defaults.removeObject(forKey: "garmin.dayKept")
+        return s
     }
 
     func getWatchApp() { UIApplication.shared.open(Self.watchAppUrl) }

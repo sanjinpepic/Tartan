@@ -262,6 +262,9 @@ final class SourcesModel {
     /** The plan to the Garmin, when the watch is one and it changed (or `force`). Nothing for a Suunto. */
     func garminSync(force: Bool = false) async {
         guard case .success(let b) = await engine.rpc("watchBrand"), GarminMessage.goesToGarmin(J(json: b)["brand"].str) else { return }
+        // A day from the watch that came while the engine couldn't take it.
+        if let kept = GarminLink.shared.takeKeptDay(), let args = J(json: kept).object,
+           case .failure = await engine.rpc("signalsPut", args) { GarminLink.shared.keepDay(kept) }
         if force { busy = "garmin" }
         let g = await GarminLink.shared.sync(force: force) { [engine] in
             if case .success(let r) = await engine.rpc("garminPlan") { return r }
@@ -269,6 +272,17 @@ final class SourcesModel {
         }
         if let g { garmin = g }
         if force { busy = nil }
+    }
+
+    /**
+     * The watch's day (Body Battery, stress, resting heart rate…, garmin/source/Body.mc), checked
+     * (GarminMessage.signalsFor), into the body signals as "garmin": only while the watch is a Garmin.
+     */
+    func garminDay(_ text: String) async {
+        guard case .success(let b) = await engine.rpc("watchBrand"),
+              let msg = try? JSONSerialization.jsonObject(with: Data(text.utf8)),
+              let args = GarminMessage.signalsFor(J(json: b)["brand"].str, msg, today: Date()) else { return }
+        if case .failure = await engine.rpc("signalsPut", args) { GarminLink.shared.keepDay(jsonText(args)) }
     }
 
     func readGarmin() { if watch?.brand == "garmin" { garmin = GarminLink.shared.now() } }

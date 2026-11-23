@@ -76,6 +76,77 @@ class GarminTest {
         assertFalse(GarminMessage.asksForPlan("want"))
     }
 
+    // ---------------------------------------------------------------- The watch's day (garmin/source/Body.mc)
+
+    /** test/fixtures/garmin-day.json: the watch's message and the signalsPut arguments made of it (the engine's test reads it too). */
+    private val dayFixture by lazy {
+        val f = listOf("../../test/fixtures/garmin-day.json", "../test/fixtures/garmin-day.json", "test/fixtures/garmin-day.json").map { java.io.File(it) }.first { it.exists() }
+        JSONObject(f.readText())
+    }
+    private val nov23 = java.time.LocalDate.parse("2026-11-23")
+    /** A message as Garmin's SDK hands it over: maps, lists, Integers and Floats. */
+    private fun fromWatch(json: String): Any? = GarminMessage.monkey(JSONObject(json))
+    /** JSON as plain values, numbers as Doubles, to compare. */
+    private fun plain(v: Any?): Any? = when (v) {
+        is JSONObject -> v.keys().asSequence().associateWith { plain(v.get(it)) }
+        is org.json.JSONArray -> (0 until v.length()).map { plain(v.get(it)) }
+        is Number -> v.toDouble()
+        else -> v
+    }
+
+    @Test fun theWatchsDayAsTheEngineGetsIt() {
+        val msg = GarminMessage.monkey(dayFixture.getJSONObject("watch"))
+        assertTrue(GarminMessage.isDay(msg))
+        assertFalse(GarminMessage.asksForPlan(msg))
+        val args = GarminMessage.signalsFor("garmin", msg, java.time.LocalDate.parse(dayFixture.getString("today")))!!
+        assertEquals(plain(dayFixture.getJSONObject("put")), plain(JSONObject(args)))
+        // Whole numbers stay whole; a breathing rate keeps its decimal (a Float from the watch).
+        val today = JSONObject(args).getJSONArray("days").getJSONObject(0)
+        assertEquals("64", today.get("energy").toString())
+        assertEquals(14.2, today.getDouble("breathing_rate"), 0.0)
+    }
+
+    @Test fun theWatchsDayChecked() {
+        val args = GarminMessage.signalDays(fromWatch("""{"t":"day","v":1,"days":[
+            {"date":"2026-11-23","energy":140,"stress":-1,"resting_hr":"48","vo2max":54.4,"spo2_max":97,"hrv_ms":55,"deep_min":80,"sleep_start":"2026-11-22T23:10","sleep_end":"x","night_hr_min":null},
+            {"date":"2026-11-15","energy":60},
+            {"date":"23/11/2026","energy":60},
+            {"date":"2026-11-24","stress":20},
+            {"energy":50},
+            {"date":"2026-11-22","energy":"high"}]}"""), nov23)!!
+        val days = args.getJSONArray("days")
+        // Today's: out of range, the wrong kind, and what a watch can't measure, left out.
+        val d = days.getJSONObject(0)
+        assertEquals(setOf("date", "source", "vo2max", "spo2_max", "sleep_start"), d.keys().asSequence().toSet())
+        assertEquals("garmin", d.getString("source"))
+        assertEquals(54.4, d.getDouble("vo2max"), 0.0)
+        assertEquals("2026-11-22T23:10", d.getString("sleep_start"))
+        // A week ago, a date not in ISO form, a day without a date, a day with nothing usable: gone.
+        // Tomorrow stays (a watch a time zone ahead).
+        assertEquals(2, days.length())
+        assertEquals("2026-11-24", days.getJSONObject(1).getString("date"))
+        // Nothing usable at all: nothing to put.
+        assertNull(GarminMessage.signalDays(fromWatch("""{"t":"day","days":[{"date":"2026-11-23","energy":-5}]}"""), nov23))
+        assertNull(GarminMessage.signalDays(fromWatch("""{"t":"day"}"""), nov23))
+        assertNull(GarminMessage.signalDays(fromWatch("""{"t":"want","v":1}"""), nov23))
+        assertNull(GarminMessage.signalDays("day", nov23))
+        assertNull(GarminMessage.signalDays(null, nov23))
+    }
+
+    @Test fun aSuuntoBrandNeverAcceptsGarminSignals() {
+        val msg = GarminMessage.monkey(dayFixture.getJSONObject("watch"))
+        assertNull(GarminMessage.signalsFor("suunto", msg, nov23))
+        assertNull(GarminMessage.signalsFor(null, msg, nov23))
+        assertNull(GarminMessage.signalsFor("", msg, nov23))
+        assertTrue(GarminMessage.signalsFor("garmin", msg, nov23) != null)
+    }
+
+    @Test fun askingTheWatchForItsDay() {
+        assertEquals(mapOf("t" to "ask", "v" to 1), GarminMessage.ASK_DAY)
+        assertFalse(GarminMessage.isDay(GarminMessage.ASK_DAY))
+        assertFalse(GarminMessage.asksForPlan(GarminMessage.ASK_DAY))
+    }
+
     @Test fun theBrandIsTheSwitch() {
         assertTrue(GarminMessage.goesToGarmin("garmin"))
         assertFalse(GarminMessage.goesToGarmin("suunto"))

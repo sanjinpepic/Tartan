@@ -51,6 +51,12 @@ interface GarminApi {
  *
  * The plan goes when the app opens, when the plan changes (TartanShellPlugin.changed) and when the
  * watch app asks ({ t: "want" }); only when it changed since the last send, unless asked.
+ *
+ * The other way, the watch app sends the day's body numbers ({ t: "day" }, garmin/source/Body.mc)
+ * about every half hour and when it opens; they reach `onDay` while Tartan's process is alive (the
+ * SDK hands messages only to a running Tartan: one while it's closed is lost). So each time Tartan
+ * opens or comes back, the phone asks the watch for its day again ({ t: "ask" }), at most every
+ * ten minutes.
  */
 class GarminLink(private val context: Context, private val plan: suspend () -> String?) : GarminApi {
     private val prefs = context.getSharedPreferences("garmin", Context.MODE_PRIVATE)
@@ -60,6 +66,8 @@ class GarminLink(private val context: Context, private val plan: suspend () -> S
     private var listening: IQDevice? = null
     /** The watch asked for the plan (it opened, or it has none). */
     var onWant: (() -> Unit)? = null
+    /** The watch sent the day's body numbers (GarminMessage.signalsFor checks them). */
+    var onDay: ((Any?) -> Unit)? = null
 
     /** Garmin Connect's SDK, set up once: "ok", "missing", "update" or "error". */
     private suspend fun start(): String {
@@ -97,7 +105,7 @@ class GarminLink(private val context: Context, private val plan: suspend () -> S
     }
 
     override suspend fun use(d: GarminDevice): GarminNow {
-        prefs.edit().putLong("id", d.id).putString("name", d.name).remove("key").apply()
+        prefs.edit().putLong("id", d.id).putString("name", d.name).remove("key").remove("askedAt").apply()
         listening = null
         return sendNow() ?: GarminNow(d.name, "ok", null, null, null, null, null)
     }
@@ -113,7 +121,9 @@ class GarminLink(private val context: Context, private val plan: suspend () -> S
         if (listening == dev) return
         runCatching {
             c.registerForAppEvents(dev, app) { _, _, messages, _ ->
-                if (messages.orEmpty().any { GarminMessage.asksForPlan(it) }) onWant?.invoke()
+                val all = messages.orEmpty()
+                all.filter { GarminMessage.isDay(it) }.forEach { onDay?.invoke(it) }
+                if (all.any { GarminMessage.asksForPlan(it) }) onWant?.invoke()
             }
             listening = dev
         }
@@ -154,8 +164,8 @@ class GarminLink(private val context: Context, private val plan: suspend () -> S
         val got = installed(c, dev)
         if (got != null) prefs.edit().putBoolean("app", got).apply()
         if (got == false) { prefs.edit().putString("error", null).apply(); return now() }
-        val (key, msg) = GarminMessage.fromEngine(plan()) ?: return now()
-        if (!force && key == prefs.getString("key", null)) return now()
+        val (key, msg) = GarminMessage.fromEngine(plan()) ?: return now().also { askDay(c, dev) }
+        if (!force && key == prefs.getString("key", null)) return now().also { askDay(c, dev) }
         val status = CompletableDeferred<ConnectIQ.IQMessageStatus?>()
         runCatching { c.sendMessage(dev, app, msg) { _, _, st -> status.complete(st) } }.onFailure { status.complete(null) }
         val st = withTimeoutOrNull(20_000) { status.await() }
@@ -169,8 +179,27 @@ class GarminLink(private val context: Context, private val plan: suspend () -> S
                 else -> st.name.lowercase()
             }).apply()
         }
+        askDay(c, dev)
         return now()
     }
+
+    /**
+     * Ask the watch app for the day's numbers (it answers with { t: "day" }, to onDay): on the
+     * watches whose background takes phone messages it answers even when closed, on the others the
+     * next time it opens (when it sends its day anyway). At most every ten minutes.
+     */
+    private suspend fun askDay(c: ConnectIQ, dev: IQDevice) {
+        if (System.currentTimeMillis() - prefs.getLong("askedAt", 0L) < 10 * 60_000L) return
+        prefs.edit().putLong("askedAt", System.currentTimeMillis()).apply()
+        val done = CompletableDeferred<Unit>()
+        runCatching { c.sendMessage(dev, app, GarminMessage.ASK_DAY) { _, _, _ -> done.complete(Unit) } }.onFailure { done.complete(Unit) }
+        withTimeoutOrNull(20_000) { done.await() }
+    }
+
+    /** A day the engine couldn't take when it came (signalsPut's arguments): kept for the next sync. */
+    fun keepDay(args: String) { prefs.edit().putString("dayKept", args).apply() }
+    /** The day kept, taken out (null when none). */
+    fun takeKeptDay(): String? = prefs.getString("dayKept", null)?.also { prefs.edit().remove("dayKept").apply() }
 
     override fun getWatchApp() = open(WATCH_APP_URL)
     override fun getGarminConnect() = open("market://details?id=$GCM_PACKAGE")

@@ -2,7 +2,8 @@
 
 `src/signals.ts` keeps each day's sleep and recovery signals in one place, whichever watch or app
 sent them. Readiness and the morning check, Today on both phones, the Body card and the coach
-read only from there. A new source (Garmin's watch app, Suunto's 24/7 API) just writes days into it.
+read only from there. A new source (Suunto's 24/7 API, say) just writes days into it, as
+Garmin's watch app does.
 
 ## Writing a day
 
@@ -45,15 +46,34 @@ Kept in `health/signals.json`, about a year.
 - **The Suunto's own log** (over Bluetooth): resting heart rate and the estimated night, written as
   `suunto` whenever the body is read (`watchLogDays`, `Health.feed`).
 - **The sample** (the demo): two weeks as `sample`, with a rough night and a low-energy morning.
+- **Tartan's Garmin watch app**: the day's Body Battery on waking, stress, night, recovery, resting
+  heart rate and VO2 max, as `garmin` (below).
 - **The coach**: `note_body_signals` keeps a number the athlete said, as `told`.
 
-## For the Garmin feed
+## The Garmin feed
 
-The phone side gets the watch's message and calls `signalsPut` with `source: "garmin"`: Body
-Battery on waking as `energy`, stress as `stress` (0-100), sleep score as `sleep_score`, recovery
-time as `recovery_h`, respiration as `breathing_rate`, resting heart rate as `resting_hr`, VO2 max
-as `vo2max`, and the night's times and stages when the watch has them. Send the morning's values
-under the morning's date.
+Tartan's Garmin watch app reads the day's numbers on the watch (`garmin/source/Body.mc`, every 30
+minutes from a background service, when the app opens and when the phone asks) and sends
+`{ t: "day", v: 1, days: [...] }` with SignalValues' own names. The phone (`GarminLink` on Android,
+`GarminLink.swift` on iPhone) checks it (`GarminMessage.signalDays`: only the fields below, numbers
+in their ranges, a date from two days ago to tomorrow) and calls `signalsPut` with source
+`garmin`, only while the watch is a Garmin (the brand the engine keeps; a Suunto never takes
+Garmin's numbers). Without `replace`: a field the watch hasn't got yet stays as it was.
+
+- `energy`: Body Battery on waking (its peak from bedtime to 3 hours after the usual wake time).
+- `stress`: the day's average stress so far, 0-100 (yesterday's over the whole day).
+- `night_hr_min`, `spo2_max`: the lowest heart rate and highest blood oxygen in the night.
+- `breathing_rate`: the night's readings averaged.
+- `recovery_h`: recovery time in the morning (whole hours), `resting_hr`: the day's resting heart
+  rate, `vo2max`: running VO2 max.
+
+The date is the morning's. Not from Garmin: sleep stages, HRV, sleep times (Connect IQ doesn't
+give them) and the sleep score (a watch app can't read it). Those come from Health Connect or
+Apple Health, and the night stays theirs. docs/garmin.md has the watch side, which watches send
+what, and the gap: a message that comes while Tartan is closed on the phone is lost, so the watch
+resends within 2 hours and the phone asks for the day whenever Tartan opens.
+`test/fixtures/garmin-day.json` is a message and what reaches `signalsPut` (read by
+`test/garmin-signals.test.ts` and Android's `GarminTest`).
 
 ## For the Suunto 24/7 feed (not built yet)
 
