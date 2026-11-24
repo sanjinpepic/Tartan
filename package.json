@@ -1,7 +1,7 @@
 {
   "name": "tartan",
-  "version": "0.4.88",
-  "versionCode": 33,
+  "version": "0.4.89",
+  "versionCode": 34,
   "private": true,
   "description": "Tartan: a running coach for your watch. Plans around your life, on your watch, with built-in rules, an AI on your phone or your own key.",
   "type": "module",
