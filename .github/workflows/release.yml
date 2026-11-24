@@ -1,0 +1,35 @@
+name: Release
+
+# The release branch holds only the newest public APK (apk/tartan-<version>.apk), these notes and
+# this workflow, in one commit that each release replaces, so APKs never pile up in the history.
+# A push here makes the GitHub release v<version>, tagged on main's newest commit, with the APK.
+# Orion Store and Obtainium read the releases.
+# Any push here (always a force-push of one new commit; a path filter misses those).
+on:
+  push:
+    branches: [release]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find the APK
+        run: |
+          APK=$(ls apk/tartan-*.apk | head -1)
+          test -n "$APK" || { echo "No apk/tartan-<version>.apk"; exit 1; }
+          V=$(basename "$APK" .apk); V="${V#tartan-}"
+          echo "APK=$APK" >> "$GITHUB_ENV"
+          echo "V=$V" >> "$GITHUB_ENV"
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.V }}
+          name: Tartan ${{ env.V }}
+          target_commitish: main
+          files: ${{ env.APK }}
+          body_path: notes.md
+          make_latest: true
